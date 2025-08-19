@@ -36,8 +36,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <AppBar 
-        title={topic.title} 
-        showMenu={false}
+        title={topic.title}
         showBack={true}
         onBackPress={() => navigation.goBack()}
       />

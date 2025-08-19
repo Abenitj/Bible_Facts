@@ -85,7 +85,8 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <AppBar 
         title="Evangelism Tool" 
-        showMenu={false}
+        showMenu={true}
+        onMenuPress={() => navigation.openDrawer()}
       />
       
       <ScrollView
@@ -125,68 +126,7 @@ const HomeScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('Favorites')}
-            >
-              <Text style={styles.quickActionIcon}>❤️</Text>
-              <Text style={styles.quickActionText}>Favorites</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('Search')}
-            >
-              <Text style={styles.quickActionIcon}>🔍</Text>
-              <Text style={styles.quickActionText}>Search</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('Settings')}
-            >
-              <Text style={styles.quickActionIcon}>⚙️</Text>
-              <Text style={styles.quickActionText}>Settings</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        {/* Quick Stats */}
-        <Animated.View 
-          style={[
-            styles.statsContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={styles.statsTitle}>Quick Stats</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{religions.length}</Text>
-              <Text style={styles.statLabel}>Religions</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>20+</Text>
-              <Text style={styles.statLabel}>Topics</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>50+</Text>
-              <Text style={styles.statLabel}>Bible Verses</Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            "Always be prepared to give an answer to everyone who asks you to give the reason for the hope that you have."
-          </Text>
-          <Text style={styles.footerReference}>- 1 Peter 3:15</Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -338,69 +278,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#8B4513',
   },
-  statsContainer: {
-    backgroundColor: '#FFFFFF',
-    margin: 16,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#DEB887',
-    shadowColor: '#8B4513',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#8B4513',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#8B4513',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#A0522D',
-    fontWeight: '600',
-  },
-  footer: {
-    padding: 24,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    margin: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#DEB887',
-  },
-  footerText: {
-    fontSize: 16,
-    color: '#8B4513',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  footerReference: {
-    fontSize: 14,
-    color: '#A0522D',
-    fontWeight: 'bold',
-  },
+
 });
 
 export default HomeScreen;

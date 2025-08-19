@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FactCard from '../components/FactCard';
 import { biblicalFacts } from '../data/biblicalFacts';
 import { StorageService } from '../utils/storage';
+import AppBar from '../components/AppBar';
 
 const FavoritesScreen = ({ navigation }) => {
   const [favoriteFacts, setFavoriteFacts] = useState([]);
@@ -69,18 +70,11 @@ const FavoritesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Favorites</Text>
-        {favoriteFacts.length > 0 && (
-          <TouchableOpacity onPress={clearAllFavorites} style={styles.clearButton}>
-            <Text style={styles.clearButtonText}>Clear</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <AppBar 
+        title="Favorites"
+        showBack={true}
+        onBackPress={() => navigation.goBack()}
+      />
 
       {/* Content */}
       {favoriteFacts.length > 0 ? (
@@ -108,9 +102,9 @@ const FavoritesScreen = ({ navigation }) => {
           </Text>
           <TouchableOpacity
             style={styles.exploreButton}
-            onPress={() => navigation.navigate('Facts')}
+            onPress={() => navigation.navigate('Home')}
           >
-            <Text style={styles.exploreButtonText}>Explore Facts</Text>
+            <Text style={styles.exploreButtonText}>Explore Topics</Text>
           </TouchableOpacity>
         </View>
       )}

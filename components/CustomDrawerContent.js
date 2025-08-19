@@ -5,90 +5,69 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image
+  Animated,
 } from 'react-native';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 
 const CustomDrawerContent = (props) => {
-  const menuItems = [
-    {
-      id: 'home',
-      title: 'Home',
-      icon: '🏠',
-      screen: 'Home'
-    },
-    {
-      id: 'favorites',
-      title: 'Favorites',
-      icon: '❤️',
-      screen: 'Favorites'
-    },
-    {
-      id: 'search',
-      title: 'Search',
-      icon: '🔍',
-      screen: 'Search'
-    },
-    {
-      id: 'settings',
-      title: 'Settings',
-      icon: '⚙️',
-      screen: 'Settings'
-    }
-  ];
+  const [fadeAnim] = React.useState(new Animated.Value(0));
 
-  const handleNavigation = (screenName) => {
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const navigateToScreen = (screenName) => {
     props.navigation.navigate(screenName);
     props.navigation.closeDrawer();
   };
 
+  const menuItems = [
+    { name: 'Home', icon: '⌂', screen: 'Home' },
+    { name: 'Favorites', icon: '♡', screen: 'Favorites' },
+    { name: 'Search', icon: '⌕', screen: 'Search' },
+    { name: 'Settings', icon: '⚙', screen: 'Settings' },
+  ];
+
   return (
-    <View style={styles.container}>
-      <DrawerContentScrollView {...props}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.appIconContainer}>
-            <Text style={styles.appIcon}>✝️</Text>
-          </View>
-          <Text style={styles.appName}>Biblical Facts</Text>
-          <Text style={styles.appSubtitle}>Evangelism Tool</Text>
-        </View>
+    <DrawerContentScrollView 
+      {...props}
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
+      {/* App Branding */}
+      <Animated.View 
+        style={[
+          styles.brandingSection,
+          { opacity: fadeAnim }
+        ]}
+      >
+        <Text style={styles.appName}>Biblical Facts</Text>
+        <Text style={styles.appSubtitle}>Evangelism Tool</Text>
+      </Animated.View>
 
-        {/* Navigation Items */}
-        <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.menuItem,
-                props.state.index === props.state.routes.findIndex(route => route.name === item.screen) && styles.activeMenuItem
-              ]}
-              onPress={() => handleNavigation(item.screen)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.menuIcon}>{item.icon}</Text>
-              <Text style={[
-                styles.menuTitle,
-                props.state.index === props.state.routes.findIndex(route => route.name === item.screen) && styles.activeMenuTitle
-              ]}>
-                {item.title}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Divider */}
-        <View style={styles.divider} />
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            "Always be prepared to give an answer"
-          </Text>
-          <Text style={styles.footerReference}>1 Peter 3:15</Text>
-        </View>
-      </DrawerContentScrollView>
-    </View>
+      {/* Navigation Menu */}
+      <Animated.View 
+        style={[
+          styles.navigationSection,
+          { opacity: fadeAnim }
+        ]}
+      >
+        {menuItems.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.menuItem}
+            onPress={() => navigateToScreen(item.screen)}
+          >
+            <Text style={styles.menuIcon}>{item.icon}</Text>
+            <Text style={styles.menuText}>{item.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </Animated.View>
+    </DrawerContentScrollView>
   );
 };
 
@@ -97,35 +76,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5DC',
   },
-  header: {
-    padding: 20,
+  contentContainer: {
+    paddingBottom: 20,
+  },
+  brandingSection: {
     alignItems: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#DEB887',
-    backgroundColor: '#FFFFFF',
-  },
-  appIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#8B4513',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#8B4513',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  appIcon: {
-    fontSize: 30,
+    borderBottomColor: '#D2B48C',
+    marginBottom: 30,
   },
   appName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#8B4513',
     marginBottom: 4,
@@ -133,58 +96,31 @@ const styles = StyleSheet.create({
   appSubtitle: {
     fontSize: 14,
     color: '#A0522D',
+    fontStyle: 'italic',
   },
-  menuContainer: {
-    paddingTop: 20,
+  navigationSection: {
+    paddingHorizontal: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 20,
-    marginHorizontal: 8,
-    marginVertical: 2,
-    borderRadius: 12,
-    backgroundColor: 'transparent',
-  },
-  activeMenuItem: {
-    backgroundColor: '#8B4513',
+    marginBottom: 8,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
   },
   menuIcon: {
     fontSize: 20,
-    marginRight: 16,
-    width: 24,
-    textAlign: 'center',
-  },
-  menuTitle: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#8B4513',
-  },
-  activeMenuTitle: {
-    color: '#FFFFFF',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#DEB887',
-    marginVertical: 20,
-    marginHorizontal: 20,
-  },
-  footer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#A0522D',
+    width: 30,
     textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 4,
+    marginRight: 16,
   },
-  footerReference: {
-    fontSize: 12,
-    color: '#CD853F',
-    fontWeight: 'bold',
+  menuText: {
+    fontSize: 16,
+    color: '#8B4513',
+    fontWeight: '500',
   },
 });
 

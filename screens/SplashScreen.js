@@ -57,7 +57,7 @@ const SplashScreen = ({ navigation }) => {
 
       // Wait a moment, then navigate
       setTimeout(() => {
-        navigation.replace('Home');
+        navigation.replace('MainApp');
       }, 1500);
     };
 
@@ -87,9 +87,9 @@ const SplashScreen = ({ navigation }) => {
           },
         ]}
       >
-        {/* App Icon */}
+        {/* Bible Icon */}
         <View style={styles.iconContainer}>
-          <Text style={styles.appIcon}>✝️</Text>
+          <Text style={styles.bibleIcon}>📖</Text>
         </View>
 
         {/* App Name */}
@@ -104,25 +104,9 @@ const SplashScreen = ({ navigation }) => {
           <Text style={styles.appName}>Biblical Facts</Text>
           <Text style={styles.appSubtitle}>Evangelism Tool</Text>
         </Animated.View>
-
-        {/* Loading indicator */}
-        <Animated.View
-          style={[
-            styles.loadingContainer,
-            {
-              opacity: textFadeAnim,
-            },
-          ]}
-        >
-          <View style={styles.loadingDots}>
-            <View style={[styles.dot, styles.dot1]} />
-            <View style={[styles.dot, styles.dot2]} />
-            <View style={[styles.dot, styles.dot3]} />
-          </View>
-        </Animated.View>
       </Animated.View>
 
-      {/* Footer text */}
+      {/* Bible Verse */}
       <Animated.View
         style={[
           styles.footer,
@@ -132,9 +116,9 @@ const SplashScreen = ({ navigation }) => {
         ]}
       >
         <Text style={styles.footerText}>
-          "Always be prepared to give an answer"
+          "Always be prepared to give an answer to everyone who asks you to give the reason for the hope that you have."
         </Text>
-        <Text style={styles.footerReference}>1 Peter 3:15</Text>
+        <Text style={styles.footerReference}>- 1 Peter 3:15</Text>
       </Animated.View>
     </View>
   );
@@ -159,16 +143,16 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: height * 0.6,
-    backgroundColor: '#A0522D',
+    height: height * 0.5,
+    backgroundColor: '#8B4513',
   },
   gradientLayer2: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: height * 0.4,
-    backgroundColor: '#CD853F',
+    height: height * 0.5,
+    backgroundColor: '#A0522D',
   },
   content: {
     alignItems: 'center',
@@ -176,24 +160,19 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#FFFFFF',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 16,
+    backgroundColor: 'transparent',
   },
-  appIcon: {
-    fontSize: 60,
+  bibleIcon: {
+    fontSize: 50,
+    color: '#FFFFFF',
   },
   titleContainer: {
     alignItems: 'center',
@@ -216,49 +195,29 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  loadingContainer: {
-    alignItems: 'center',
-  },
-  loadingDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 4,
-  },
-  dot1: {
-    opacity: 0.6,
-  },
-  dot2: {
-    opacity: 0.8,
-  },
-  dot3: {
-    opacity: 1,
-  },
+
   footer: {
     position: 'absolute',
-    bottom: 60,
+    bottom: 80,
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   footerText: {
     fontSize: 16,
-    color: '#F5F5DC',
+    color: '#FFFFFF',
     textAlign: 'center',
     fontStyle: 'italic',
-    marginBottom: 4,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+    lineHeight: 22,
   },
   footerReference: {
     fontSize: 14,
-    color: '#DEB887',
+    color: '#F5F5DC',
     fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },

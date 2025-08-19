@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StorageService } from '../utils/storage';
+import AppBar from '../components/AppBar';
 
 const SettingsScreen = ({ navigation }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -97,14 +98,11 @@ const SettingsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <AppBar 
+        title="Settings"
+        showBack={true}
+        onBackPress={() => navigation.goBack()}
+      />
 
       <ScrollView style={styles.scrollView}>
         {/* Appearance Section */}

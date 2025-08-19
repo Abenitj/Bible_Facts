@@ -44,8 +44,7 @@ const TopicsScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <AppBar 
-        title={religion.name} 
-        showMenu={false}
+        title={religion.name}
         showBack={true}
         onBackPress={() => navigation.goBack()}
       />

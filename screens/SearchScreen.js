@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FactCard from '../components/FactCard';
 import { searchFacts, biblicalFacts, categories } from '../data/biblicalFacts';
 import { StorageService } from '../utils/storage';
+import AppBar from '../components/AppBar';
 
 const SearchScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,14 +97,11 @@ const SearchScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Search Facts</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <AppBar 
+        title="Search"
+        showBack={true}
+        onBackPress={() => navigation.goBack()}
+      />
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
