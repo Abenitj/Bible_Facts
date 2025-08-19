@@ -61,7 +61,7 @@ const HomeScreen = ({ navigation }) => {
       ]}
     >
       <TouchableOpacity
-        style={[styles.card, { borderLeftColor: item.color }]}
+        style={styles.card}
         onPress={() => navigateToReligion(item)}
         activeOpacity={0.9}
       >
@@ -135,37 +135,37 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5DC',
+    backgroundColor: '#F0E6D2',
   },
   scrollView: {
     flex: 1,
   },
   welcomeSection: {
     padding: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5DC',
     margin: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#DEB887',
-    shadowColor: '#8B4513',
+    borderColor: '#A0522D',
+    shadowColor: '#654321',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
   welcomeTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#654321',
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#A0522D',
+    color: '#8B4513',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -176,13 +176,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#654321',
     marginBottom: 8,
     textAlign: 'center',
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#A0522D',
+    color: '#8B4513',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
@@ -191,13 +191,14 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5DC',
     borderRadius: 16,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    borderLeftWidth: 6,
-    shadowColor: '#8B4513',
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B4513',
+    shadowColor: '#654321',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -217,6 +218,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 24,
+    color: '#FFFFFF',
   },
   content: {
     flex: 1,
@@ -224,25 +226,25 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#654321',
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#A0522D',
+    color: '#8B4513',
     lineHeight: 20,
   },
   arrowContainer: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#DEB887',
+    backgroundColor: '#A0522D',
     justifyContent: 'center',
     alignItems: 'center',
   },
   arrow: {
     fontSize: 18,
-    color: '#8B4513',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   quickActionsContainer: {

@@ -72,7 +72,7 @@ const AppBar = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#8B4513',
+    backgroundColor: '#654321',
   },
   appBar: {
     flexDirection: 'row',
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#8B4513',
+    backgroundColor: '#654321',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -98,8 +98,6 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -111,8 +109,6 @@ const styles = StyleSheet.create({
   menuButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },

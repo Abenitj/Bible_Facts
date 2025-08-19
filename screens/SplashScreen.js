@@ -66,13 +66,9 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#8B4513" />
+      <StatusBar barStyle="light-content" backgroundColor="#654321" />
       
-      {/* Background gradient effect */}
-      <View style={styles.backgroundGradient}>
-        <View style={styles.gradientLayer1} />
-        <View style={styles.gradientLayer2} />
-      </View>
+
 
       {/* Main content */}
       <Animated.View
@@ -127,32 +123,9 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#8B4513',
+    backgroundColor: '#654321',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  gradientLayer1: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.5,
-    backgroundColor: '#8B4513',
-  },
-  gradientLayer2: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.5,
-    backgroundColor: '#A0522D',
   },
   content: {
     alignItems: 'center',

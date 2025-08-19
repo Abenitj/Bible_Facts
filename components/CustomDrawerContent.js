@@ -21,15 +21,14 @@ const CustomDrawerContent = (props) => {
   }, []);
 
   const navigateToScreen = (screenName) => {
-    props.navigation.navigate(screenName);
+    props.navigation.navigate('TabNavigator', { screen: screenName });
     props.navigation.closeDrawer();
   };
 
   const menuItems = [
     { name: 'Home', icon: '⌂', screen: 'Home' },
     { name: 'Favorites', icon: '♡', screen: 'Favorites' },
-    { name: 'Search', icon: '⌕', screen: 'Search' },
-    { name: 'Settings', icon: '⚙', screen: 'Settings' },
+    { name: 'Settings', icon: '⊛', screen: 'Settings' },
   ];
 
   return (
@@ -57,14 +56,16 @@ const CustomDrawerContent = (props) => {
         ]}
       >
         {menuItems.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.menuItem}
-            onPress={() => navigateToScreen(item.screen)}
-          >
-            <Text style={styles.menuIcon}>{item.icon}</Text>
-            <Text style={styles.menuText}>{item.name}</Text>
-          </TouchableOpacity>
+          <View key={index}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigateToScreen(item.screen)}
+            >
+              <Text style={styles.menuIcon}>{item.icon}</Text>
+              <Text style={styles.menuText}>{item.name}</Text>
+            </TouchableOpacity>
+            {index < menuItems.length - 1 && <View style={styles.separator} />}
+          </View>
         ))}
       </Animated.View>
     </DrawerContentScrollView>
@@ -74,7 +75,7 @@ const CustomDrawerContent = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5DC',
+    backgroundColor: '#F0E6D2',
   },
   contentContainer: {
     paddingBottom: 20,
@@ -86,41 +87,48 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#D2B48C',
     marginBottom: 30,
+    marginHorizontal: 16,
+    marginTop: 16,
   },
   appName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#654321',
     marginBottom: 4,
   },
   appSubtitle: {
     fontSize: 14,
-    color: '#A0522D',
+    color: '#8B4513',
     fontStyle: 'italic',
   },
   navigationSection: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     marginBottom: 8,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
   },
   menuIcon: {
     fontSize: 20,
-    color: '#8B4513',
+    color: '#654321',
     width: 30,
     textAlign: 'center',
     marginRight: 16,
   },
   menuText: {
     fontSize: 16,
-    color: '#8B4513',
-    fontWeight: '500',
+    color: '#654321',
+    fontWeight: '600',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#D2B48C',
+    marginHorizontal: 32,
+    opacity: 0.3,
   },
 });
 
