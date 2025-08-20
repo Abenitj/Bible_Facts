@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Text } from 'react-native';
+import { Text, View, ActivityIndicator } from 'react-native';
 import 'react-native-gesture-handler';
+
+// Import database
+import { initDatabase } from './src/database/simpleData';
 
 // Import screens
 import SplashScreen from './screens/SplashScreen';
@@ -50,7 +53,7 @@ function BottomTabNavigator() {
         name="Home" 
         component={HomeScreen}
         options={{
-          title: 'Home',
+          title: 'ዋና ገጽ',
           tabBarIcon: ({ color, size }) => (
             <Text style={{ color, fontSize: size }}>⌂</Text>
           ),
@@ -60,7 +63,7 @@ function BottomTabNavigator() {
         name="Settings" 
         component={SettingsScreen}
         options={{
-          title: 'Settings',
+          title: 'ቅንብሮች',
           tabBarIcon: ({ color, size }) => (
             <Text style={{ color, fontSize: size }}>⊛</Text>
           ),
@@ -92,7 +95,7 @@ function MainApp() {
         name="TabNavigator" 
         component={BottomTabNavigator}
         options={{
-          title: 'Evangelism Tool',
+          title: 'Melhik - የሃይማኖት መሳሪያ',
           drawerItemStyle: { display: 'none' }
         }}
       />
@@ -100,7 +103,7 @@ function MainApp() {
         name="Topics" 
         component={TopicsScreen}
         options={{
-          title: 'Topics',
+          title: 'ርዕሰ መልእክቶች',
           drawerItemStyle: { display: 'none' }
         }}
       />
@@ -108,7 +111,7 @@ function MainApp() {
         name="TopicDetail" 
         component={TopicDetailScreen}
         options={{
-          title: 'Topic Detail',
+          title: 'ዝርዝር መረጃ',
           drawerItemStyle: { display: 'none' }
         }}
       />
@@ -116,13 +119,56 @@ function MainApp() {
   );
 }
 
+// Loading component
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F0E6D2' }}>
+    <ActivityIndicator size="large" color="#654321" />
+    <Text style={{ marginTop: 16, color: '#654321', fontSize: 16 }}>ይዘት እያደረገ ነው...</Text>
+  </View>
+);
+
 // Root Stack Navigator
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        // Initialize database
+        await initDatabase();
+        console.log('Database initialized successfully');
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('App initialization failed:', error);
+        // Even if database fails, we should still show the app
+        setIsInitialized(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Add a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log('Initialization timeout, proceeding anyway');
+      setIsLoading(false);
+      setIsInitialized(true);
+    }, 5000);
+
+    initializeApp().finally(() => {
+      clearTimeout(timeout);
+    });
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName="Splash"
+          initialRouteName={isInitialized ? "MainApp" : "Splash"}
           screenOptions={{
             headerShown: false,
             cardStyle: { backgroundColor: '#F0E6D2' }

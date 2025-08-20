@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -11,39 +10,91 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
-import { religions } from '../data/evangelismData';
-import { StorageService } from '../utils/storage';
+import AmharicText from '../src/components/AmharicText';
+import { getReligions, initDatabase, initializeSampleData } from '../src/database/simpleData';
+import SyncService from '../src/services/SyncService';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
+  const [religions, setReligions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
 
   useEffect(() => {
-    // Entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      console.log('HomeScreen: Starting initialization...');
+      
+      // Initialize sample data
+      await initializeSampleData();
+      console.log('HomeScreen: Sample data initialized');
+      
+      // Load religions from database
+      await loadReligions();
+      console.log('HomeScreen: Religions loaded');
+      
+      // Check for updates
+      await SyncService.checkForUpdates();
+      console.log('HomeScreen: Sync check completed');
+      
+      // Start entrance animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      console.log('HomeScreen: Animation started');
+    } catch (error) {
+      console.error('Error initializing HomeScreen:', error);
+      // Start animation even if there's an error
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  };
+
+  const loadReligions = async () => {
+    try {
+      const data = await getReligions();
+      setReligions(data);
+    } catch (error) {
+      console.error('Error loading religions:', error);
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate refresh
-    setTimeout(() => {
+    try {
+      await loadReligions();
+      await SyncService.checkForUpdates();
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
       setRefreshing(false);
-    }, 1000);
+    }
   };
 
   const navigateToReligion = (religion) => {
@@ -66,16 +117,16 @@ const HomeScreen = ({ navigation }) => {
         activeOpacity={0.9}
       >
         <View style={styles.iconContainer}>
-          <Text style={styles.icon}>{item.icon}</Text>
+          <AmharicText style={styles.icon}>{item.icon}</AmharicText>
         </View>
         
         <View style={styles.content}>
-          <Text style={styles.title}>{item.name}</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <AmharicText variant="subheading" style={styles.title}>{item.name}</AmharicText>
+          <AmharicText variant="caption" style={styles.description}>{item.description}</AmharicText>
         </View>
         
         <View style={styles.arrowContainer}>
-          <Text style={styles.arrow}>›</Text>
+          <AmharicText style={styles.arrow}>›</AmharicText>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -106,24 +157,35 @@ const HomeScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.welcomeTitle}>Welcome to Melhik</Text>
-          <Text style={styles.welcomeSubtitle}>
-            Your comprehensive evangelism tool for answering questions about Christianity
-          </Text>
+          <AmharicText variant="heading" style={styles.welcomeTitle}>Melhik ን እንኳን በደህና መጡ</AmharicText>
+          <AmharicText variant="body" style={styles.welcomeSubtitle}>
+            ክርስትናን ለማስረዳት የሚያገለግል ሁለገብ መሳሪያ
+          </AmharicText>
         </Animated.View>
 
         {/* Religions List */}
         <View style={styles.religionsContainer}>
-          <Text style={styles.sectionTitle}>Choose a Religion or Perspective</Text>
-          <Text style={styles.sectionSubtitle}>
-            Select a religion to explore common questions and biblical answers
-          </Text>
+          <AmharicText variant="subheading" style={styles.sectionTitle}>ሃይማኖት ወይም አመለካከት ይምረጡ</AmharicText>
+          <AmharicText variant="caption" style={styles.sectionSubtitle}>
+            የተለመዱ ጥያቄዎችን እና የመጽሐፍ ቅዱስ መልሶችን ለማግኘት ሃይማኖት ይምረጡ
+          </AmharicText>
           
-          {religions.map((religion, index) => (
-            <View key={religion.id}>
-              {renderReligionCard({ item: religion, index })}
+          {religions.length > 0 ? (
+            religions.map((religion, index) => (
+              <View key={religion.id}>
+                {renderReligionCard({ item: religion, index })}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <AmharicText variant="subheading" style={styles.emptyTitle}>
+                ሃይማኖቶች አልተገኙም
+              </AmharicText>
+              <AmharicText variant="body" style={styles.emptyText}>
+                ይዘት እያደረገ ነው፣ እባክዎ ያስተናግዱ...
+              </AmharicText>
             </View>
-          ))}
+          )}
         </View>
 
 
@@ -279,6 +341,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#8B4513',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    color: '#8B4513',
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: '#A0522D',
+    textAlign: 'center',
+    paddingHorizontal: 32,
   },
 
 });

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -10,28 +9,57 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
 import BibleReference from '../components/BibleReference';
+import AmharicText from '../src/components/AmharicText';
+import { getTopicById } from '../src/database/simpleData';
 
 const TopicDetailScreen = ({ navigation, route }) => {
-  const { religion, topic } = route.params;
+  const { religion, topicId } = route.params;
+  const [topic, setTopic] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
 
   useEffect(() => {
-    // Entrance animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+    loadTopic();
+  }, [topicId]);
+
+  const loadTopic = async () => {
+    try {
+      const topicData = await getTopicById(topicId);
+      setTopic(topicData);
+      
+      // Entrance animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } catch (error) {
+      console.error('Error loading topic:', error);
+    }
+  };
+
+  if (!topic) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <AppBar 
+          title="ዝርዝር መረጃ"
+          showBack={true}
+          onBackPress={() => navigation.goBack()}
+        />
+        <View style={styles.loadingContainer}>
+          <AmharicText variant="body">ይዘት እያደረገ ነው...</AmharicText>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,8 +85,8 @@ const TopicDetailScreen = ({ navigation, route }) => {
             },
           ]}
         >
-          <Text style={styles.questionLabel}>Question:</Text>
-          <Text style={styles.questionText}>{topic.description}</Text>
+          <AmharicText variant="caption" style={styles.questionLabel}>ጥያቄ:</AmharicText>
+          <AmharicText variant="subheading" style={styles.questionText}>{topic.description}</AmharicText>
         </Animated.View>
 
         {/* Concept */}
@@ -72,11 +100,11 @@ const TopicDetailScreen = ({ navigation, route }) => {
           ]}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>💡</Text>
-            <Text style={styles.sectionTitle}>Biblical Concept</Text>
+            <AmharicText style={styles.sectionIcon}>💡</AmharicText>
+            <AmharicText variant="subheading" style={styles.sectionTitle}>የመጽሐፍ ቅዱስ ጽንሰ ሐሳብ</AmharicText>
           </View>
           <View style={styles.sectionContent}>
-            <Text style={styles.sectionText}>{topic.content.concept}</Text>
+            <AmharicText variant="body" style={styles.sectionText}>{topic.content.concept}</AmharicText>
           </View>
         </Animated.View>
 
@@ -91,11 +119,11 @@ const TopicDetailScreen = ({ navigation, route }) => {
           ]}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>📝</Text>
-            <Text style={styles.sectionTitle}>Detailed Explanation</Text>
+            <AmharicText style={styles.sectionIcon}>📝</AmharicText>
+            <AmharicText variant="subheading" style={styles.sectionTitle}>ዝርዝር ማብራሪያ</AmharicText>
           </View>
           <View style={styles.sectionContent}>
-            <Text style={styles.sectionText}>{topic.content.explanation}</Text>
+            <AmharicText variant="body" style={styles.sectionText}>{topic.content.explanation}</AmharicText>
           </View>
         </Animated.View>
 
@@ -110,14 +138,14 @@ const TopicDetailScreen = ({ navigation, route }) => {
           ]}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>🎯</Text>
-            <Text style={styles.sectionTitle}>Key Points</Text>
+            <AmharicText style={styles.sectionIcon}>🎯</AmharicText>
+            <AmharicText variant="subheading" style={styles.sectionTitle}>ዋና ነጥቦች</AmharicText>
           </View>
           <View style={styles.sectionContent}>
             {topic.content.keyPoints.map((point, index) => (
               <View key={index} style={styles.keyPointContainer}>
-                <Text style={styles.keyPointBullet}>•</Text>
-                <Text style={styles.keyPointText}>{point}</Text>
+                <AmharicText style={styles.keyPointBullet}>•</AmharicText>
+                <AmharicText variant="body" style={styles.keyPointText}>{point}</AmharicText>
               </View>
             ))}
           </View>
@@ -134,13 +162,13 @@ const TopicDetailScreen = ({ navigation, route }) => {
           ]}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionIcon}>📖</Text>
-            <Text style={styles.sectionTitle}>Bible References</Text>
+            <AmharicText style={styles.sectionIcon}>📖</AmharicText>
+            <AmharicText variant="subheading" style={styles.sectionTitle}>የመጽሐፍ ቅዱስ ጥቅሶች</AmharicText>
           </View>
           <View style={styles.sectionContent}>
-            <Text style={styles.referencesIntro}>
-              Tap on any verse to read the full text and explanation:
-            </Text>
+            <AmharicText variant="caption" style={styles.referencesIntro}>
+              ሙሉ ጽሑፍ እና ማብራሪያ ለማንበብ ጥቅስ ይንኩ:
+            </AmharicText>
             {topic.references.map((reference, index) => (
               <BibleReference key={index} reference={reference} />
             ))}
@@ -149,10 +177,10 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            "Sanctify Christ as Lord in your hearts, always being ready to make a defense to everyone who asks you to give an account for the hope that is in you."
-          </Text>
-          <Text style={styles.footerReference}>- 1 Peter 3:15</Text>
+          <AmharicText variant="body" style={styles.footerText}>
+            "እርሱን በልባችሁ ጌታ አድርጉ፥ በልባችሁም ያለውን ተስፋ ለሚጠይቁ ሁሉ ለመግለጫ ሁልጊዜ ዝግጁ ሆናችሁ፥ ግን በደጋፊነትና በፍርሃት አድርጉ።"
+          </AmharicText>
+          <AmharicText variant="caption" style={styles.footerReference}>- 1 ጴጥሮስ 3:15</AmharicText>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -163,6 +191,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5DC',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollView: {
     flex: 1,

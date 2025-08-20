@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
@@ -10,7 +9,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
 import TopicCard from '../components/TopicCard';
-import { getTopicsByReligion } from '../data/evangelismData';
+import AmharicText from '../src/components/AmharicText';
+import { getTopicsByReligion } from '../src/database/simpleData';
 
 const TopicsScreen = ({ navigation, route }) => {
   const { religion } = route.params;
@@ -18,19 +18,27 @@ const TopicsScreen = ({ navigation, route }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    const religionTopics = getTopicsByReligion(religion.id);
-    setTopics(religionTopics);
-    
-    // Entrance animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
+    loadTopics();
   }, [religion.id]);
 
+  const loadTopics = async () => {
+    try {
+      const religionTopics = await getTopicsByReligion(religion.id);
+      setTopics(religionTopics);
+      
+      // Entrance animation
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+    } catch (error) {
+      console.error('Error loading topics:', error);
+    }
+  };
+
   const navigateToTopic = (topic) => {
-    navigation.navigate('TopicDetail', { religion, topic });
+    navigation.navigate('TopicDetail', { religion, topicId: topic.id });
   };
 
   const renderTopic = ({ item, index }) => (
@@ -63,21 +71,21 @@ const TopicsScreen = ({ navigation, route }) => {
               { opacity: fadeAnim }
             ]}
           >
-            <Text style={styles.listHeaderTitle}>
-              {topics.length} Topic{topics.length !== 1 ? 's' : ''} Available
-            </Text>
-            <Text style={styles.listHeaderSubtitle}>
-              Tap on any topic to explore biblical answers
-            </Text>
+            <AmharicText variant="subheading" style={styles.listHeaderTitle}>
+              {topics.length} ርዕሰ መልእክት{topics.length !== 1 ? 'ዎች' : ''} ይገኛሉ
+            </AmharicText>
+            <AmharicText variant="caption" style={styles.listHeaderSubtitle}>
+              የመጽሐፍ ቅዱስ መልሶችን ለማግኘት ርዕሰ መልእክት ይንኩ
+            </AmharicText>
           </Animated.View>
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📖</Text>
-            <Text style={styles.emptyTitle}>No topics available</Text>
-            <Text style={styles.emptyText}>
-              Topics for this religion will be added soon.
-            </Text>
+            <AmharicText style={styles.emptyIcon}>📖</AmharicText>
+            <AmharicText variant="subheading" style={styles.emptyTitle}>ርዕሰ መልእክቶች የሉም</AmharicText>
+            <AmharicText variant="body" style={styles.emptyText}>
+              ለዚህ ሃይማኖት ርዕሰ መልእክቶች በቅርቡ ይጨመራሉ።
+            </AmharicText>
           </View>
         }
       />
