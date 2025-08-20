@@ -15,7 +15,6 @@ import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
 import ZoomableText from '../components/ZoomableText';
 import TextWithBibleVerses from '../components/TextWithBibleVerses';
-import SwipeToGoBack from '../components/SwipeToGoBack';
 import { getTopicById } from '../src/database/simpleData';
 import { mockBibleVerses } from '../src/database/mockBibleVerses';
 
@@ -97,20 +96,19 @@ const TopicDetailScreen = ({ navigation, route }) => {
   }
 
   return (
-    <SwipeToGoBack onSwipeBack={() => navigation.navigate('Topics', { religion })}>
-      <SafeAreaView style={styles.container}>
-        <AppBar 
-          title={topic.title}
-          showBack={true}
-          onBackPress={() => navigation.navigate('Topics', { religion })}
-        />
+    <SafeAreaView style={styles.container}>
+      <AppBar 
+        title={topic.title}
+        showBack={true}
+        onBackPress={() => navigation.navigate('Topics', { religion })}
+      />
 
-        {/* Content */}
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
+      {/* Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
           {/* Description Section */}
           <Animated.View 
             style={[
@@ -152,8 +150,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
-      </SafeAreaView>
-    </SwipeToGoBack>
+    </SafeAreaView>
   );
 };
 
