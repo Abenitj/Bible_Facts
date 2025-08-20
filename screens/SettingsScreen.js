@@ -82,12 +82,12 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <SwipeToGoBack onSwipeBack={() => navigation.goBack()}>
+    <SwipeToGoBack enabled={false}>
       <SafeAreaView style={styles.container}>
         <AppBar 
           title="Settings"
           showBack={true}
-          onBackPress={() => navigation.goBack()}
+          onBackPress={() => navigation.navigate('Home')}
         />
 
         <ScrollView style={styles.scrollView}>

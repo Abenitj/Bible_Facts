@@ -52,12 +52,12 @@ const TopicsScreen = ({ navigation, route }) => {
   );
 
   return (
-    <SwipeToGoBack onSwipeBack={() => navigation.goBack()}>
+    <SwipeToGoBack onSwipeBack={() => navigation.navigate('Home')}>
       <SafeAreaView style={styles.container}>
         <AppBar 
           title={religion.name}
           showBack={true}
-          onBackPress={() => navigation.goBack()}
+          onBackPress={() => navigation.navigate('Home')}
         />
 
         {/* Topics List */}

@@ -87,7 +87,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
         <AppBar 
           title="ዝርዝር መረጃ"
           showBack={true}
-          onBackPress={() => navigation.goBack()}
+          onBackPress={() => navigation.navigate('Topics', { religion })}
         />
         <View style={styles.loadingContainer}>
           <AmharicText variant="body">ይዘት እያደረገ ነው...</AmharicText>
@@ -97,12 +97,12 @@ const TopicDetailScreen = ({ navigation, route }) => {
   }
 
   return (
-    <SwipeToGoBack onSwipeBack={() => navigation.goBack()}>
+    <SwipeToGoBack onSwipeBack={() => navigation.navigate('Topics', { religion })}>
       <SafeAreaView style={styles.container}>
         <AppBar 
           title={topic.title}
           showBack={true}
-          onBackPress={() => navigation.goBack()}
+          onBackPress={() => navigation.navigate('Topics', { religion })}
         />
 
         {/* Content */}

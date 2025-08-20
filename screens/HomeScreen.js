@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
+import SwipeToGoBack from '../components/SwipeToGoBack';
 import { getReligions, initializeSampleData } from '../src/database/simpleData';
 import SyncService from '../src/services/SyncService';
 
@@ -190,26 +191,28 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AppBar 
-        title="Melhik" 
-        showMenu={true}
-        onMenuPress={() => navigation.navigate('Settings')}
-      />
-      
-      <FlatList
-        data={religions}
-        renderItem={renderReligionCard}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={styles.listContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      />
-    </SafeAreaView>
+    <SwipeToGoBack enabled={false}>
+      <SafeAreaView style={styles.container}>
+        <AppBar 
+          title="Melhik" 
+          showMenu={true}
+          onMenuPress={() => navigation.openDrawer()}
+        />
+        
+        <FlatList
+          data={religions}
+          renderItem={renderReligionCard}
+          keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmpty}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+    </SwipeToGoBack>
   );
 };
 
