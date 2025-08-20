@@ -1,13 +1,13 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Animated,
 } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import AmharicText from '../src/components/AmharicText';
 
 const CustomDrawerContent = (props) => {
   const [fadeAnim] = React.useState(new Animated.Value(0));
@@ -21,13 +21,13 @@ const CustomDrawerContent = (props) => {
   }, []);
 
   const navigateToScreen = (screenName) => {
-    props.navigation.navigate('TabNavigator', { screen: screenName });
+    props.navigation.navigate(screenName);
     props.navigation.closeDrawer();
   };
 
   const menuItems = [
-    { name: 'Home', icon: '⌂', screen: 'Home' },
-    { name: 'Settings', icon: '⊛', screen: 'Settings' },
+    { name: 'ዋና ገጽ', icon: '⌂', screen: 'Home' },
+    { name: 'ቅንብሮች', icon: '⊛', screen: 'Settings' },
   ];
 
   return (
@@ -43,8 +43,8 @@ const CustomDrawerContent = (props) => {
           { opacity: fadeAnim }
         ]}
       >
-        <Text style={styles.appName}>Melhik</Text>
-        <Text style={styles.appSubtitle}>Evangelism Tool</Text>
+        <AmharicText variant="heading" style={styles.appName}>Melhik</AmharicText>
+        <AmharicText variant="caption" style={styles.appSubtitle}>የሃይማኖት መሳሪያ</AmharicText>
       </Animated.View>
 
       {/* Navigation Menu */}
@@ -60,8 +60,8 @@ const CustomDrawerContent = (props) => {
               style={styles.menuItem}
               onPress={() => navigateToScreen(item.screen)}
             >
-              <Text style={styles.menuIcon}>{item.icon}</Text>
-              <Text style={styles.menuText}>{item.name}</Text>
+              <AmharicText style={styles.menuIcon}>{item.icon}</AmharicText>
+              <AmharicText variant="body" style={styles.menuText}>{item.name}</AmharicText>
             </TouchableOpacity>
             {index < menuItems.length - 1 && <View style={styles.separator} />}
           </View>

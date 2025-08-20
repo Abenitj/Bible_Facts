@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text, View, ActivityIndicator } from 'react-native';
 import 'react-native-gesture-handler';
@@ -22,62 +21,12 @@ import CustomDrawerContent from './components/CustomDrawerContent';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
-const Tab = createBottomTabNavigator();
 
-// Bottom Tab Navigator
-function BottomTabNavigator() {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#654321',
-          borderTopWidth: 0,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          height: 60,
-        },
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#F5F5DC',
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginBottom: 5,
-        },
-      }}
-    >
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
-        options={{
-          title: 'ዋና ገጽ',
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>⌂</Text>
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{
-          title: 'ቅንብሮች',
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>⊛</Text>
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
-
-// Main App with Drawer Navigation
+// Main App with Drawer Navigation only
 function MainApp() {
   return (
     <Drawer.Navigator
-      initialRouteName="TabNavigator"
+      initialRouteName="Home"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
@@ -92,11 +41,17 @@ function MainApp() {
       }}
     >
       <Drawer.Screen 
-        name="TabNavigator" 
-        component={BottomTabNavigator}
+        name="Home" 
+        component={HomeScreen}
         options={{
-          title: 'Melhik - የሃይማኖት መሳሪያ',
-          drawerItemStyle: { display: 'none' }
+          title: 'ዋና ገጽ',
+        }}
+      />
+      <Drawer.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+        options={{
+          title: 'ቅንብሮች',
         }}
       />
       <Drawer.Screen 
@@ -118,6 +73,8 @@ function MainApp() {
     </Drawer.Navigator>
   );
 }
+
+
 
 // Loading component
 const LoadingScreen = () => (
