@@ -12,8 +12,6 @@ import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import TopicsScreen from './screens/TopicsScreen';
 import TopicDetailScreen from './screens/TopicDetailScreen';
-import FavoritesScreen from './screens/FavoritesScreen';
-
 import SettingsScreen from './screens/SettingsScreen';
 
 // Import custom drawer content
@@ -58,17 +56,6 @@ function BottomTabNavigator() {
           ),
         }}
       />
-      <Tab.Screen 
-        name="Favorites" 
-        component={FavoritesScreen}
-        options={{
-          title: 'Favorites',
-          tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>♡</Text>
-          ),
-        }}
-      />
-
       <Tab.Screen 
         name="Settings" 
         component={SettingsScreen}

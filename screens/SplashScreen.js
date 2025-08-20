@@ -97,7 +97,7 @@ const SplashScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.appName}>Biblical Facts</Text>
+          <Text style={styles.appName}>Melhik</Text>
           <Text style={styles.appSubtitle}>Evangelism Tool</Text>
         </Animated.View>
       </Animated.View>

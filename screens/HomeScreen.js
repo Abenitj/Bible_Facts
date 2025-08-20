@@ -106,7 +106,7 @@ const HomeScreen = ({ navigation }) => {
             },
           ]}
         >
-          <Text style={styles.welcomeTitle}>Welcome to Biblical Facts</Text>
+          <Text style={styles.welcomeTitle}>Welcome to Melhik</Text>
           <Text style={styles.welcomeSubtitle}>
             Your comprehensive evangelism tool for answering questions about Christianity
           </Text>

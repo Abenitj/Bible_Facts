@@ -34,7 +34,7 @@ const SettingsScreen = ({ navigation }) => {
   const clearAllData = () => {
     Alert.alert(
       'Clear All Data',
-      'This will remove all your favorites and settings. This action cannot be undone.',
+      'This will reset all your settings. This action cannot be undone.',
       [
         {
           text: 'Cancel',
@@ -45,14 +45,12 @@ const SettingsScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Clear favorites
-              await StorageService.removeFromFavorites('all');
               // Reset theme to light
               await StorageService.setTheme('light');
               setIsDarkMode(false);
-              Alert.alert('Success', 'All data has been cleared');
+              Alert.alert('Success', 'All settings have been reset');
             } catch (error) {
-              Alert.alert('Error', 'Failed to clear data');
+              Alert.alert('Error', 'Failed to clear settings');
             }
           },
         },
@@ -123,8 +121,8 @@ const SettingsScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Data Management</Text>
           {renderSettingItem({
             icon: '🗑️',
-            title: 'Clear All Data',
-            subtitle: 'Remove all favorites and reset settings',
+            title: 'Clear All Settings',
+            subtitle: 'Reset all app settings',
             onPress: clearAllData
           })}
         </View>
@@ -157,7 +155,7 @@ const SettingsScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>About</Text>
           {renderSettingItem({
             icon: '📖',
-            title: 'Bible Facts',
+            title: 'Melhik',
             subtitle: 'Version 1.0.0'
           })}
           {renderSettingItem({
@@ -173,7 +171,7 @@ const SettingsScreen = ({ navigation }) => {
             Made with ❤️ for biblical education
           </Text>
           <Text style={styles.footerSubtext}>
-            © 2024 Bible Facts App
+            © 2024 Melhik App
           </Text>
         </View>
       </ScrollView>

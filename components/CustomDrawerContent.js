@@ -27,7 +27,6 @@ const CustomDrawerContent = (props) => {
 
   const menuItems = [
     { name: 'Home', icon: '⌂', screen: 'Home' },
-    { name: 'Favorites', icon: '♡', screen: 'Favorites' },
     { name: 'Settings', icon: '⊛', screen: 'Settings' },
   ];
 
@@ -44,7 +43,7 @@ const CustomDrawerContent = (props) => {
           { opacity: fadeAnim }
         ]}
       >
-        <Text style={styles.appName}>Biblical Facts</Text>
+        <Text style={styles.appName}>Melhik</Text>
         <Text style={styles.appSubtitle}>Evangelism Tool</Text>
       </Animated.View>
 
