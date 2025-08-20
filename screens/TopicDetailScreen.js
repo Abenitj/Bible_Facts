@@ -14,8 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
 import ZoomableText from '../components/ZoomableText';
-// import TextWithBibleVerses from '../components/TextWithBibleVerses';
+import TextWithBibleVerses from '../components/TextWithBibleVerses';
 import { getTopicById } from '../src/database/simpleData';
+import { mockBibleVerses } from '../src/database/mockBibleVerses';
 
 const TopicDetailScreen = ({ navigation, route }) => {
   const { religion, topicId } = route.params;
@@ -136,12 +137,10 @@ const TopicDetailScreen = ({ navigation, route }) => {
             <View style={styles.separator} />
             
             <View style={styles.sectionContent}>
-              <ZoomableText 
+              <TextWithBibleVerses 
                 text={topic.content.explanation}
                 style={styles.explanationText}
-                minFontSize={14}
-                maxFontSize={28}
-                initialFontSize={16}
+                verseData={mockBibleVerses}
               />
             </View>
             

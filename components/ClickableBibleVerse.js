@@ -47,13 +47,19 @@ const ClickableBibleVerse = ({ verse, text, explanation, style }) => {
         visible={modalVisible}
         onRequestClose={closeModal}
       >
-        <Animated.View 
+        <TouchableOpacity 
           style={[
             styles.modalOverlay,
             { opacity: fadeAnim }
           ]}
+          activeOpacity={1}
+          onPress={closeModal}
         >
-          <View style={styles.modalContent}>
+          <TouchableOpacity 
+            style={styles.modalContent}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
               <AmharicText variant="subheading" style={styles.modalTitle}>
                 {verse}
@@ -81,8 +87,8 @@ const ClickableBibleVerse = ({ verse, text, explanation, style }) => {
                 </View>
               )}
             </ScrollView>
-          </View>
-        </Animated.View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </>
   );
