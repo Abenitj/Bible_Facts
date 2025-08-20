@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Animated,
 } from 'react-native';
 import AmharicText from '../src/components/AmharicText';
 
@@ -14,23 +13,8 @@ const AppBar = ({
   showMenu = false, 
   onMenuPress 
 }) => {
-  const [fadeAnim] = React.useState(new Animated.Value(0));
-
-  React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
   return (
-    <Animated.View 
-      style={[
-        styles.appBar,
-        { opacity: fadeAnim }
-      ]}
-    >
+    <View style={styles.appBar}>
       <View style={styles.leftSection}>
         {showBack && (
           <TouchableOpacity
@@ -64,7 +48,7 @@ const AppBar = ({
       <View style={styles.rightSection}>
         {/* Placeholder for future right-side buttons */}
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -99,7 +83,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   backIcon: {
     fontSize: 28,
@@ -113,7 +96,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   menuIcon: {
     width: 20,

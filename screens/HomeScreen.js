@@ -2,19 +2,90 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  RefreshControl,
   Animated,
-  Dimensions
+  RefreshControl,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
-import { getReligions, initDatabase, initializeSampleData } from '../src/database/simpleData';
+import { getReligions, initializeSampleData } from '../src/database/simpleData';
 import SyncService from '../src/services/SyncService';
 
-const { width } = Dimensions.get('window');
+// ReligionCard component with animation
+const ReligionCard = ({ item, index, onPress }) => {
+  const [scaleValue] = useState(new Animated.Value(1));
+  const [opacityValue] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    // Staggered animation for cards
+    Animated.sequence([
+      Animated.delay(index * 100),
+      Animated.parallel([
+        Animated.timing(opacityValue, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleValue, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleValue, {
+      toValue: 0.95,
+      tension: 100,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      tension: 100,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View
+      style={[
+        styles.religionCard,
+        {
+          opacity: opacityValue,
+          transform: [{ scale: scaleValue }],
+        },
+      ]}
+    >
+      <TouchableOpacity
+        style={styles.card}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={0.9}
+      >
+        <View style={styles.content}>
+          <AmharicText variant="subheading" style={styles.title}>{item.name}</AmharicText>
+          <AmharicText variant="caption" style={styles.description}>{item.description}</AmharicText>
+        </View>
+        
+        <View style={styles.arrowContainer}>
+          <Ionicons name="chevron-forward" size={20} color="#8B4513" />
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 const HomeScreen = ({ navigation }) => {
   const [religions, setReligions] = useState([]);
@@ -23,18 +94,18 @@ const HomeScreen = ({ navigation }) => {
   const [slideAnim] = useState(new Animated.Value(30));
 
   useEffect(() => {
-    initializeApp();
+    initializeScreen();
   }, []);
 
-  const initializeApp = async () => {
+  const initializeScreen = async () => {
+    console.log('HomeScreen: Starting initialization...');
+    
     try {
-      console.log('HomeScreen: Starting initialization...');
-      
       // Initialize sample data
       await initializeSampleData();
       console.log('HomeScreen: Sample data initialized');
       
-      // Load religions from database
+      // Load religions
       await loadReligions();
       console.log('HomeScreen: Religions loaded');
       
@@ -46,7 +117,7 @@ const HomeScreen = ({ navigation }) => {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.spring(slideAnim, {
@@ -58,21 +129,7 @@ const HomeScreen = ({ navigation }) => {
       ]).start();
       console.log('HomeScreen: Animation started');
     } catch (error) {
-      console.error('Error initializing HomeScreen:', error);
-      // Start animation even if there's an error
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      console.error('HomeScreen initialization failed:', error);
     }
   };
 
@@ -102,94 +159,60 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const renderReligionCard = ({ item, index }) => (
-    <Animated.View
+    <ReligionCard 
+      item={item} 
+      index={index} 
+      onPress={() => navigateToReligion(item)}
+    />
+  );
+
+  const renderHeader = () => (
+    <Animated.View 
       style={[
-        styles.religionCard,
+        styles.welcomeSection,
         {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
         },
       ]}
     >
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => navigateToReligion(item)}
-        activeOpacity={0.9}
-      >
-        <View style={styles.iconContainer}>
-          <AmharicText style={styles.icon}>{item.icon}</AmharicText>
-        </View>
-        
-        <View style={styles.content}>
-          <AmharicText variant="subheading" style={styles.title}>{item.name}</AmharicText>
-          <AmharicText variant="caption" style={styles.description}>{item.description}</AmharicText>
-        </View>
-        
-        <View style={styles.arrowContainer}>
-          <AmharicText style={styles.arrow}>›</AmharicText>
-        </View>
-      </TouchableOpacity>
+      <AmharicText variant="heading" style={styles.welcomeTitle}>Melhik ን እንኳን በደህና መጡ</AmharicText>
+      <AmharicText variant="body" style={styles.welcomeSubtitle}>
+        ክርስትናን ለማስረዳት የሚያገለግል ሁለገብ መሳሪያ
+      </AmharicText>
     </Animated.View>
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="book-outline" size={64} color="#8B4513" />
+      <AmharicText variant="subheading" style={styles.emptyTitle}>ሃይማኖቶች የሉም</AmharicText>
+      <AmharicText variant="body" style={styles.emptyText}>
+        ሃይማኖቶች በቅርቡ ይጨመራሉ።
+      </AmharicText>
+    </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <AppBar 
-        title="Evangelism Tool" 
+        title="Melhik" 
         showMenu={true}
         onMenuPress={() => navigation.openDrawer()}
       />
       
-      <ScrollView
-        style={styles.scrollView}
+      <FlatList
+        data={religions}
+        renderItem={renderReligionCard}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
-      >
-        {/* Welcome Section */}
-        <Animated.View 
-          style={[
-            styles.welcomeSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <AmharicText variant="heading" style={styles.welcomeTitle}>Melhik ን እንኳን በደህና መጡ</AmharicText>
-          <AmharicText variant="body" style={styles.welcomeSubtitle}>
-            ክርስትናን ለማስረዳት የሚያገለግል ሁለገብ መሳሪያ
-          </AmharicText>
-        </Animated.View>
-
-        {/* Religions List */}
-        <View style={styles.religionsContainer}>
-          <AmharicText variant="subheading" style={styles.sectionTitle}>ሃይማኖት ወይም አመለካከት ይምረጡ</AmharicText>
-          <AmharicText variant="caption" style={styles.sectionSubtitle}>
-            የተለመዱ ጥያቄዎችን እና የመጽሐፍ ቅዱስ መልሶችን ለማግኘት ሃይማኖት ይምረጡ
-          </AmharicText>
-          
-          {religions.length > 0 ? (
-            religions.map((religion, index) => (
-              <View key={religion.id}>
-                {renderReligionCard({ item: religion, index })}
-              </View>
-            ))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <AmharicText variant="subheading" style={styles.emptyTitle}>
-                ሃይማኖቶች አልተገኙም
-              </AmharicText>
-              <AmharicText variant="body" style={styles.emptyText}>
-                ይዘት እያደረገ ነው፣ እባክዎ ያስተናግዱ...
-              </AmharicText>
-            </View>
-          )}
-        </View>
-
-
-      </ScrollView>
+      />
     </SafeAreaView>
   );
 };
@@ -199,24 +222,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F0E6D2',
   },
-  scrollView: {
-    flex: 1,
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    flexGrow: 1,
   },
   welcomeSection: {
     padding: 24,
-    backgroundColor: '#F5F5DC',
     margin: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#A0522D',
-    shadowColor: '#654321',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
   },
   welcomeTitle: {
     fontSize: 24,
@@ -231,56 +246,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  religionsContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#654321',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#8B4513',
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
   religionCard: {
     marginVertical: 6,
   },
   card: {
-    backgroundColor: '#F5F5DC',
-    borderRadius: 16,
-    padding: 20,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderLeftWidth: 4,
     borderLeftColor: '#8B4513',
-    shadowColor: '#654321',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.15)',
+    backgroundColor: '#F5F0E0',
+    borderRadius: 12,
+    shadowColor: '#8B4513',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#8B4513',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  icon: {
-    fontSize: 24,
-    color: '#FFFFFF',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   content: {
     flex: 1,
@@ -300,64 +286,30 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#A0522D',
+    backgroundColor: '#DEB887',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  arrow: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  quickActionsContainer: {
-    paddingVertical: 20,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 16,
-  },
-  quickActionButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 4,
-    shadowColor: '#8B4513',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  quickActionIcon: {
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  quickActionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#8B4513',
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
+    marginTop: 40,
   },
   emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     color: '#8B4513',
+    marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
+    fontSize: 16,
     color: '#A0522D',
     textAlign: 'center',
     paddingHorizontal: 32,
   },
-
 });
 
 export default HomeScreen;

@@ -4,9 +4,10 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Animated
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import TopicCard from '../components/TopicCard';
 import AmharicText from '../src/components/AmharicText';
@@ -81,7 +82,7 @@ const TopicsScreen = ({ navigation, route }) => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <AmharicText style={styles.emptyIcon}>📖</AmharicText>
+            <Ionicons name="book-outline" size={64} color="#8B4513" />
             <AmharicText variant="subheading" style={styles.emptyTitle}>ርዕሰ መልእክቶች የሉም</AmharicText>
             <AmharicText variant="body" style={styles.emptyText}>
               ለዚህ ሃይማኖት ርዕሰ መልእክቶች በቅርቡ ይጨመራሉ።
@@ -96,7 +97,7 @@ const TopicsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5DC',
+    backgroundColor: '#F0E6D2',
   },
   topicsList: {
     paddingVertical: 16,
@@ -104,6 +105,8 @@ const styles = StyleSheet.create({
   listHeader: {
     paddingHorizontal: 20,
     paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
   },
   listHeaderTitle: {
     fontSize: 18,

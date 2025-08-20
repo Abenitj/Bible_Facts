@@ -1,56 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   Switch,
   Alert,
-  ScrollView,
-  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StorageService } from '../utils/storage';
+import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsScreen = ({ navigation }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  useEffect(() => {
-    loadTheme();
-  }, []);
-
-  const loadTheme = async () => {
-    const theme = await StorageService.getTheme();
-    setIsDarkMode(theme === 'dark');
-  };
-
-  const toggleTheme = async (value) => {
-    setIsDarkMode(value);
-    const theme = value ? 'dark' : 'light';
-    await StorageService.setTheme(theme);
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
   };
 
   const clearAllData = () => {
     Alert.alert(
-      'Clear All Data',
-      'This will reset all your settings. This action cannot be undone.',
+      'Clear All Settings',
+      'Are you sure you want to clear all settings? This action cannot be undone.',
       [
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Clear All',
+          text: 'Clear',
           style: 'destructive',
           onPress: async () => {
             try {
-              // Reset theme to light
-              await StorageService.setTheme('light');
-              setIsDarkMode(false);
-              Alert.alert('Success', 'All settings have been reset');
+              await AsyncStorage.clear();
+              Alert.alert('Success', 'All settings have been cleared.');
             } catch (error) {
-              Alert.alert('Error', 'Failed to clear settings');
+              Alert.alert('Error', 'Failed to clear settings.');
             }
           },
         },
@@ -58,39 +42,41 @@ const SettingsScreen = ({ navigation }) => {
     );
   };
 
+  const contactSupport = () => {
+    Alert.alert('Contact Support', 'Support feature coming soon!');
+  };
+
   const openPrivacyPolicy = () => {
-    // You can replace this with your actual privacy policy URL
-    Alert.alert('Privacy Policy', 'Privacy policy will be available soon.');
+    Alert.alert('Privacy Policy', 'Privacy policy coming soon!');
   };
 
   const openTermsOfService = () => {
-    // You can replace this with your actual terms of service URL
-    Alert.alert('Terms of Service', 'Terms of service will be available soon.');
+    Alert.alert('Terms of Service', 'Terms of service coming soon!');
   };
 
-  const contactSupport = () => {
-    Alert.alert('Contact Support', 'Support contact information will be available soon.');
-  };
-
-  const renderSettingItem = ({ icon, title, subtitle, onPress, showSwitch = false, switchValue = false, onSwitchChange }) => (
-    <TouchableOpacity style={styles.settingItem} onPress={onPress} disabled={showSwitch}>
+  const renderSettingItem = ({ icon, title, subtitle, showSwitch = false, switchValue = false, onSwitchChange, onPress }) => (
+    <TouchableOpacity
+      style={styles.settingItem}
+      onPress={onPress}
+      disabled={!onPress}
+    >
       <View style={styles.settingItemLeft}>
-        <Text style={styles.settingIcon}>{icon}</Text>
+        <Ionicons name={icon} size={24} color="#8B4513" style={styles.settingIcon} />
         <View style={styles.settingTextContainer}>
           <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+          <Text style={styles.settingSubtitle}>{subtitle}</Text>
         </View>
       </View>
       {showSwitch ? (
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: '#ecf0f1', true: '#3498db' }}
-          thumbColor={switchValue ? '#ffffff' : '#ffffff'}
+          trackColor={{ false: '#D2B48C', true: '#8B4513' }}
+          thumbColor={switchValue ? '#FFFFFF' : '#F5F5DC'}
         />
-      ) : (
-        <Text style={styles.settingArrow}>›</Text>
-      )}
+      ) : onPress ? (
+        <Ionicons name="chevron-forward" size={20} color="#A0522D" style={styles.settingArrow} />
+      ) : null}
     </TouchableOpacity>
   );
 
@@ -107,7 +93,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Appearance</Text>
           {renderSettingItem({
-            icon: '🌙',
+            icon: 'moon-outline',
             title: 'Dark Mode',
             subtitle: 'Switch between light and dark themes',
             showSwitch: true,
@@ -120,7 +106,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data Management</Text>
           {renderSettingItem({
-            icon: '🗑️',
+            icon: 'trash-outline',
             title: 'Clear All Settings',
             subtitle: 'Reset all app settings',
             onPress: clearAllData
@@ -131,19 +117,19 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           {renderSettingItem({
-            icon: '📧',
+            icon: 'mail-outline',
             title: 'Contact Support',
             subtitle: 'Get help with the app',
             onPress: contactSupport
           })}
           {renderSettingItem({
-            icon: '📄',
+            icon: 'document-text-outline',
             title: 'Privacy Policy',
             subtitle: 'Read our privacy policy',
             onPress: openPrivacyPolicy
           })}
           {renderSettingItem({
-            icon: '📋',
+            icon: 'document-outline',
             title: 'Terms of Service',
             subtitle: 'Read our terms of service',
             onPress: openTermsOfService
@@ -154,12 +140,12 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
           {renderSettingItem({
-            icon: '📖',
+            icon: 'book-outline',
             title: 'Melhik',
             subtitle: 'Version 1.0.0'
           })}
           {renderSettingItem({
-            icon: '💡',
+            icon: 'bulb-outline',
             title: 'Discover amazing biblical truths',
             subtitle: 'Learn fascinating facts from the Bible'
           })}
@@ -225,11 +211,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F5F5DC',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#D2B48C',
+    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
   },
   settingItemLeft: {
     flexDirection: 'row',

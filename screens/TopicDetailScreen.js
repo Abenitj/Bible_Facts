@@ -4,12 +4,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated
+  Animated,
+  Share,
+  Alert,
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
-import BibleReference from '../components/BibleReference';
 import AmharicText from '../src/components/AmharicText';
+// import TextWithBibleVerses from '../components/TextWithBibleVerses';
 import { getTopicById } from '../src/database/simpleData';
 
 const TopicDetailScreen = ({ navigation, route }) => {
@@ -17,6 +21,8 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [topic, setTopic] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
+  // const [scale] = useState(new Animated.Value(1));
+  // const [lastScale, setLastScale] = useState(1);
 
   useEffect(() => {
     loadTopic();
@@ -45,6 +51,34 @@ const TopicDetailScreen = ({ navigation, route }) => {
       console.error('Error loading topic:', error);
     }
   };
+
+  const handleShare = async () => {
+    if (!topic) return;
+
+    try {
+      const shareContent = {
+        title: topic.title,
+        message: `${topic.title}\n\nጥያቄ: ${topic.description}\n\nዝርዝር ማብራሪያ:\n${topic.content.explanation}\n\nየመጽሐፍ ቅዱስ ጥቅሶች:\n${topic.references.map(ref => ref.verse).join(', ')}\n\nMelhik - Evangelism Tool`,
+        url: 'https://melhik.app', // Replace with actual app URL when available
+      };
+
+      const result = await Share.share(shareContent);
+      
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          console.log('Shared successfully');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log('Share dismissed');
+      }
+    } catch (error) {
+      Alert.alert('ስህተት', 'ይዘቱን ለማጋራት አልተቻለም።');
+    }
+  };
+
+  // Gesture handlers removed for now to fix import issues
 
   if (!topic) {
     return (
@@ -75,114 +109,51 @@ const TopicDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Question */}
-        <Animated.View 
-          style={[
-            styles.questionContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <AmharicText variant="caption" style={styles.questionLabel}>ጥያቄ:</AmharicText>
-          <AmharicText variant="subheading" style={styles.questionText}>{topic.description}</AmharicText>
-        </Animated.View>
+          {/* Question Section */}
+          <Animated.View 
+            style={[
+              styles.questionContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <AmharicText variant="subheading" style={styles.questionText}>{topic.description}</AmharicText>
+          </Animated.View>
 
-        {/* Concept */}
-        <Animated.View 
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <AmharicText style={styles.sectionIcon}>💡</AmharicText>
-            <AmharicText variant="subheading" style={styles.sectionTitle}>የመጽሐፍ ቅዱስ ጽንሰ ሐሳብ</AmharicText>
-          </View>
-          <View style={styles.sectionContent}>
-            <AmharicText variant="body" style={styles.sectionText}>{topic.content.concept}</AmharicText>
-          </View>
-        </Animated.View>
+          {/* Description Section */}
+          <Animated.View 
+            style={[
+              styles.descriptionContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.sectionHeader}>
+              <Ionicons name="create-outline" size={24} color="#8B4513" style={styles.sectionIcon} />
+              <AmharicText variant="subheading" style={styles.sectionTitle}>ዝርዝር ማብራሪያ</AmharicText>
+              <TouchableOpacity onPress={handleShare} style={styles.questionShareButton}>
+                <Ionicons name="share-outline" size={20} color="#8B4513" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.sectionContent}>
+              <AmharicText style={styles.explanationText}>
+                {topic.content.explanation}
+              </AmharicText>
+            </View>
+          </Animated.View>
 
-        {/* Explanation */}
-        <Animated.View 
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <AmharicText style={styles.sectionIcon}>📝</AmharicText>
-            <AmharicText variant="subheading" style={styles.sectionTitle}>ዝርዝር ማብራሪያ</AmharicText>
-          </View>
-          <View style={styles.sectionContent}>
-            <AmharicText variant="body" style={styles.sectionText}>{topic.content.explanation}</AmharicText>
-          </View>
-        </Animated.View>
-
-        {/* Key Points */}
-        <Animated.View 
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <AmharicText style={styles.sectionIcon}>🎯</AmharicText>
-            <AmharicText variant="subheading" style={styles.sectionTitle}>ዋና ነጥቦች</AmharicText>
-          </View>
-          <View style={styles.sectionContent}>
-            {topic.content.keyPoints.map((point, index) => (
-              <View key={index} style={styles.keyPointContainer}>
-                <AmharicText style={styles.keyPointBullet}>•</AmharicText>
-                <AmharicText variant="body" style={styles.keyPointText}>{point}</AmharicText>
-              </View>
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Bible References */}
-        <Animated.View 
-          style={[
-            styles.section,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.sectionHeader}>
-            <AmharicText style={styles.sectionIcon}>📖</AmharicText>
-            <AmharicText variant="subheading" style={styles.sectionTitle}>የመጽሐፍ ቅዱስ ጥቅሶች</AmharicText>
-          </View>
-          <View style={styles.sectionContent}>
-            <AmharicText variant="caption" style={styles.referencesIntro}>
-              ሙሉ ጽሑፍ እና ማብራሪያ ለማንበብ ጥቅስ ይንኩ:
+          {/* Footer */}
+          <View style={styles.footer}>
+            <AmharicText variant="body" style={styles.footerText}>
+              "እርሱን በልባችሁ ጌታ አድርጉ፥ በልባችሁም ያለውን ተስፋ ለሚጠይቁ ሁሉ ለመግለጫ ሁልጊዜ ዝግጁ ሆናችሁ፥ ግን በደጋፊነትና በፍርሃት አድርጉ።"
             </AmharicText>
-            {topic.references.map((reference, index) => (
-              <BibleReference key={index} reference={reference} />
-            ))}
+            <AmharicText variant="caption" style={styles.footerReference}>- 1 ጴጥሮስ 3:15</AmharicText>
           </View>
-        </Animated.View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <AmharicText variant="body" style={styles.footerText}>
-            "እርሱን በልባችሁ ጌታ አድርጉ፥ በልባችሁም ያለውን ተስፋ ለሚጠይቁ ሁሉ ለመግለጫ ሁልጊዜ ዝግጁ ሆናችሁ፥ ግን በደጋፊነትና በፍርሃት አድርጉ።"
-          </AmharicText>
-          <AmharicText variant="caption" style={styles.footerReference}>- 1 ጴጥሮስ 3:15</AmharicText>
-        </View>
-      </ScrollView>
+        </ScrollView>
     </SafeAreaView>
   );
 };
@@ -190,7 +161,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5DC',
+    backgroundColor: '#F0E6D2',
   },
   loadingContainer: {
     flex: 1,
@@ -204,28 +175,21 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   questionContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#DEB887',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
+    backgroundColor: '#F5F0E0',
+    borderRadius: 12,
     shadowColor: '#8B4513',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  questionLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#8B4513',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    position: 'relative',
   },
   questionText: {
     fontSize: 18,
@@ -233,26 +197,38 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '600',
   },
-  section: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+  questionShareButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    zIndex: 1,
+  },
+  descriptionContainer: {
     padding: 20,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#DEB887',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
+    backgroundColor: '#F5F0E0',
+    borderRadius: 12,
     shadowColor: '#8B4513',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    justifyContent: 'space-between',
   },
   sectionIcon: {
     fontSize: 24,
@@ -262,47 +238,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#8B4513',
+    flex: 1,
+  },
+  shareButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
   },
   sectionContent: {
     flex: 1,
   },
-  sectionText: {
+  explanationText: {
     fontSize: 16,
     color: '#A0522D',
     lineHeight: 24,
-  },
-  keyPointContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  keyPointBullet: {
-    fontSize: 18,
-    color: '#8B4513',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  keyPointText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#A0522D',
-    lineHeight: 24,
-  },
-  referencesIntro: {
-    fontSize: 14,
-    color: '#A0522D',
-    fontStyle: 'italic',
-    marginBottom: 16,
-    lineHeight: 20,
   },
   footer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     padding: 20,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: '#DEB887',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(139, 69, 19, 0.2)',
   },
   footerText: {
     fontSize: 16,

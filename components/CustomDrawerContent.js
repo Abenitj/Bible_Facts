@@ -4,22 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Animated,
 } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import AmharicText from '../src/components/AmharicText';
 
 const CustomDrawerContent = (props) => {
-  const [fadeAnim] = React.useState(new Animated.Value(0));
-
-  React.useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
   const navigateToScreen = (screenName) => {
     props.navigation.navigate(screenName);
     props.navigation.closeDrawer();
@@ -37,23 +26,13 @@ const CustomDrawerContent = (props) => {
       contentContainerStyle={styles.contentContainer}
     >
       {/* App Branding */}
-      <Animated.View 
-        style={[
-          styles.brandingSection,
-          { opacity: fadeAnim }
-        ]}
-      >
+      <View style={styles.brandingSection}>
         <AmharicText variant="heading" style={styles.appName}>Melhik</AmharicText>
         <AmharicText variant="caption" style={styles.appSubtitle}>የሃይማኖት መሳሪያ</AmharicText>
-      </Animated.View>
+      </View>
 
       {/* Navigation Menu */}
-      <Animated.View 
-        style={[
-          styles.navigationSection,
-          { opacity: fadeAnim }
-        ]}
-      >
+      <View style={styles.navigationSection}>
         {menuItems.map((item, index) => (
           <View key={index}>
             <TouchableOpacity
@@ -66,7 +45,7 @@ const CustomDrawerContent = (props) => {
             {index < menuItems.length - 1 && <View style={styles.separator} />}
           </View>
         ))}
-      </Animated.View>
+      </View>
     </DrawerContentScrollView>
   );
 };

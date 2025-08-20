@@ -7,6 +7,7 @@ import {
   Animated,
   Dimensions
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -69,17 +70,13 @@ const TopicCard = ({ topic, onPress, index = 0 }) => {
         onPressOut={handlePressOut}
         activeOpacity={0.9}
       >
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>{topic.icon}</Text>
-        </View>
-        
         <View style={styles.content}>
           <Text style={styles.title}>{topic.title}</Text>
           <Text style={styles.description}>{topic.description}</Text>
         </View>
         
         <View style={styles.arrowContainer}>
-          <Text style={styles.arrow}>›</Text>
+          <Ionicons name="chevron-forward" size={20} color="#8B4513" />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -92,41 +89,23 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   card: {
-    backgroundColor: '#F5F5DC', // Beige background
-    borderRadius: 16,
-    padding: 20,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B4513',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.15)',
+    backgroundColor: '#F5F0E0',
+    borderRadius: 12,
     shadowColor: '#8B4513',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#DEB887',
-  },
-  iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#8B4513',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  icon: {
-    fontSize: 24,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   content: {
     flex: 1,
@@ -149,11 +128,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#DEB887',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  arrow: {
-    fontSize: 18,
-    color: '#8B4513',
-    fontWeight: 'bold',
   },
 });
 
