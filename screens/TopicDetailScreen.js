@@ -8,11 +8,12 @@ import {
   Share,
   Alert,
 } from 'react-native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { PanGestureHandler, State, PinchGestureHandler } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
+import ZoomableText from '../components/ZoomableText';
 // import TextWithBibleVerses from '../components/TextWithBibleVerses';
 import { getTopicById } from '../src/database/simpleData';
 
@@ -21,8 +22,6 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [topic, setTopic] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
-  // const [scale] = useState(new Animated.Value(1));
-  // const [lastScale, setLastScale] = useState(1);
 
   useEffect(() => {
     loadTopic();
@@ -78,7 +77,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
     }
   };
 
-  // Gesture handlers removed for now to fix import issues
+  // Zoom functionality moved to ZoomableText component
 
   if (!topic) {
     return (
@@ -109,19 +108,6 @@ const TopicDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-          {/* Question Section */}
-          <Animated.View 
-            style={[
-              styles.questionContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <AmharicText variant="subheading" style={styles.questionText}>{topic.description}</AmharicText>
-          </Animated.View>
-
           {/* Description Section */}
           <Animated.View 
             style={[
@@ -132,27 +118,38 @@ const TopicDetailScreen = ({ navigation, route }) => {
               },
             ]}
           >
-            <View style={styles.sectionHeader}>
-              <Ionicons name="create-outline" size={24} color="#8B4513" style={styles.sectionIcon} />
+            {/* Question Section */}
+            <View style={styles.questionSection}>
+              <AmharicText variant="subheading" style={styles.questionText}>{topic.description}</AmharicText>
+            </View>
+            
+            {/* Separator Above */}
+            <View style={styles.separator} />
+            
+            {/* Description Title */}
+            <View style={styles.descriptionTitleSection}>
+              <Ionicons name="create-outline" size={20} color="#8B4513" style={styles.sectionIcon} />
               <AmharicText variant="subheading" style={styles.sectionTitle}>ዝርዝር ማብራሪያ</AmharicText>
-              <TouchableOpacity onPress={handleShare} style={styles.questionShareButton}>
-                <Ionicons name="share-outline" size={20} color="#8B4513" />
-              </TouchableOpacity>
             </View>
+            
+            {/* Separator Below */}
+            <View style={styles.separator} />
+            
             <View style={styles.sectionContent}>
-              <AmharicText style={styles.explanationText}>
-                {topic.content.explanation}
-              </AmharicText>
+              <ZoomableText 
+                text={topic.content.explanation}
+                style={styles.explanationText}
+                minFontSize={14}
+                maxFontSize={28}
+                initialFontSize={16}
+              />
             </View>
+            
+            {/* Share Button at Bottom */}
+            <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+              <Ionicons name="share-social" size={18} color="#8B4513" />
+            </TouchableOpacity>
           </Animated.View>
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            <AmharicText variant="body" style={styles.footerText}>
-              "እርሱን በልባችሁ ጌታ አድርጉ፥ በልባችሁም ያለውን ተስፋ ለሚጠይቁ ሁሉ ለመግለጫ ሁልጊዜ ዝግጁ ሆናችሁ፥ ግን በደጋፊነትና በፍርሃት አድርጉ።"
-            </AmharicText>
-            <AmharicText variant="caption" style={styles.footerReference}>- 1 ጴጥሮስ 3:15</AmharicText>
-          </View>
         </ScrollView>
     </SafeAreaView>
   );
@@ -172,30 +169,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
+    padding: 12,
   },
-  questionContainer: {
-    padding: 20,
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
-    backgroundColor: '#F5F0E0',
-    borderRadius: 12,
-    shadowColor: '#8B4513',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-    position: 'relative',
+  // questionContainer removed - question now included in description container
+  questionSection: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B4513',
   },
   questionText: {
     fontSize: 18,
-    color: '#8B4513',
+    color: '#654321',
     lineHeight: 26,
-    fontWeight: '600',
+    fontWeight: 'bold',
+  },
+  descriptionTitleSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(139, 69, 19, 0.2)',
+    marginVertical: 8,
   },
   questionShareButton: {
     position: 'absolute',
@@ -211,18 +211,7 @@ const styles = StyleSheet.create({
   descriptionContainer: {
     padding: 20,
     marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
-    backgroundColor: '#F5F0E0',
-    borderRadius: 12,
-    shadowColor: '#8B4513',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
+    position: 'relative',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -241,39 +230,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   shareButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
+    zIndex: 1,
   },
   sectionContent: {
     flex: 1,
+    paddingBottom: 60, // Add space for the share button
   },
   explanationText: {
     fontSize: 16,
     color: '#A0522D',
     lineHeight: 24,
   },
-  footer: {
-    padding: 20,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(139, 69, 19, 0.2)',
-  },
-  footerText: {
-    fontSize: 16,
-    color: '#8B4513',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  footerReference: {
-    fontSize: 14,
-    color: '#A0522D',
-    fontWeight: 'bold',
-  },
+  // Footer styles removed
 });
 
 export default TopicDetailScreen;
