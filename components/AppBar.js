@@ -1,12 +1,11 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import AmharicText from '../src/components/AmharicText';
 
 const AppBar = ({ 
   title, 
@@ -26,54 +25,50 @@ const AppBar = ({
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Animated.View 
-        style={[
-          styles.appBar,
-          { opacity: fadeAnim }
-        ]}
-      >
-        <View style={styles.leftSection}>
-          {showBack && (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={onBackPress}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.backIcon}>‹</Text>
-            </TouchableOpacity>
-          )}
-          {showMenu && (
-            <TouchableOpacity
-              style={styles.menuButton}
-              onPress={onMenuPress}
-              activeOpacity={0.7}
-            >
-              <View style={styles.menuIcon}>
-                <View style={styles.menuLine} />
-                <View style={styles.menuLine} />
-                <View style={styles.menuLine} />
-              </View>
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        <View style={styles.titleSection}>
-          <Text style={styles.title}>{title}</Text>
-        </View>
-        
-        <View style={styles.rightSection}>
-          {/* Placeholder for future right-side buttons */}
-        </View>
-      </Animated.View>
-    </SafeAreaView>
+    <Animated.View 
+      style={[
+        styles.appBar,
+        { opacity: fadeAnim }
+      ]}
+    >
+      <View style={styles.leftSection}>
+        {showBack && (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBackPress}
+            activeOpacity={0.6}
+          >
+            <AmharicText style={styles.backIcon}>‹</AmharicText>
+          </TouchableOpacity>
+        )}
+        {showMenu && (
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={onMenuPress}
+            activeOpacity={0.6}
+          >
+            <View style={styles.menuIcon}>
+              <View style={[styles.menuLine, { marginBottom: 4 }]} />
+              <View style={[styles.menuLine, { marginBottom: 4 }]} />
+              <View style={styles.menuLine} />
+            </View>
+          </TouchableOpacity>
+        )}
+      </View>
+      
+      <View style={styles.titleSection}>
+        <AmharicText variant="subheading" style={styles.title}>{title}</AmharicText>
+        <View style={styles.titleIndicator} />
+      </View>
+      
+      <View style={styles.rightSection}>
+        {/* Placeholder for future right-side buttons */}
+      </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#654321',
-  },
   appBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -81,14 +76,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#654321',
+    borderBottomWidth: 1,
+    borderBottomColor: '#8B4513',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
     elevation: 5,
+    position: 'relative',
   },
   leftSection: {
     flexDirection: 'row',
@@ -100,37 +98,53 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   backIcon: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginLeft: -2,
   },
   menuButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   menuIcon: {
-    width: 24,
-    height: 18,
+    width: 20,
+    height: 16,
     justifyContent: 'space-between',
   },
   menuLine: {
     width: '100%',
     height: 2,
     backgroundColor: '#FFFFFF',
+    borderRadius: 1,
   },
   titleSection: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 16,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  titleIndicator: {
+    width: 20,
+    height: 2,
+    backgroundColor: '#F5F5DC',
+    borderRadius: 1,
+    alignSelf: 'center',
   },
   rightSection: {
     minWidth: 40,
