@@ -176,10 +176,6 @@ const HomeScreen = ({ navigation }) => {
         },
       ]}
     >
-      <AmharicText variant="heading" style={styles.welcomeTitle}>Melhik ን እንኳን በደህና መጡ</AmharicText>
-      <AmharicText variant="body" style={styles.welcomeSubtitle}>
-        ክርስትናን ለማስረዳት የሚያገለግል ሁለገብ መሳሪያ
-      </AmharicText>
     </Animated.View>
   );
 
@@ -198,7 +194,7 @@ const HomeScreen = ({ navigation }) => {
       <AppBar 
         title="Melhik" 
         showMenu={true}
-        onMenuPress={() => navigation.openDrawer()}
+        onMenuPress={() => navigation.navigate('Settings')}
       />
       
       <FlatList

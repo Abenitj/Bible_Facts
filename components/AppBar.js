@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 
 const AppBar = ({ 
@@ -22,7 +23,7 @@ const AppBar = ({
             onPress={onBackPress}
             activeOpacity={0.6}
           >
-            <AmharicText style={styles.backIcon}>‹</AmharicText>
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         )}
         {showMenu && (
@@ -83,12 +84,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginLeft: -2,
   },
   menuButton: {
     width: 40,

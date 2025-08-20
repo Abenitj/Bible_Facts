@@ -22,55 +22,33 @@ import CustomDrawerContent from './components/CustomDrawerContent';
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
-// Main App with Drawer Navigation only
+// Main App with Stack Navigation for proper back navigation
 function MainApp() {
   return (
-    <Drawer.Navigator
+    <Stack.Navigator
       initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: '#F0E6D2' },
-        drawerStyle: {
-          backgroundColor: '#F0E6D2',
-          width: 280,
-        },
-        drawerActiveBackgroundColor: '#D2B48C',
-        drawerActiveTintColor: '#654321',
-        drawerInactiveTintColor: '#8B4513',
       }}
     >
-      <Drawer.Screen 
+      <Stack.Screen 
         name="Home" 
         component={HomeScreen}
-        options={{
-          title: 'ዋና ገጽ',
-        }}
       />
-      <Drawer.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{
-          title: 'ቅንብሮች',
-        }}
-      />
-      <Drawer.Screen 
+      <Stack.Screen 
         name="Topics" 
         component={TopicsScreen}
-        options={{
-          title: 'ርዕሰ መልእክቶች',
-          drawerItemStyle: { display: 'none' }
-        }}
       />
-      <Drawer.Screen 
+      <Stack.Screen 
         name="TopicDetail" 
         component={TopicDetailScreen}
-        options={{
-          title: 'ዝርዝር መረጃ',
-          drawerItemStyle: { display: 'none' }
-        }}
       />
-    </Drawer.Navigator>
+      <Stack.Screen 
+        name="Settings" 
+        component={SettingsScreen}
+      />
+    </Stack.Navigator>
   );
 }
 

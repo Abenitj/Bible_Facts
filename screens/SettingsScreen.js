@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
+import SwipeToGoBack from '../components/SwipeToGoBack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsScreen = ({ navigation }) => {
@@ -81,14 +82,15 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AppBar 
-        title="Settings"
-        showBack={true}
-        onBackPress={() => navigation.goBack()}
-      />
+    <SwipeToGoBack onSwipeBack={() => navigation.goBack()}>
+      <SafeAreaView style={styles.container}>
+        <AppBar 
+          title="Settings"
+          showBack={true}
+          onBackPress={() => navigation.goBack()}
+        />
 
-      <ScrollView style={styles.scrollView}>
+        <ScrollView style={styles.scrollView}>
         {/* Appearance Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Appearance</Text>
@@ -162,6 +164,7 @@ const SettingsScreen = ({ navigation }) => {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </SwipeToGoBack>
   );
 };
 

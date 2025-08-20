@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import TopicCard from '../components/TopicCard';
 import AmharicText from '../src/components/AmharicText';
+import SwipeToGoBack from '../components/SwipeToGoBack';
 import { getTopicsByReligion } from '../src/database/simpleData';
 
 const TopicsScreen = ({ navigation, route }) => {
@@ -51,15 +52,16 @@ const TopicsScreen = ({ navigation, route }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AppBar 
-        title={religion.name}
-        showBack={true}
-        onBackPress={() => navigation.goBack()}
-      />
+    <SwipeToGoBack onSwipeBack={() => navigation.goBack()}>
+      <SafeAreaView style={styles.container}>
+        <AppBar 
+          title={religion.name}
+          showBack={true}
+          onBackPress={() => navigation.goBack()}
+        />
 
-      {/* Topics List */}
-      <FlatList
+        {/* Topics List */}
+        <FlatList
         data={topics}
         renderItem={renderTopic}
         keyExtractor={(item) => item.id}
@@ -89,8 +91,9 @@ const TopicsScreen = ({ navigation, route }) => {
             </AmharicText>
           </View>
         }
-      />
-    </SafeAreaView>
+              />
+      </SafeAreaView>
+    </SwipeToGoBack>
   );
 };
 
