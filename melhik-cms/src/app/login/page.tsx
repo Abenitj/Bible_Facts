@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -11,6 +13,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { darkMode } = useDarkMode()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,17 +56,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" 
+         style={{ 
+           background: darkMode 
+             ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
+             : 'linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)' 
+         }}>
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
+        <div className="text-center relative">
+          <div className="absolute top-0 right-0">
+            <DarkModeToggle />
+          </div>
           <h1 className="text-4xl font-bold text-white mb-2">Melhik CMS</h1>
           <p className="text-blue-200">Admin Dashboard Login</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        <div className="rounded-lg shadow-xl p-8" 
+             style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium mb-2"
+                     style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                 Username
               </label>
               <input
@@ -73,13 +86,19 @@ export default function LoginPage() {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
                 placeholder="Enter your username"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium mb-2"
+                     style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                 Password
               </label>
               <input
@@ -89,13 +108,23 @@ export default function LoginPage() {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
                 placeholder="Enter your password"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              <div className="border px-4 py-3 rounded-md"
+                   style={{
+                     backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                     borderColor: darkMode ? '#991b1b' : '#fecaca',
+                     color: darkMode ? '#fca5a5' : '#dc2626'
+                   }}>
                 {error}
               </div>
             )}
@@ -103,7 +132,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>

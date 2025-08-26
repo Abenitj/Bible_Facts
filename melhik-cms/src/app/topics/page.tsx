@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
+import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 interface Religion {
   id: number
@@ -47,6 +49,7 @@ export default function TopicsPage() {
   const [activeSection, setActiveSection] = useState('topics')
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
   const router = useRouter()
+  const { darkMode } = useDarkMode()
 
     useEffect(() => {
     // Check authentication
@@ -179,7 +182,7 @@ export default function TopicsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
         {/* Sidebar */}
         <Sidebar 
           user={user} 
@@ -188,10 +191,10 @@ export default function TopicsPage() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center overflow-hidden">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading topics...</p>
+            <p className="mt-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Loading topics...</p>
           </div>
         </div>
       </div>
@@ -199,7 +202,7 @@ export default function TopicsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
       {/* Sidebar */}
       <Sidebar 
         user={user} 
@@ -210,30 +213,42 @@ export default function TopicsPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="shadow-sm border-b" 
+                 style={{ 
+                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                   borderColor: darkMode ? '#374151' : '#e5e7eb'
+                 }}>
           <div className="px-6 py-4">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Topic Management</h1>
-                <p className="text-sm text-gray-600">Manage topics and content categories</p>
+                <h1 className="text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Topic Management</h1>
+                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Manage topics and content categories</p>
               </div>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <div className="flex items-center space-x-3">
+                <DarkModeToggle />
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Add Topic
               </button>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <div className="mb-6 border px-4 py-3 rounded-md"
+               style={{
+                 backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                 borderColor: darkMode ? '#991b1b' : '#fecaca',
+                 color: darkMode ? '#fca5a5' : '#dc2626'
+               }}>
             {error}
           </div>
         )}
@@ -241,23 +256,31 @@ export default function TopicsPage() {
         {/* Topic Form */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">
+            <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+                 style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+              <div className="px-6 py-4 border-b" 
+                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
                   {editingTopic ? 'Edit Topic' : 'Add New Topic'}
                 </h3>
               </div>
               
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Religion *
                   </label>
                   <select
                     required
                     value={formData.religionId}
                     onChange={(e) => setFormData(prev => ({ ...prev, religionId: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                   >
                     <option value={0}>Select a religion</option>
                     {religions.map((religion) => (
@@ -269,7 +292,8 @@ export default function TopicsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Title (Amharic) *
                   </label>
                   <input
@@ -277,33 +301,50 @@ export default function TopicsPage() {
                     required
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                     placeholder="ፍጹም አንድነት"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Title (English)
                   </label>
                   <input
                     type="text"
                     value={formData.titleEn}
                     onChange={(e) => setFormData(prev => ({ ...prev, titleEn: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                     placeholder="The Trinity"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                     placeholder="Brief description about this topic..."
                   />
                 </div>
@@ -330,19 +371,21 @@ export default function TopicsPage() {
         )}
 
         {/* Topics List */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+          <div className="px-6 py-4 border-b" 
+               style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+            <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
               All Topics ({topics.length})
             </h3>
           </div>
           
           {topics.length === 0 ? (
             <div className="p-8 text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              <p className="text-gray-500 mb-4">No topics found</p>
+              <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No topics found</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
@@ -351,9 +394,19 @@ export default function TopicsPage() {
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
               {topics.map((topic) => (
-                <div key={topic.id} className="p-6 hover:bg-gray-50">
+                <div key={topic.id} className="p-6 hover:bg-gray-50" 
+                     style={{ 
+                       backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                       borderColor: darkMode ? '#374151' : '#e5e7eb'
+                     }}
+                     onMouseEnter={(e) => {
+                       e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f9fafb'
+                     }}
+                     onMouseLeave={(e) => {
+                       e.currentTarget.style.backgroundColor = darkMode ? '#1f2937' : '#ffffff'
+                     }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div
@@ -361,21 +414,21 @@ export default function TopicsPage() {
                         style={{ backgroundColor: topic.religion.color }}
                       ></div>
                       <div>
-                        <h4 className="text-lg font-medium text-gray-900">{topic.title}</h4>
+                        <h4 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>{topic.title}</h4>
                         {topic.titleEn && (
-                          <p className="text-sm text-gray-600">{topic.titleEn}</p>
+                          <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{topic.titleEn}</p>
                         )}
                         {topic.description && (
-                          <p className="text-sm text-gray-500 mt-1">{topic.description}</p>
+                          <p className="text-sm mt-1" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>{topic.description}</p>
                         )}
                         <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                             Religion: {topic.religion.name}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                             {topic.details ? `Content: v${topic.details.version}` : 'No content'}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                             Created {new Date(topic.createdAt).toLocaleDateString()}
                           </span>
                         </div>

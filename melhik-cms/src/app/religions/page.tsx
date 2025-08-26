@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
+import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 interface Religion {
   id: number
@@ -38,6 +40,7 @@ export default function ReligionsPage() {
   const [activeSection, setActiveSection] = useState('religions')
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
   const router = useRouter()
+  const { darkMode } = useDarkMode()
 
   useEffect(() => {
     // Check authentication
@@ -162,7 +165,7 @@ export default function ReligionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
         {/* Sidebar */}
         <Sidebar 
           user={user} 
@@ -171,10 +174,10 @@ export default function ReligionsPage() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center overflow-hidden">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading religions...</p>
+            <p className="mt-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Loading religions...</p>
           </div>
         </div>
       </div>
@@ -182,7 +185,7 @@ export default function ReligionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
       {/* Sidebar */}
       <Sidebar 
         user={user} 
@@ -193,30 +196,42 @@ export default function ReligionsPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="shadow-sm border-b" 
+                 style={{ 
+                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                   borderColor: darkMode ? '#374151' : '#e5e7eb'
+                 }}>
           <div className="px-6 py-4">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Religion Management</h1>
-                <p className="text-sm text-gray-600">Manage religious categories and topics</p>
+                <h1 className="text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Religion Management</h1>
+                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Manage religious categories and topics</p>
               </div>
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Religion
-              </button>
+              <div className="flex items-center space-x-3">
+                <DarkModeToggle />
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Religion
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <div className="mb-6 border px-4 py-3 rounded-md"
+               style={{
+                 backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                 borderColor: darkMode ? '#991b1b' : '#fecaca',
+                 color: darkMode ? '#fca5a5' : '#dc2626'
+               }}>
             {error}
           </div>
         )}
@@ -224,16 +239,19 @@ export default function ReligionsPage() {
         {/* Religion Form */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">
+            <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+                 style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+              <div className="px-6 py-4 border-b" 
+                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
                   {editingReligion ? 'Edit Religion' : 'Add New Religion'}
                 </h3>
               </div>
               
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Name (Amharic) *
                   </label>
                   <input
@@ -241,39 +259,57 @@ export default function ReligionsPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                     placeholder="እስልምና"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Name (English)
                   </label>
                   <input
                     type="text"
                     value={formData.nameEn}
                     onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                     placeholder="Islam"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      backgroundColor: darkMode ? '#374151' : '#ffffff',
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      color: darkMode ? '#ffffff' : '#000000'
+                    }}
                     placeholder="Brief description about this religion..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium mb-2" 
+                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     Color
                   </label>
                   <div className="flex items-center space-x-3">
@@ -281,13 +317,19 @@ export default function ReligionsPage() {
                       type="color"
                       value={formData.color}
                       onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                      className="w-12 h-10 border border-gray-300 rounded-md cursor-pointer"
+                      className="w-12 h-10 border rounded-md cursor-pointer"
+                      style={{ borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
                     />
                     <input
                       type="text"
                       value={formData.color}
                       onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
                       placeholder="#8B4513"
                     />
                   </div>
@@ -315,19 +357,22 @@ export default function ReligionsPage() {
         )}
 
         {/* Religions List */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
+        <div className="rounded-lg shadow" 
+             style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+          <div className="px-6 py-4 border-b" 
+               style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+            <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
               All Religions ({religions.length})
             </h3>
           </div>
           
           {religions.length === 0 ? (
             <div className="p-8 text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                   style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0v-3.5a2 2 0 011.5-1.5h.5m0 0V9H9m4.5 6v-3.5a2 2 0 00-1.5-1.5H9" />
               </svg>
-              <p className="text-gray-500 mb-4">No religions found</p>
+              <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No religions found</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
@@ -336,9 +381,19 @@ export default function ReligionsPage() {
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
               {religions.map((religion) => (
-                <div key={religion.id} className="p-6 hover:bg-gray-50">
+                <div key={religion.id} className="p-6 hover:bg-gray-50" 
+                     style={{ 
+                       backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                       borderColor: darkMode ? '#374151' : '#e5e7eb'
+                     }}
+                     onMouseEnter={(e) => {
+                       e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f9fafb'
+                     }}
+                     onMouseLeave={(e) => {
+                       e.currentTarget.style.backgroundColor = darkMode ? '#1f2937' : '#ffffff'
+                     }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div
@@ -346,14 +401,14 @@ export default function ReligionsPage() {
                         style={{ backgroundColor: religion.color }}
                       ></div>
                       <div>
-                        <h4 className="text-lg font-medium text-gray-900">{religion.name}</h4>
+                        <h4 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>{religion.name}</h4>
                         {religion.nameEn && (
-                          <p className="text-sm text-gray-600">{religion.nameEn}</p>
+                          <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{religion.nameEn}</p>
                         )}
                         {religion.description && (
-                          <p className="text-sm text-gray-500 mt-1">{religion.description}</p>
+                          <p className="text-sm mt-1" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>{religion.description}</p>
                         )}
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs mt-2" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                           {religion.topics.length} topics • Created {new Date(religion.createdAt).toLocaleDateString()}
                         </p>
                       </div>

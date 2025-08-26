@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
+import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 
 interface Topic {
   id: number
@@ -47,6 +49,7 @@ export default function ContentEditorPage() {
   const [activeSection, setActiveSection] = useState('content')
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
   const router = useRouter()
+  const { darkMode } = useDarkMode()
 
   const [formData, setFormData] = useState<ContentFormData>({
     explanation: '',
@@ -228,7 +231,7 @@ export default function ContentEditorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
         {/* Sidebar */}
         <Sidebar 
           user={user} 
@@ -237,10 +240,10 @@ export default function ContentEditorPage() {
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center overflow-hidden">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading content editor...</p>
+            <p className="mt-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Loading content editor...</p>
           </div>
         </div>
       </div>
@@ -248,7 +251,7 @@ export default function ContentEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
       {/* Sidebar */}
       <Sidebar 
         user={user} 
@@ -259,27 +262,42 @@ export default function ContentEditorPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="shadow-sm border-b" 
+                 style={{ 
+                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                   borderColor: darkMode ? '#374151' : '#e5e7eb'
+                 }}>
           <div className="px-6 py-4">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Content Editor</h1>
-                <p className="text-sm text-gray-600">Create and edit topic content</p>
+                <h1 className="text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Content Editor</h1>
+                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Create and edit topic content</p>
               </div>
+              <DarkModeToggle />
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <div className="mb-6 border px-4 py-3 rounded-md"
+                 style={{
+                   backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                   borderColor: darkMode ? '#991b1b' : '#fecaca',
+                   color: darkMode ? '#fca5a5' : '#dc2626'
+                 }}>
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            <div className="mb-6 border px-4 py-3 rounded-md"
+                 style={{
+                   backgroundColor: darkMode ? '#064e3b' : '#f0fdf4',
+                   borderColor: darkMode ? '#065f46' : '#bbf7d0',
+                   color: darkMode ? '#6ee7b7' : '#16a34a'
+                 }}>
               {success}
             </div>
           )}
@@ -287,18 +305,20 @@ export default function ContentEditorPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Topic Selection */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Select Topic</h3>
-                  <p className="text-sm text-gray-600">Choose a topic to edit content</p>
+              <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                <div className="px-6 py-4 border-b" 
+                     style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                  <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Select Topic</h3>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Choose a topic to edit content</p>
                 </div>
                 <div className="p-6">
                   {topics.length === 0 ? (
                     <div className="text-center py-8">
-                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                           style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
-                      <p className="text-gray-500">No topics found</p>
+                      <p style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No topics found</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -308,9 +328,17 @@ export default function ContentEditorPage() {
                           onClick={() => handleTopicSelect(topic)}
                           className={`w-full text-left p-3 rounded-lg border transition-colors ${
                             selectedTopic?.id === topic.id
-                              ? 'border-blue-500 bg-blue-50'
+                              ? 'border-blue-500'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
+                          style={{
+                            backgroundColor: selectedTopic?.id === topic.id 
+                              ? (darkMode ? '#1e40af' : '#eff6ff')
+                              : (darkMode ? '#1f2937' : '#ffffff'),
+                            borderColor: selectedTopic?.id === topic.id 
+                              ? '#3b82f6'
+                              : (darkMode ? '#374151' : '#e5e7eb')
+                          }}
                         >
                           <div className="flex items-center space-x-3">
                             <div
@@ -318,10 +346,14 @@ export default function ContentEditorPage() {
                               style={{ backgroundColor: topic.religion.color }}
                             ></div>
                             <div className="flex-1">
-                              <h4 className="font-medium text-gray-900">{topic.title}</h4>
-                              <p className="text-sm text-gray-500">{topic.religion.name}</p>
+                              <h4 className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>{topic.title}</h4>
+                              <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{topic.religion.name}</p>
                               {topic.details && (
-                                <span className="inline-block mt-1 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                <span className="inline-block mt-1 px-2 py-1 text-xs rounded-full"
+                                      style={{
+                                        backgroundColor: darkMode ? '#064e3b' : '#dcfce7',
+                                        color: darkMode ? '#6ee7b7' : '#16a34a'
+                                      }}>
                                   v{topic.details.version}
                                 </span>
                               )}
@@ -338,14 +370,15 @@ export default function ContentEditorPage() {
             {/* Content Editor */}
             <div className="lg:col-span-2">
               {selectedTopic ? (
-                <div className="bg-white rounded-lg shadow">
-                  <div className="px-6 py-4 border-b border-gray-200">
+                <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                  <div className="px-6 py-4 border-b" 
+                       style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
                           {selectedTopic.title}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                           {selectedTopic.religion.name} • {selectedTopic.details ? `Version ${selectedTopic.details.version}` : 'New Content'}
                         </p>
                       </div>
@@ -362,14 +395,20 @@ export default function ContentEditorPage() {
                   <div className="p-6 space-y-6">
                     {/* Main Explanation */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium mb-2" 
+                             style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                         Main Explanation *
                       </label>
                       <textarea
                         value={formData.explanation}
                         onChange={(e) => setFormData(prev => ({ ...prev, explanation: e.target.value }))}
                         rows={8}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{
+                          backgroundColor: darkMode ? '#374151' : '#ffffff',
+                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                          color: darkMode ? '#ffffff' : '#000000'
+                        }}
                         placeholder="Write the main explanation for this topic..."
                       />
                     </div>
@@ -377,13 +416,20 @@ export default function ContentEditorPage() {
                     {/* Bible Verses */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                           Bible Verses
                         </label>
                         <button
                           type="button"
                           onClick={addBibleVerse}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          className="text-sm transition-colors"
+                          style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = darkMode ? '#93c5fd' : '#1d4ed8'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = darkMode ? '#60a5fa' : '#2563eb'
+                          }}
                         >
                           + Add Verse
                         </button>
@@ -395,14 +441,26 @@ export default function ContentEditorPage() {
                               type="text"
                               value={verse}
                               onChange={(e) => updateBibleVerse(index, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              style={{
+                                backgroundColor: darkMode ? '#374151' : '#ffffff',
+                                borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                                color: darkMode ? '#ffffff' : '#000000'
+                              }}
                               placeholder="e.g., John 3:16"
                             />
                             {formData.bibleVerses.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removeBibleVerse(index)}
-                                className="text-red-600 hover:text-red-800"
+                                className="transition-colors"
+                                style={{ color: darkMode ? '#f87171' : '#dc2626' }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = darkMode ? '#fca5a5' : '#b91c1c'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = darkMode ? '#f87171' : '#dc2626'
+                                }}
                               >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -417,13 +475,20 @@ export default function ContentEditorPage() {
                     {/* Key Points */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                           Key Points
                         </label>
                         <button
                           type="button"
                           onClick={addKeyPoint}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          className="text-sm transition-colors"
+                          style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = darkMode ? '#93c5fd' : '#1d4ed8'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = darkMode ? '#60a5fa' : '#2563eb'
+                          }}
                         >
                           + Add Point
                         </button>
@@ -435,14 +500,26 @@ export default function ContentEditorPage() {
                               type="text"
                               value={point}
                               onChange={(e) => updateKeyPoint(index, e.target.value)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              style={{
+                                backgroundColor: darkMode ? '#374151' : '#ffffff',
+                                borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                                color: darkMode ? '#ffffff' : '#000000'
+                              }}
                               placeholder="Enter a key point..."
                             />
                             {formData.keyPoints.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removeKeyPoint(index)}
-                                className="text-red-600 hover:text-red-800"
+                                className="transition-colors"
+                                style={{ color: darkMode ? '#f87171' : '#dc2626' }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = darkMode ? '#fca5a5' : '#b91c1c'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = darkMode ? '#f87171' : '#dc2626'
+                                }}
                               >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -457,27 +534,41 @@ export default function ContentEditorPage() {
                     {/* References */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                           Detailed References
                         </label>
                         <button
                           type="button"
                           onClick={addReference}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          className="text-sm transition-colors"
+                          style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = darkMode ? '#93c5fd' : '#1d4ed8'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = darkMode ? '#60a5fa' : '#2563eb'
+                          }}
                         >
                           + Add Reference
                         </button>
                       </div>
                       <div className="space-y-4">
                         {formData.references.map((reference, index) => (
-                          <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div key={index} className="border rounded-lg p-4" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-sm font-medium text-gray-700">Reference {index + 1}</h4>
+                              <h4 className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Reference {index + 1}</h4>
                               {formData.references.length > 1 && (
                                 <button
                                   type="button"
                                   onClick={() => removeReference(index)}
-                                  className="text-red-600 hover:text-red-800"
+                                  className="transition-colors"
+                                  style={{ color: darkMode ? '#f87171' : '#dc2626' }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.color = darkMode ? '#fca5a5' : '#b91c1c'
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.color = darkMode ? '#f87171' : '#dc2626'
+                                  }}
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -490,21 +581,36 @@ export default function ContentEditorPage() {
                                 type="text"
                                 value={reference.verse}
                                 onChange={(e) => updateReference(index, 'verse', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                style={{
+                                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                                  color: darkMode ? '#ffffff' : '#000000'
+                                }}
                                 placeholder="Verse reference (e.g., John 3:16)"
                               />
                               <textarea
                                 value={reference.text}
                                 onChange={(e) => updateReference(index, 'text', e.target.value)}
                                 rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                style={{
+                                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                                  color: darkMode ? '#ffffff' : '#000000'
+                                }}
                                 placeholder="Verse text..."
                               />
                               <textarea
                                 value={reference.explanation}
                                 onChange={(e) => updateReference(index, 'explanation', e.target.value)}
                                 rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                style={{
+                                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                                  color: darkMode ? '#ffffff' : '#000000'
+                                }}
                                 placeholder="Explanation of this verse..."
                               />
                             </div>
@@ -515,13 +621,14 @@ export default function ContentEditorPage() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow">
+                <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
                   <div className="p-8 text-center">
-                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Topic</h3>
-                    <p className="text-gray-500">Choose a topic from the left panel to start editing content</p>
+                    <h3 className="text-lg font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Select a Topic</h3>
+                    <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Choose a topic from the left panel to start editing content</p>
                   </div>
                 </div>
               )}
