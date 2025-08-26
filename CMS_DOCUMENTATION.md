@@ -453,3 +453,25 @@ npx prisma db seed
 ```
 
 This CMS will provide a complete content management solution for the Melhik Evangelism Tool, enabling easy creation and management of religious content with Bible verse references.
+
+## 📚 **Additional Resources**
+
+### **Getting Started**
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs)
+- [React Hook Form](https://react-hook-form.com/docs)
+
+### **Deployment Guides**
+- [Vercel Deployment](https://vercel.com/docs)
+- [Netlify Deployment](https://docs.netlify.com)
+- [Railway Database](https://docs.railway.app)
+
+### **Mobile App Integration**
+- [React Native Documentation](https://reactnative.dev/docs)
+- [Expo Documentation](https://docs.expo.dev)
+- [AsyncStorage Guide](https://docs.expo.dev/versions/latest/sdk/async-storage)
+
+---
+
+**Note**: This documentation is a living document and will be updated as the CMS evolves. For the latest updates, please refer to the project repository.

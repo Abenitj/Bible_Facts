@@ -479,3 +479,31 @@ const CONFIG = {
 5. **Monitor**: Track usage and feedback
 
 This documentation provides a comprehensive overview of the Melhik mobile app and sync system, covering all aspects from development to deployment.
+
+## 📚 **Additional Resources**
+
+### **Development Resources**
+- [React Native Documentation](https://reactnative.dev/docs)
+- [Expo Documentation](https://docs.expo.dev)
+- [React Navigation](https://reactnavigation.org/docs)
+- [AsyncStorage Guide](https://docs.expo.dev/versions/latest/sdk/async-storage)
+
+### **UI/UX Resources**
+- [React Native Vector Icons](https://github.com/oblador/react-native-vector-icons)
+- [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler)
+- [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated)
+
+### **Testing Resources**
+- [React Native Testing Library](https://callstack.github.io/react-native-testing-library)
+- [Jest Documentation](https://jestjs.io/docs)
+- [Detox E2E Testing](https://github.com/wix/Detox)
+
+### **Deployment Resources**
+- [Expo Build](https://docs.expo.dev/build/introduction)
+- [EAS Build](https://docs.expo.dev/build/introduction)
+- [App Store Guidelines](https://developer.apple.com/app-store/review/guidelines)
+- [Google Play Guidelines](https://play.google.com/about/developer-content-policy)
+
+---
+
+**Note**: This documentation is a living document and will be updated as the mobile app evolves. For the latest updates, please refer to the project repository.

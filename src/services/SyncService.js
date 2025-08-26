@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { insertReligion, insertTopic } from '../database/schema';
+// Note: Schema imports are commented out since we're using simpleData layer
+// import { insertReligion, insertTopic } from '../database/schema';
 
 class SyncService {
   constructor() {

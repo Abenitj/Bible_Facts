@@ -1,224 +1,284 @@
-# ✝️ Evangelism Tool
+# Melhik - Evangelism Tool
 
-A powerful React Native mobile application designed to help Christians answer questions from different religions and perspectives about Christianity. Built with Expo for fast development and easy deployment.
-
-## 🎯 **Main Purpose**
-
-This app is specifically designed for **evangelism** - helping Christians provide biblical answers to common questions from:
-- **Muslims** (Trinity, Jesus as God, Salvation by Grace)
-- **Orthodox Christians** (Sola Scriptura, Authority)
-- **Catholics** (Justification by Faith, Works vs Grace)
-- **Atheists** (Existence of God, Evidence)
-- **Hindus** (One Way to Salvation, Exclusivity of Christ)
-- **Buddhists** (Purpose of Suffering, Meaning)
-- **Jews** (Messiah Fulfilled, Prophecies)
-
-## ✨ **Key Features**
-
-- **📚 Religion-Based Navigation**: Organized by different religions and perspectives
-- **🎯 Topic-Specific Answers**: Detailed biblical responses to common questions
-- **📖 Interactive Bible References**: Tap verses to read full text with explanations
-- **💡 Professional Explanations**: Clear, well-structured theological responses
-- **🎨 Beautiful Design**: Professional brown color palette with smooth animations
-- **📱 Mobile-Optimized**: Perfect for evangelism conversations on-the-go
-- **🔍 Search Functionality**: Find specific topics quickly
-- **❤️ Favorites System**: Save important answers for quick access
-- **⚙️ Settings & Customization**: Personalize your experience
+A React Native mobile app for evangelism, designed to help users answer questions about Christianity from different religions. The app works offline-first and syncs content when online.
 
 ## 🚀 **Quick Start**
 
 ### Prerequisites
-
-- Node.js (v14 or higher)
+- Node.js (v16 or higher)
 - npm or yarn
-- Expo CLI (`npm install -g @expo/cli`)
-- Expo Go app on your mobile device (for testing)
+- Expo CLI
+- Android Studio (for Android development)
+- Xcode (for iOS development, macOS only)
 
 ### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Bible_Facts
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-4. **Run on your device**
-   - Install Expo Go on your mobile device
-   - Scan the QR code displayed in the terminal
-   - The app will load on your device
-
-### Alternative Commands
-
 ```bash
-# Run on Android emulator
+# Clone the repository
+git clone <repository-url>
+cd Bible_Facts
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+```
+
+### Running the App
+```bash
+# Start Expo development server
+npm start
+
+# Run on Android
 npm run android
 
-# Run on iOS simulator (macOS only)
+# Run on iOS
 npm run ios
 
-# Run on web browser
+# Run on web
 npm run web
 ```
 
-## 📱 **App Structure**
+## 📱 **App Features**
+
+### **Core Features**
+- **Offline-First**: Works without internet connection
+- **Amharic Language Support**: Full Amharic interface and content
+- **Religion Categories**: Organized content by religion
+- **Topic Management**: Detailed explanations for each topic
+- **Bible Verse Integration**: Clickable Bible verses with explanations
+- **Content Sync**: Automatic content updates when online
+- **Professional UI**: Clean, modern design with smooth animations
+
+### **Navigation**
+- **Drawer Navigation**: Home and Settings
+- **Stack Navigation**: Topics and Topic Details
+- **Back Navigation**: Proper stack-based navigation
+
+### **Content Structure**
+```
+Religions
+├── Islam (እስልምና)
+├── Judaism (ይሁዳዊነት)
+├── Hinduism (ሂንዱዊነት)
+└── Buddhism (ቡዲስትነት)
+    └── Topics
+        ├── Topic 1
+        ├── Topic 2
+        └── Topic 3
+            └── Detailed Explanation
+                ├── Question
+                ├── Answer
+                └── Bible Verses
+```
+
+## 🏗️ **Project Structure**
 
 ```
 Bible_Facts/
-├── App.js                    # Main app component with navigation
-├── components/
-│   ├── TopicCard.js          # Animated topic display component
-│   └── BibleReference.js     # Interactive Bible verse component
-├── screens/
-│   ├── HomeScreen.js         # Religion selection dashboard
-│   ├── TopicsScreen.js       # Topics for selected religion
-│   ├── TopicDetailScreen.js  # Detailed topic with Bible references
-│   ├── FavoritesScreen.js    # Saved favorite topics
-│   ├── SearchScreen.js       # Search functionality
-│   └── SettingsScreen.js     # App settings and preferences
-├── data/
-│   └── evangelismData.js     # Evangelism content database
-├── utils/
-│   └── storage.js            # Local storage utilities
-└── assets/                   # Images and icons
+├── App.js                          # Main app entry point
+├── babel.config.js                 # Babel configuration
+├── package.json                    # Dependencies and scripts
+├── components/                     # Reusable components
+│   ├── AppBar.js                   # App bar component
+│   ├── AmharicText.js              # Amharic text component
+│   ├── ClickableBibleVerse.js      # Bible verse modal
+│   ├── CustomDrawerContent.js      # Drawer navigation
+│   ├── TextWithBibleVerses.js      # Bible verse detection
+│   ├── TopicCard.js                # Topic card component
+│   └── ZoomableText.js             # Text zoom functionality
+├── screens/                        # App screens
+│   ├── HomeScreen.js               # Main religion list
+│   ├── TopicsScreen.js             # Topics by religion
+│   ├── TopicDetailScreen.js        # Topic details
+│   ├── SettingsScreen.js           # App settings
+│   └── SplashScreen.js             # Loading screen
+├── src/                            # Source code
+│   ├── components/                 # Source components
+│   ├── database/                   # Data layer
+│   │   ├── schema.js               # SQLite schema (bypassed)
+│   │   ├── simpleData.js           # Simple data layer
+│   │   ├── fallbackData.js         # Fallback data
+│   │   └── mockBibleVerses.js      # Mock Bible verses
+│   └── services/                   # Services
+│       └── SyncService.js          # Content sync service
+├── utils/                          # Utilities
+│   └── storage.js                  # Local storage utilities
+└── scripts/                        # Build scripts
+    └── cleanup.js                  # Production cleanup
 ```
 
-## 🎨 **Design Features**
+## 🔧 **Technical Stack**
+
+### **Frontend**
+- **React Native**: Mobile app framework
+- **Expo**: Development platform
+- **React Navigation**: Navigation library
+- **React Native Gesture Handler**: Gesture support
+- **React Native Reanimated**: Animations
+
+### **Data Management**
+- **AsyncStorage**: Local data storage
+- **Simple Data Layer**: In-memory data management
+- **Fallback Data**: Offline content
+- **Sync Service**: Content synchronization
+
+### **UI/UX**
+- **Custom Components**: Amharic text, Bible verses
+- **Vector Icons**: Professional iconography
+- **Animations**: Smooth transitions and effects
+- **Responsive Design**: Works on all screen sizes
+
+## 📊 **Data Flow**
+
+### **Offline-First Architecture**
+1. **App Startup**: Load local data from AsyncStorage
+2. **Fallback Data**: Use in-memory data if storage is empty
+3. **Content Display**: Show content immediately
+4. **Background Sync**: Check for updates when online
+5. **Content Update**: Download and store new content
+
+### **Sync Process**
+1. **Check Updates**: Call sync API endpoint
+2. **Download Content**: Get new content if available
+3. **Store Locally**: Save to AsyncStorage
+4. **Update UI**: Refresh app content
+5. **Background Sync**: Periodic checks
+
+## 🎨 **Design System**
 
 ### **Color Palette**
-- **Primary Brown**: `#8B4513` (Saddle Brown)
-- **Secondary Brown**: `#A0522D` (Sienna)
-- **Accent Brown**: `#CD853F` (Sandy Brown)
-- **Background**: `#F5F5DC` (Beige)
-- **Borders**: `#DEB887` (Burlywood)
+- **Primary**: #654321 (Dark Brown)
+- **Secondary**: #8B4513 (Saddle Brown)
+- **Background**: #F0E6D2 (Light Beige)
+- **Card Background**: #F5F0E0 (Off-White)
+- **Accent**: #DEB887 (Burlywood)
 
-### **Professional Design Elements**
-- **Smooth Animations**: Entrance animations, press feedback, transitions
-- **Card-Based Layout**: Clean, organized information display
-- **Typography Hierarchy**: Clear visual hierarchy for easy reading
-- **Interactive Elements**: Touch feedback and visual cues
-- **Consistent Spacing**: Professional spacing and padding
+### **Typography**
+- **Amharic Font**: System default
+- **Font Sizes**: 14px, 16px, 18px, 24px
+- **Line Heights**: 20px, 24px, 26px
+- **Font Weights**: normal, bold, 600
 
-## 📚 **Content Structure**
+## 🔄 **Content Management**
 
-### **Religion Categories**
-Each religion contains relevant topics with:
-- **Question**: The specific question being addressed
-- **Biblical Concept**: Core theological understanding
-- **Detailed Explanation**: Comprehensive biblical response
-- **Key Points**: Bullet points for quick reference
-- **Bible References**: Interactive verses with explanations
+### **Current System**
+- **Local Data**: Stored in AsyncStorage
+- **Fallback Data**: In-memory sample data
+- **Bible Verses**: Mock data with explanations
+- **Content Structure**: Religions → Topics → Details
 
-### **Example Topic Structure**
-```javascript
-{
-  id: 'trinity',
-  title: 'The Trinity',
-  description: 'How can God be three in one?',
-  content: {
-    concept: 'Theological explanation...',
-    explanation: 'Detailed response...',
-    keyPoints: ['Point 1', 'Point 2', 'Point 3']
-  },
-  references: [
-    {
-      verse: 'Matthew 28:19',
-      text: 'Full verse text...',
-      explanation: 'How this verse supports the answer'
-    }
-  ]
-}
-```
+### **Future CMS Integration**
+- **Web CMS**: Next.js + Prisma + PostgreSQL
+- **Content Sync**: REST API integration
+- **Admin Interface**: Content management dashboard
+- **Version Control**: Content versioning system
 
-## 🔧 **Customization**
+## 🚀 **Deployment**
 
-### **Adding New Religions**
-Edit `data/evangelismData.js` to add new religions:
-
-```javascript
-{
-  id: 'new-religion',
-  name: 'New Religion',
-  icon: '🕉️',
-  description: 'Questions from this perspective',
-  color: '#8B4513'
-}
-```
-
-### **Adding New Topics**
-Add topics to the appropriate religion section:
-
-```javascript
-{
-  id: 'new-topic',
-  title: 'Topic Title',
-  icon: '📖',
-  description: 'The question being addressed',
-  content: {
-    concept: 'Biblical concept...',
-    explanation: 'Detailed explanation...',
-    keyPoints: ['Key point 1', 'Key point 2']
-  },
-  references: [
-    {
-      verse: 'Bible Reference',
-      text: 'Verse text...',
-      explanation: 'Explanation...'
-    }
-  ]
-}
-```
-
-## 📦 **Building for Production**
-
-### **Android APK**
+### **Development**
 ```bash
+# Start development server
+npm start
+
+# Run on specific platform
+npm run android
+npm run ios
+npm run web
+```
+
+### **Production Build**
+```bash
+# Build for Android
 expo build:android
-```
 
-### **iOS IPA**
-```bash
+# Build for iOS
 expo build:ios
+
+# EAS Build (recommended)
+eas build --platform android
+eas build --platform ios
 ```
 
-### **Web Build**
+### **App Store Distribution**
+- **Google Play Store**: Android APK/AAB
+- **Apple App Store**: iOS IPA
+- **Expo Updates**: Over-the-air updates
+
+## 🧪 **Testing**
+
+### **Manual Testing**
+- **Navigation**: Test all navigation flows
+- **Content**: Verify all content displays correctly
+- **Offline**: Test offline functionality
+- **Sync**: Test content synchronization
+- **UI/UX**: Test on different screen sizes
+
+### **Automated Testing**
 ```bash
-expo build:web
+# Run tests (when implemented)
+npm test
+
+# Run specific tests
+npm run test:unit
+npm run test:integration
 ```
 
-## 🎯 **Evangelism Use Cases**
+## 🔧 **Development Workflow**
 
-### **Personal Evangelism**
-- **Street Evangelism**: Quick access to biblical answers
-- **Friends & Family**: Share with non-Christian loved ones
-- **Workplace**: Professional responses to faith questions
+### **Feature Development**
+1. **Plan**: Define requirements and design
+2. **Implement**: Code the feature
+3. **Test**: Manual and automated testing
+4. **Review**: Code review process
+5. **Deploy**: Build and distribute
 
-### **Group Settings**
-- **Bible Study**: Reference material for discussions
-- **Youth Ministry**: Teaching tool for young believers
-- **Mission Trips**: Portable evangelism resource
+### **Content Updates**
+1. **Create**: Add new content to fallback data
+2. **Test**: Verify content displays correctly
+3. **Deploy**: Update app with new content
+4. **Monitor**: Track usage and feedback
 
-### **Apologetics Training**
-- **Study Tool**: Learn biblical responses to common objections
-- **Memory Aid**: Quick reference during conversations
-- **Teaching Resource**: Share with other believers
+## 📚 **Documentation**
+
+### **Available Documentation**
+- **CMS Documentation**: `CMS_DOCUMENTATION.md`
+- **Mobile App & Sync**: `MOBILE_APP_AND_SYNC_DOCUMENTATION.md`
+- **API Documentation**: Available in CMS docs
+- **Component Documentation**: Inline code comments
+
+### **Additional Resources**
+- [React Native Documentation](https://reactnative.dev/docs)
+- [Expo Documentation](https://docs.expo.dev)
+- [React Navigation](https://reactnavigation.org/docs)
+
+## 🐛 **Known Issues**
+
+### **Current Issues**
+- **Console Logs**: Many debug console.log statements (use cleanup script)
+- **SQLite Bypass**: Using simple data layer instead of SQLite
+- **Sync Service**: Currently mocked, needs real API integration
+
+### **Future Improvements**
+- **Real CMS Integration**: Connect to web CMS
+- **Performance Optimization**: Lazy loading and caching
+- **Advanced Features**: Search, favorites, user preferences
+- **Multi-language**: Support for additional languages
 
 ## 🤝 **Contributing**
 
+### **Development Setup**
 1. Fork the repository
 2. Create a feature branch
-3. Add new religions, topics, or improve existing content
+3. Make your changes
 4. Test thoroughly
 5. Submit a pull request
+
+### **Code Standards**
+- **ESLint**: Follow linting rules
+- **Prettier**: Consistent code formatting
+- **Comments**: Document complex logic
+- **Testing**: Add tests for new features
 
 ## 📄 **License**
 
@@ -226,19 +286,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 **Acknowledgments**
 
-- Biblical content sourced from reliable theological resources
-- Built for the purpose of spreading the Gospel
-- Inspired by 1 Peter 3:15 - "Always be prepared to give an answer"
-
-## 📞 **Support**
-
-For support or questions:
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation
+- **Amharic Content**: Native speakers for content review
+- **UI/UX Design**: Modern, professional design principles
+- **Open Source**: Built with amazing open source libraries
 
 ---
 
-**"Always be prepared to give an answer to everyone who asks you to give the reason for the hope that you have." - 1 Peter 3:15**
-
-**Made with ❤️ for evangelism and biblical education**
+**Note**: This is a living document. For the latest updates, please refer to the project repository and documentation files.
