@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Sidebar from '@/components/Sidebar'
+import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 
@@ -47,6 +47,7 @@ export default function ContentEditorPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [activeSection, setActiveSection] = useState('content')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
   const router = useRouter()
   const { darkMode } = useDarkMode()
@@ -258,6 +259,14 @@ export default function ContentEditorPage() {
         activeSection={activeSection} 
         onLogout={handleLogout} 
       />
+      
+      <MobileMenu
+        user={user}
+        activeSection={activeSection}
+        onLogout={handleLogout}
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -267,19 +276,34 @@ export default function ContentEditorPage() {
                    backgroundColor: darkMode ? '#1f2937' : '#ffffff',
                    borderColor: darkMode ? '#374151' : '#e5e7eb'
                  }}>
-          <div className="px-6 py-4">
-            <div className="flex justify-between items-center">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Content Editor</h1>
+                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Content Editor</h1>
                 <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Create and edit topic content</p>
               </div>
-              <DarkModeToggle />
+              <div className="flex items-center space-x-2">
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="sm:hidden p-2 rounded-md transition-colors duration-200"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                    color: darkMode ? '#d1d5db' : '#374151'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <DarkModeToggle />
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           {error && (
             <div className="mb-6 border px-4 py-3 rounded-md"
                  style={{
@@ -302,7 +326,7 @@ export default function ContentEditorPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
             {/* Topic Selection */}
             <div className="lg:col-span-1">
               <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>

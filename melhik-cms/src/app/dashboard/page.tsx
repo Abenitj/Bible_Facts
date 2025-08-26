@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Sidebar from '@/components/Sidebar'
+import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 
@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState('dashboard')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode } = useDarkMode()
 
   useEffect(() => {
@@ -166,31 +167,53 @@ export default function Dashboard() {
         activeSection={activeSection}
         onLogout={handleLogout}
       />
+      
+      <MobileMenu
+        user={user}
+        activeSection={activeSection}
+        onLogout={handleLogout}
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8 p-4 rounded-lg border" 
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 p-4 rounded-lg border space-y-4 sm:space-y-0" 
                style={{ 
                  backgroundColor: darkMode ? '#1f2937' : '#ffffff',
                  borderColor: darkMode ? '#374151' : '#e5e7eb'
                }}>
             <div>
-              <h1 className="text-3xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Dashboard</h1>
-              <p className="mt-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+              <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Dashboard</h1>
+              <p className="mt-1 text-sm sm:text-base" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                 Welcome back! Here's what's happening with your content.
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="sm:hidden p-2 rounded-md transition-colors duration-200"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                  color: darkMode ? '#d1d5db' : '#374151'
+                }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
               <div className="flex items-center space-x-2 text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>Live</span>
+                <span className="hidden sm:inline">Live</span>
                 <span className="ml-2 px-2 py-1 rounded text-xs" style={{ 
                   backgroundColor: darkMode ? '#374151' : '#f3f4f6',
                   color: darkMode ? '#d1d5db' : '#374151'
                 }}>
-                  {darkMode ? '🌙 Dark' : '☀️ Light'}
+                  {darkMode ? '🌙' : '☀️'}
                 </span>
               </div>
               <DarkModeToggle />
@@ -199,8 +222,8 @@ export default function Dashboard() {
 
 
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="rounded-lg p-6 border-l-4 border-blue-500 transition-all duration-300"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="rounded-lg p-4 sm:p-6 border-l-4 border-blue-500 transition-all duration-300"
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="flex items-center">
                 <div className="p-3 rounded-full" 
@@ -220,7 +243,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="rounded-lg p-6 border-l-4 border-green-500 transition-all duration-300"
+            <div className="rounded-lg p-4 sm:p-6 border-l-4 border-green-500 transition-all duration-300"
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="flex items-center">
                 <div className="p-3 rounded-full" 
@@ -240,7 +263,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="rounded-lg p-6 border-l-4 border-purple-500 transition-all duration-300"
+            <div className="rounded-lg p-4 sm:p-6 border-l-4 border-purple-500 transition-all duration-300"
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="flex items-center">
                 <div className="p-3 rounded-full" 
@@ -260,7 +283,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="rounded-lg p-6 border-l-4 border-orange-500 transition-all duration-300"
+            <div className="rounded-lg p-4 sm:p-6 border-l-4 border-orange-500 transition-all duration-300"
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="flex items-center">
                 <div className="p-3 rounded-full" 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Sidebar from '../../components/Sidebar'
+import Sidebar, { MobileMenu } from '../../components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 
@@ -38,6 +38,7 @@ export default function ReligionsPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [activeSection, setActiveSection] = useState('religions')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
   const router = useRouter()
   const { darkMode } = useDarkMode()
@@ -192,6 +193,14 @@ export default function ReligionsPage() {
         activeSection={activeSection} 
         onLogout={handleLogout} 
       />
+      
+      <MobileMenu
+        user={user}
+        activeSection={activeSection}
+        onLogout={handleLogout}
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -201,22 +210,36 @@ export default function ReligionsPage() {
                    backgroundColor: darkMode ? '#1f2937' : '#ffffff',
                    borderColor: darkMode ? '#374151' : '#e5e7eb'
                  }}>
-          <div className="px-6 py-4">
-            <div className="flex justify-between items-center">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
               <div>
-                <h1 className="text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Religion Management</h1>
+                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Religion Management</h1>
                 <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Manage religious categories and topics</p>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="sm:hidden p-2 rounded-md transition-colors duration-200"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                    color: darkMode ? '#d1d5db' : '#374151'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
                 <DarkModeToggle />
                 <button
                   onClick={() => setShowForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                  className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center text-sm sm:text-base"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Add Religion
+                  <span className="hidden sm:inline">Add Religion</span>
+                  <span className="sm:hidden">Add</span>
                 </button>
               </div>
             </div>
@@ -224,7 +247,7 @@ export default function ReligionsPage() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
         {error && (
           <div className="mb-6 border px-4 py-3 rounded-md"
                style={{
