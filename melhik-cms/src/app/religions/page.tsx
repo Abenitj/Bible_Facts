@@ -133,20 +133,44 @@ export default function ReligionsPage() {
     if (!deletingReligion) return
 
     try {
+      console.log('Attempting to delete religion:', deletingReligion.id, deletingReligion.name)
+      
       const response = await fetch(`/api/religions/${deletingReligion.id}`, {
         method: 'DELETE',
       })
 
+      console.log('Delete response status:', response.status)
+      
       if (response.ok) {
+        console.log('Religion deleted successfully')
         await loadReligions()
         setShowDeleteConfirm(false)
         setDeletingReligion(null)
+        setError('') // Clear any previous errors
       } else {
         const data = await response.json()
-        setError(data.error || 'Failed to delete religion')
+        console.error('Delete failed:', data)
+        
+        // Provide specific error messages based on the business rules
+        let errorMessage = data.error || 'Failed to delete religion'
+        
+        if (response.status === 400 && data.error?.includes('topics')) {
+          errorMessage = `Cannot delete "${deletingReligion.name}" because it has ${deletingReligion.topics.length} topic(s). Please delete all topics first.`
+        } else if (response.status === 404) {
+          errorMessage = `Religion "${deletingReligion.name}" not found. It may have been deleted by another user.`
+        } else if (response.status === 500) {
+          errorMessage = 'Server error occurred. Please try again later.'
+        }
+        
+        setError(errorMessage)
+        setShowDeleteConfirm(false)
+        setDeletingReligion(null)
       }
     } catch (error) {
-      setError('Network error')
+      console.error('Network error during delete:', error)
+      setError('Network error. Please check your connection and try again.')
+      setShowDeleteConfirm(false)
+      setDeletingReligion(null)
     }
   }
 
@@ -510,8 +534,16 @@ export default function ReligionsPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(religion)}
-                        className="text-red-600 hover:text-red-800 p-2"
-                        title="Delete religion"
+                        className={`p-2 transition-colors ${
+                          religion.topics.length > 0 
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-red-600 hover:text-red-800'
+                        }`}
+                        title={
+                          religion.topics.length > 0 
+                            ? `Cannot delete "${religion.name}" - it has ${religion.topics.length} topic(s). Delete all topics first.`
+                            : `Delete "${religion.name}"`
+                        }
                         disabled={religion.topics.length > 0}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
