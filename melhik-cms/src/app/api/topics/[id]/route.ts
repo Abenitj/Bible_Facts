@@ -5,10 +5,11 @@ import { updateTopicSchema } from '@/lib/validation'
 // GET /api/topics/[id] - Get specific topic
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -56,10 +57,11 @@ export async function GET(
 // PUT /api/topics/[id] - Update topic
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -126,10 +128,11 @@ export async function PUT(
 // DELETE /api/topics/[id] - Delete topic
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     
     if (isNaN(id)) {
       return NextResponse.json(

@@ -111,6 +111,7 @@ export default function Dashboard() {
 
   // Calculate religion distribution for chart
   const religionDistribution = religions.map(religion => ({
+    id: religion.id,
     name: religion.name,
     count: religion.topics?.length || 0,
     color: religion.color || '#3B82F6'
@@ -294,7 +295,7 @@ export default function Dashboard() {
                         
                         return (
                           <circle
-                            key={item.name}
+                            key={item.id}
                             cx="50"
                             cy="50"
                             r={radius}
@@ -331,7 +332,7 @@ export default function Dashboard() {
               </div>
               <div className="mt-6 grid grid-cols-2 gap-4">
                 {religionDistribution.slice(0, 4).map((item) => (
-                  <div key={item.name} className="flex items-center space-x-2">
+                  <div key={item.id} className="flex items-center space-x-2">
                     <div 
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: item.color }}

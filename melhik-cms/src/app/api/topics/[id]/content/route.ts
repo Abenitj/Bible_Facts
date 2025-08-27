@@ -5,10 +5,11 @@ import { createTopicDetailSchema, updateTopicDetailSchema } from '@/lib/validati
 // POST /api/topics/[id]/content - Create topic content
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const topicId = parseInt(params.id)
+    const { id: idParam } = await params
+    const topicId = parseInt(idParam)
 
     if (isNaN(topicId)) {
       return NextResponse.json(
@@ -100,10 +101,11 @@ export async function POST(
 // PUT /api/topics/[id]/content - Update topic content
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const topicId = parseInt(params.id)
+    const { id: idParam } = await params
+    const topicId = parseInt(idParam)
 
     if (isNaN(topicId)) {
       return NextResponse.json(
@@ -195,10 +197,11 @@ export async function PUT(
 // GET /api/topics/[id]/content - Get topic content
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const topicId = parseInt(params.id)
+    const { id: idParam } = await params
+    const topicId = parseInt(idParam)
 
     if (isNaN(topicId)) {
       return NextResponse.json(
