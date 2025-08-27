@@ -116,41 +116,7 @@ export default function Dashboard() {
     color: religion.color || '#3B82F6'
   }))
 
-  // Mock activity data
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'content_created',
-      title: 'New content added to "Christianity Basics"',
-      time: '2 hours ago',
-      icon: '📝',
-      color: 'text-green-600'
-    },
-    {
-      id: 2,
-      type: 'topic_created',
-      title: 'Topic "Islamic Practices" created',
-      time: '4 hours ago',
-      icon: '📚',
-      color: 'text-blue-600'
-    },
-    {
-      id: 3,
-      type: 'religion_updated',
-      title: 'Religion "Buddhism" updated',
-      time: '1 day ago',
-      icon: '🔄',
-      color: 'text-purple-600'
-    },
-    {
-      id: 4,
-      type: 'content_edited',
-      title: 'Content edited in "Jewish Traditions"',
-      time: '2 days ago',
-      icon: '✏️',
-      color: 'text-orange-600'
-    }
-  ]
+
 
   // Generate chart data
   const chartData = religionDistribution.map((item, index) => ({
@@ -305,7 +271,7 @@ export default function Dashboard() {
           </div>
 
           {/* Charts and Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 gap-8 mb-8">
             {/* Religion Distribution Chart */}
             <div className="rounded-lg p-6 transition-all duration-300" 
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
@@ -377,45 +343,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Activity Feed */}
-            <div className="rounded-lg p-6 transition-all duration-300" 
-                 style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Recent Activity</h2>
-                <button className="text-sm font-medium transition-colors hover:opacity-80"
-                        style={{ 
-                          color: darkMode ? '#60a5fa' : '#2563eb'
-                        }}>
-                  View All
-                </button>
-              </div>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg transition-all duration-200"
-                       style={{ 
-                         backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                         borderColor: darkMode ? '#374151' : '#e5e7eb'
-                       }}
-                       onMouseEnter={(e) => {
-                         e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f9fafb'
-                       }}
-                       onMouseLeave={(e) => {
-                         e.currentTarget.style.backgroundColor = darkMode ? '#1f2937' : '#ffffff'
-                       }}>
-                    <div className={`text-2xl ${activity.color}`}>
-                      {activity.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                        {activity.title}
-                      </p>
-                      <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{activity.time}</p>
-                    </div>
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
           </div>
 
           {/* Religion Overview */}

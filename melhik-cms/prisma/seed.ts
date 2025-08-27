@@ -72,7 +72,66 @@ async function main() {
 
   console.log('✅ Created topics for Islam')
 
-  // Create sample topic details
+  // Create more topics for Islam
+  const prayerTopic = await prisma.topic.create({
+    data: {
+      religionId: islam.id,
+      title: 'የእስልምና ጸሎት',
+      titleEn: 'Islamic Prayer',
+      description: 'የእስልምና ጸሎት እንዴት እንደሚደረግ እና ለምን እንደሚደረግ'
+    }
+  })
+
+  const fastingTopic = await prisma.topic.create({
+    data: {
+      religionId: islam.id,
+      title: 'የረመዳን ጾም',
+      titleEn: 'Ramadan Fasting',
+      description: 'የረመዳን ጾም ትርጉም እና አስፈላጊነት'
+    }
+  })
+
+  // Create topics for Orthodox
+  const orthodoxPrayer = await prisma.topic.create({
+    data: {
+      religionId: orthodox.id,
+      title: 'የኦርቶዶክስ ጸሎት',
+      titleEn: 'Orthodox Prayer',
+      description: 'የኦርቶዶክስ ቤተ ክርስቲያን ጸሎት ስርዓት'
+    }
+  })
+
+  const orthodoxFasting = await prisma.topic.create({
+    data: {
+      religionId: orthodox.id,
+      title: 'የኦርቶዶክስ ጾም',
+      titleEn: 'Orthodox Fasting',
+      description: 'የኦርቶዶክስ ቤተ ክርስቲያን ጾም ስርዓት'
+    }
+  })
+
+  // Create topics for Protestant
+  const protestantPrayer = await prisma.topic.create({
+    data: {
+      religionId: protestant.id,
+      title: 'የፕሮቴስታንት ጸሎት',
+      titleEn: 'Protestant Prayer',
+      description: 'የፕሮቴስታንት ጸሎት ስርዓት እና መርሆዎች'
+    }
+  })
+
+  const protestantBible = await prisma.topic.create({
+    data: {
+      religionId: protestant.id,
+      title: 'የመጽሐፍ ቅዱስ አስተምህሮ',
+      titleEn: 'Bible Teaching',
+      description: 'የፕሮቴስታንት መጽሐፍ ቅዱስ አስተምህሮ መርሆዎች'
+    }
+  })
+
+  console.log('✅ Created additional topics for all religions')
+
+  // Create sample topic details for Trinity
   const trinityDetails = await prisma.topicDetail.upsert({
     where: { topicId: trinityTopic.id },
     update: {},
@@ -109,7 +168,74 @@ async function main() {
     }
   })
 
-  console.log('✅ Created topic details for Trinity')
+  // Create content for Jesus topic
+  const jesusDetails = await prisma.topicDetail.upsert({
+    where: { topicId: jesusTopic.id },
+    update: {},
+    create: {
+      topicId: jesusTopic.id,
+      explanation: `ኢየሱስ ክርስቶስ የእግዚአብሔር ልጅ ናቸው። በመጽሐፍ ቅዱስ ውስጥ በብዙ ስፍራዎች የኢየሱስ ክርስቶስ አምላክነት ይታያል።
+
+የኢየሱስ ክርስቶስ አምላክነት የሚታየው፡
+1. በስማቸው - እግዚአብሔር እንደሚለው
+2. በተሰጣቸው ክብር - እግዚአብሔር እንደሚሰጥ ያለው
+3. በድርሳናቸው - እግዚአብሔር እንደሚያደርገው ያለው`,
+      bibleVerses: JSON.stringify([
+        "John 1:1",
+        "John 1:14",
+        "John 10:30",
+        "Colossians 2:9"
+      ]),
+      keyPoints: JSON.stringify([
+        "ኢየሱስ ክርስቶስ የእግዚአብሔር ልጅ ናቸው እንደ ዮሐንስ 1:1 ያለው",
+        "በሥጋ ሆነ እንደ ዮሐንስ 1:14 ያለው",
+        "እኔ እና አብ አንድ ነን እንደ ዮሐንስ 10:30 ያለው"
+      ]),
+      references: JSON.stringify([
+        {
+          verse: "John 1:1",
+          text: "በመጀመሪያ የሐልመት ነበረ፥ የሐልመትም ከእግዚአብሔር ጋር ነበረ፥ የሐልመትም እግዚአብሔር ነበረ።",
+          explanation: "ይህ ጥቅስ የሚያሳየን ኢየሱስ ክርስቶስ እግዚአብሔር እንደሆኑ ነው።"
+        }
+      ]),
+      version: 1
+    }
+  })
+
+  // Create content for Islamic Prayer
+  const prayerDetails = await prisma.topicDetail.upsert({
+    where: { topicId: prayerTopic.id },
+    update: {},
+    create: {
+      topicId: prayerTopic.id,
+      explanation: `የእስልምና ጸሎት የሚደረገው በየቀኑ አምስት ጊዜ ነው። እያንዳንዱ ጸሎት የራሱ ጊዜ አለው።
+
+የእስልምና ጸሎት ዓላማዎች፡
+1. እግዚአብሔርን ማምለክ
+2. የራስን ስነ ምግባር ማሻሻል
+3. የማህበረሰብ አንድነት ማጎልበት`,
+      bibleVerses: JSON.stringify([
+        "Acts 2:42",
+        "1 Thessalonians 5:17",
+        "Philippians 4:6"
+      ]),
+      keyPoints: JSON.stringify([
+        "የእስልምና ጸሎት በየቀኑ አምስት ጊዜ ይደረጋል",
+        "እያንዳንዱ ጸሎት የራሱ ጊዜ አለው",
+        "ጸሎት የራስን ስነ ምግባር ያሻሽላል"
+      ]),
+      references: JSON.stringify([
+        {
+          verse: "Acts 2:42",
+          text: "የሐዋርያትም ሥርዓት ሲያዙ፥ በጸሎትም ሲሰተኩ፥ በእንግድም ሲሰተኩ እንደ ቆዩ።",
+          explanation: "ይህ ጥቅስ የሚያሳየን ጸሎት አስፈላጊ እንደሆነ ነው።"
+        }
+      ]),
+      version: 1
+    }
+  })
+
+  console.log('✅ Created topic details for multiple topics')
 
   console.log('🎉 Database seeding completed successfully!')
 }
