@@ -151,11 +151,29 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
               onClick={() => {
                 router.push(item.href)
               }}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeSection === item.id
                   ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-r-2 border-blue-600'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                  : ''
               }`}
+              style={{
+                backgroundColor: activeSection === item.id 
+                  ? undefined 
+                  : (darkMode ? '#1f2937' : '#ffffff'),
+                color: activeSection === item.id 
+                  ? undefined 
+                  : (darkMode ? '#d1d5db' : '#374151')
+              }}
+              onMouseEnter={(e) => {
+                if (activeSection !== item.id) {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f9fafb'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeSection !== item.id) {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#1f2937' : '#ffffff'
+                }
+              }}
             >
               <span className="flex-shrink-0">{item.icon}</span>
               {sidebarOpen && <span className="ml-3">{item.name}</span>}
@@ -179,7 +197,7 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
             )}
             <button
               onClick={onLogout}
-              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               title="Logout"
             >
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,12 +321,25 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
                     onClose()
                   }}
                   className={`w-full flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
-                    activeSection === item.id ? 'bg-blue-100 dark:bg-blue-900' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    activeSection === item.id ? 'bg-blue-100 dark:bg-blue-900' : ''
                   }`}
                   style={{
+                    backgroundColor: activeSection === item.id 
+                      ? undefined 
+                      : (darkMode ? '#1f2937' : '#ffffff'),
                     color: activeSection === item.id 
                       ? (darkMode ? '#93c5fd' : '#1e40af')
                       : (darkMode ? '#d1d5db' : '#374151')
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== item.id) {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f9fafb'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeSection !== item.id) {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#1f2937' : '#ffffff'
+                    }
                   }}
                 >
                   <span className="mr-3" style={{ color: 'inherit' }}>

@@ -198,7 +198,7 @@ export default function SettingsPage() {
               <form onSubmit={handleProfileUpdate} className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Username
                   </label>
                   <input
@@ -216,7 +216,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Email
                   </label>
                   <input
@@ -234,7 +234,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Current Password
                   </label>
                   <input
@@ -252,7 +252,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     New Password
                   </label>
                   <input
@@ -270,7 +270,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Confirm New Password
                   </label>
                   <input
@@ -307,7 +307,7 @@ export default function SettingsPage() {
               <form onSubmit={handleSystemUpdate} className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                    <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                       Auto Backup
                     </label>
                     <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Backup Frequency
                   </label>
                   <select
@@ -345,7 +345,7 @@ export default function SettingsPage() {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                    <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                       Enable Notifications
                     </label>
                     <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Language
                   </label>
                   <select
