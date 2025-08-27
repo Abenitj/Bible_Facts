@@ -37,6 +37,8 @@ export default function ReligionsPage() {
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingReligion, setDeletingReligion] = useState<Religion | null>(null)
   const [activeSection, setActiveSection] = useState('religions')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
@@ -123,17 +125,22 @@ export default function ReligionsPage() {
   }
 
   const handleDelete = async (religion: Religion) => {
-    if (!confirm(`Are you sure you want to delete "${religion.name}"?`)) {
-      return
-    }
+    setDeletingReligion(religion)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingReligion) return
 
     try {
-      const response = await fetch(`/api/religions/${religion.id}`, {
+      const response = await fetch(`/api/religions/${deletingReligion.id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         await loadReligions()
+        setShowDeleteConfirm(false)
+        setDeletingReligion(null)
       } else {
         const data = await response.json()
         setError(data.error || 'Failed to delete religion')
@@ -141,6 +148,11 @@ export default function ReligionsPage() {
     } catch (error) {
       setError('Network error')
     }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setDeletingReligion(null)
   }
 
   const resetForm = () => {
@@ -261,7 +273,7 @@ export default function ReligionsPage() {
 
         {/* Religion Form */}
         {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
             <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="px-6 py-4 border-b" 
@@ -375,6 +387,55 @@ export default function ReligionsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && deletingReligion && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+            <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+                 style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+              <div className="px-6 py-4 border-b" 
+                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                  Confirm Delete
+                </h3>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full" style={{ backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                      Delete "{deletingReligion.name}"?
+                    </p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      This action cannot be undone. All associated topics will also be deleted.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}

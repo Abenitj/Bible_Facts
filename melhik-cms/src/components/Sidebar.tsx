@@ -257,7 +257,7 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden"
+          className="fixed inset-0 bg-black bg-opacity-75 z-40 sm:hidden"
           onClick={onClose}
         />
       )}

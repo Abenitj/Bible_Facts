@@ -46,6 +46,8 @@ export default function TopicsPage() {
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingTopic, setDeletingTopic] = useState<Topic | null>(null)
   const [activeSection, setActiveSection] = useState('topics')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
@@ -140,17 +142,22 @@ export default function TopicsPage() {
   }
 
   const handleDelete = async (topic: Topic) => {
-    if (!confirm(`Are you sure you want to delete "${topic.title}"?`)) {
-      return
-    }
+    setDeletingTopic(topic)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingTopic) return
 
     try {
-      const response = await fetch(`/api/topics/${topic.id}`, {
+      const response = await fetch(`/api/topics/${deletingTopic.id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         await loadData()
+        setShowDeleteConfirm(false)
+        setDeletingTopic(null)
       } else {
         const data = await response.json()
         setError(data.error || 'Failed to delete topic')
@@ -158,6 +165,11 @@ export default function TopicsPage() {
     } catch (error) {
       setError('Network error')
     }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false)
+    setDeletingTopic(null)
   }
 
   const resetForm = () => {
@@ -278,7 +290,7 @@ export default function TopicsPage() {
 
         {/* Topic Form */}
         {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
             <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
                  style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="px-6 py-4 border-b" 
@@ -298,7 +310,7 @@ export default function TopicsPage() {
                     required
                     value={formData.religionId}
                     onChange={(e) => setFormData(prev => ({ ...prev, religionId: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{
                       backgroundColor: darkMode ? '#374151' : '#ffffff',
                       borderColor: darkMode ? '#4b5563' : '#d1d5db',
@@ -324,7 +336,7 @@ export default function TopicsPage() {
                     required
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{
                       backgroundColor: darkMode ? '#374151' : '#ffffff',
                       borderColor: darkMode ? '#4b5563' : '#d1d5db',
@@ -343,7 +355,7 @@ export default function TopicsPage() {
                     type="text"
                     value={formData.titleEn}
                     onChange={(e) => setFormData(prev => ({ ...prev, titleEn: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{
                       backgroundColor: darkMode ? '#374151' : '#ffffff',
                       borderColor: darkMode ? '#4b5563' : '#d1d5db',
@@ -362,7 +374,7 @@ export default function TopicsPage() {
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{
                       backgroundColor: darkMode ? '#374151' : '#ffffff',
                       borderColor: darkMode ? '#4b5563' : '#d1d5db',
@@ -376,7 +388,7 @@ export default function TopicsPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {submitting ? 'Saving...' : (editingTopic ? 'Update' : 'Create')}
                   </button>
@@ -389,6 +401,55 @@ export default function TopicsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && deletingTopic && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+            <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+                 style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+              <div className="px-6 py-4 border-b" 
+                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                  Confirm Delete
+                </h3>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-full" style={{ backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2' }}>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                      Delete "{deletingTopic.title}"?
+                    </p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      This action cannot be undone. All associated content will also be deleted.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -411,7 +472,7 @@ export default function TopicsPage() {
               <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No topics found</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 Add First Topic
               </button>
