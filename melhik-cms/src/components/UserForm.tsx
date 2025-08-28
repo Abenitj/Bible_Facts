@@ -13,7 +13,7 @@ interface User {
 
 interface UserFormProps {
   user?: User | null
-  onSubmit: (userData: any) => void
+  onSubmit: (userData: any, userId?: number) => void
   onClose: () => void
   currentUser: any
 }
@@ -26,6 +26,12 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
     password: '',
     role: 'content_manager',
     status: 'active'
+  } as {
+    username: string
+    email: string
+    password: string
+    role: string
+    status: string
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -81,18 +87,18 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
       
       // Remove password if it's empty (for editing)
       if (isEditing && !submitData.password) {
-        delete submitData.password
+        delete (submitData as any).password
       }
 
       // Remove email if it's empty
       if (!submitData.email) {
-        delete submitData.email
+        delete (submitData as any).email
       }
 
 
 
       if (isEditing) {
-        await onSubmit(user!.id, submitData)
+        await onSubmit(submitData, user!.id)
       } else {
         await onSubmit(submitData)
       }
@@ -124,25 +130,15 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
   ].filter(option => canAssignRole(option.value))
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`w-full max-w-md rounded-lg shadow-xl transition-all duration-300 ${
-        darkMode ? 'bg-gray-800' : 'bg-white'
-      }`}>
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+      <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+           style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b" 
+        <div className="px-6 py-4 border-b" 
              style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-          <h2 className="text-xl font-semibold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-            {isEditing ? 'Edit User' : 'Create User'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+            {isEditing ? 'Edit User' : 'Add New User'}
+          </h3>
         </div>
 
         {/* Form */}
@@ -270,32 +266,20 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
 
 
           {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              style={{
-                backgroundColor: darkMode ? '#374151' : '#ffffff',
-                borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                color: darkMode ? '#f9fafb' : '#111827'
-              }}
-            >
-              Cancel
-            </button>
+          <div className="flex space-x-3 pt-4">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Saving...</span>
-                </div>
-              ) : (
-                isEditing ? 'Update User' : 'Create User'
-              )}
+              {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+            >
+              Cancel
             </button>
           </div>
         </form>

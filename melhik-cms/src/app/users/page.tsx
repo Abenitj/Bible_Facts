@@ -48,6 +48,15 @@ export default function UsersPage() {
     status: ''
   })
   const [currentPage, setCurrentPage] = useState(1)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deletingUser, setDeletingUser] = useState<User | null>(null)
+  const [showPasswordResetConfirm, setShowPasswordResetConfirm] = useState(false)
+  const [resettingPasswordUser, setResettingPasswordUser] = useState<User | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false)
+  const [deletingAccountUser, setDeletingAccountUser] = useState<User | null>(null)
   const { darkMode } = useDarkMode()
 
   useEffect(() => {
@@ -78,7 +87,7 @@ export default function UsersPage() {
       
       if (!token) {
         console.error('No token found')
-        alert('No authentication token found. Please log in again.')
+        setError('No authentication token found. Please log in again.')
         router.push('/login')
         return
       }
@@ -103,44 +112,46 @@ export default function UsersPage() {
         console.log('Users data:', data)
         setUsers(data.data || [])
         setPagination(data.pagination)
+        setError('')
       } else {
         const errorData = await response.json()
         console.error('Failed to load users:', errorData)
-        alert(`Failed to load users: ${errorData.error || 'Unknown error'}`)
+        setError(`Failed to load users: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error loading users:', error)
-      alert('Error loading users. Please check console for details.')
+      setError('Error loading users. Please check console for details.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCreateUser = async (userData: any) => {
+  const handleCreateUser = async (userData: any, userId?: number) => {
     try {
       const token = localStorage.getItem('cms_token')
-      const response = await authenticatedApiCall('api/users', token, {
+      const response = await authenticatedApiCall('api/users', token!, {
         method: 'POST',
         body: JSON.stringify(userData)
       })
 
       if (response.ok) {
         setShowUserForm(false)
+        setSuccess('User created successfully')
         loadUsers()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to create user')
+        setError(error.error || 'Failed to create user')
       }
     } catch (error) {
       console.error('Error creating user:', error)
-      alert('Failed to create user')
+      setError('Failed to create user')
     }
   }
 
-  const handleUpdateUser = async (userId: number, userData: any) => {
+  const handleUpdateUser = async (userData: any, userId?: number) => {
     try {
       const token = localStorage.getItem('cms_token')
-      const response = await authenticatedApiCall(`api/users/${userId}`, token, {
+      const response = await authenticatedApiCall(`api/users/${userId!}`, token!, {
         method: 'PUT',
         body: JSON.stringify(userData)
       })
@@ -148,64 +159,127 @@ export default function UsersPage() {
       if (response.ok) {
         setShowUserForm(false)
         setEditingUser(null)
+        setSuccess('User updated successfully')
         loadUsers()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to update user')
+        setError(error.error || 'Failed to update user')
       }
     } catch (error) {
       console.error('Error updating user:', error)
-      alert('Failed to update user')
+      setError('Failed to update user')
     }
   }
 
-  const handleDeactivateUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to deactivate this user?')) {
-      return
-    }
+  const handleDeactivateUser = (user: User) => {
+    setDeletingUser(user)
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDeactivateUser = async () => {
+    if (!deletingUser) return
 
     try {
       const token = localStorage.getItem('cms_token')
-      const response = await authenticatedApiCall(`api/users/${userId}`, token, {
+      const response = await authenticatedApiCall(`api/users/${deletingUser.id}`, token!, {
         method: 'DELETE'
       })
 
       if (response.ok) {
+        setSuccess('User deactivated successfully')
         loadUsers()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to deactivate user')
+        setError(error.error || 'Failed to deactivate user')
       }
     } catch (error) {
       console.error('Error deactivating user:', error)
-      alert('Failed to deactivate user')
+      setError('Failed to deactivate user')
+    } finally {
+      setShowDeleteConfirm(false)
+      setDeletingUser(null)
     }
   }
 
-  const handleResetPassword = async (userId: number) => {
-    const newPassword = prompt('Enter new password (minimum 6 characters):')
-    if (!newPassword || newPassword.length < 6) {
-      alert('Password must be at least 6 characters long')
+  const cancelDeactivateUser = () => {
+    setShowDeleteConfirm(false)
+    setDeletingUser(null)
+  }
+
+  const handleDeleteAccount = (user: User) => {
+    setDeletingAccountUser(user)
+    setShowDeleteAccountConfirm(true)
+  }
+
+  const confirmDeleteAccount = async () => {
+    if (!deletingAccountUser) return
+
+    try {
+      const token = localStorage.getItem('cms_token')
+      const response = await authenticatedApiCall(`api/users/${deletingAccountUser.id}/delete`, token!, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setSuccess('User account permanently deleted successfully')
+        loadUsers()
+      } else {
+        const error = await response.json()
+        setError(error.error || 'Failed to delete user account')
+      }
+    } catch (error) {
+      console.error('Error deleting user account:', error)
+      setError('Failed to delete user account')
+    } finally {
+      setShowDeleteAccountConfirm(false)
+      setDeletingAccountUser(null)
+    }
+  }
+
+  const cancelDeleteAccount = () => {
+    setShowDeleteAccountConfirm(false)
+    setDeletingAccountUser(null)
+  }
+
+  const handleResetPassword = (user: User) => {
+    setResettingPasswordUser(user)
+    setNewPassword('')
+    setShowPasswordResetConfirm(true)
+  }
+
+  const confirmResetPassword = async () => {
+    if (!resettingPasswordUser || !newPassword || newPassword.length < 6) {
+      setError('Password must be at least 6 characters long')
       return
     }
 
     try {
       const token = localStorage.getItem('cms_token')
-      const response = await authenticatedApiCall(`api/users/${userId}/reset-password`, token, {
+      const response = await authenticatedApiCall(`api/users/${resettingPasswordUser.id}/reset-password`, token!, {
         method: 'POST',
         body: JSON.stringify({ newPassword })
       })
 
       if (response.ok) {
-        alert('Password reset successfully')
+        setSuccess('Password reset successfully')
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to reset password')
+        setError(error.error || 'Failed to reset password')
       }
     } catch (error) {
       console.error('Error resetting password:', error)
-      alert('Failed to reset password')
+      setError('Failed to reset password')
+    } finally {
+      setShowPasswordResetConfirm(false)
+      setResettingPasswordUser(null)
+      setNewPassword('')
     }
+  }
+
+  const cancelResetPassword = () => {
+    setShowPasswordResetConfirm(false)
+    setResettingPasswordUser(null)
+    setNewPassword('')
   }
 
   const handleFilterChange = (key: string, value: string) => {
@@ -329,7 +403,7 @@ export default function UsersPage() {
                 onClick={async () => {
                   const token = localStorage.getItem('cms_token')
                   console.log('Testing API with token:', token ? 'Token exists' : 'No token')
-                  const response = await authenticatedApiCall('api/users', token)
+                  const response = await authenticatedApiCall('api/users', token!)
                   const data = await response.json()
                   console.log('Test API response:', data)
                   alert(`API Test: ${response.status} - ${JSON.stringify(data)}`)
@@ -450,8 +524,9 @@ export default function UsersPage() {
                   user={userItem}
                   currentUser={user}
                   onEdit={() => openUserForm(userItem)}
-                  onDeactivate={() => handleDeactivateUser(userItem.id)}
-                  onResetPassword={() => handleResetPassword(userItem.id)}
+                  onDeactivate={() => handleDeactivateUser(userItem)}
+                  onResetPassword={() => handleResetPassword(userItem)}
+                  onDelete={() => handleDeleteAccount(userItem)}
                   getRoleColor={getRoleColor}
                   getStatusColor={getStatusColor}
                 />
@@ -526,6 +601,226 @@ export default function UsersPage() {
           currentUser={user}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && deletingUser && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-6 py-4 border-b" 
+                 style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                Confirm Deactivation
+              </h3>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full" style={{ backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2' }}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                       style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                    Deactivate "{deletingUser.username}"?
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    This user will be marked as inactive and won't be able to log in.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={confirmDeactivateUser}
+                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Deactivate
+                </button>
+                <button
+                  onClick={cancelDeactivateUser}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Confirmation Modal */}
+      {showPasswordResetConfirm && resettingPasswordUser && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-6 py-4 border-b" 
+                 style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                Reset Password
+              </h3>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full" style={{ backgroundColor: darkMode ? '#1e40af' : '#eff6ff' }}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                       style={{ color: darkMode ? '#93c5fd' : '#3b82f6' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                    Reset password for "{resettingPasswordUser.username}"?
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Enter a new password (minimum 6 characters).
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                  New Password *
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#ffffff',
+                    borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                    color: darkMode ? '#ffffff' : '#000000'
+                  }}
+                  placeholder="Enter new password"
+                  minLength={6}
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={confirmResetPassword}
+                  disabled={!newPassword || newPassword.length < 6}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Reset Password
+                </button>
+                <button
+                  onClick={cancelResetPassword}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteAccountConfirm && deletingAccountUser && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-6 py-4 border-b" 
+                 style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                Confirm Account Deletion
+              </h3>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-full" style={{ backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2' }}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                       style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                    Permanently delete "{deletingAccountUser.username}"?
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    This action cannot be undone. The user account and all associated data will be permanently removed.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+                <p className="text-sm font-medium" style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                  ⚠️ Warning: This is a permanent action
+                </p>
+                <p className="text-xs mt-1" style={{ color: darkMode ? '#f87171' : '#b91c1c' }}>
+                  The user account will be completely removed from the system and cannot be recovered.
+                </p>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={confirmDeleteAccount}
+                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Delete Account
+                </button>
+                <button
+                  onClick={cancelDeleteAccount}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <div className="border px-4 py-3 rounded-md shadow-lg"
+               style={{
+                 backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                 borderColor: darkMode ? '#991b1b' : '#fecaca',
+                 color: darkMode ? '#fca5a5' : '#dc2626'
+               }}>
+            <div className="flex items-center justify-between">
+              <span>{error}</span>
+              <button
+                onClick={() => setError('')}
+                className="ml-4 text-sm font-medium hover:opacity-75"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <div className="border px-4 py-3 rounded-md shadow-lg"
+               style={{
+                 backgroundColor: darkMode ? '#064e3b' : '#f0fdf4',
+                 borderColor: darkMode ? '#065f46' : '#bbf7d0',
+                 color: darkMode ? '#6ee7b7' : '#16a34a'
+               }}>
+            <div className="flex items-center justify-between">
+              <span>{success}</span>
+              <button
+                onClick={() => setSuccess('')}
+                className="ml-4 text-sm font-medium hover:opacity-75"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

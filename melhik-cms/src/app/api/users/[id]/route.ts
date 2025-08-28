@@ -19,11 +19,11 @@ function hasPermission(userRole: string, requiredRole: string): boolean {
 // GET /api/users/[id] - Get user details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization'))
+    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -38,7 +38,8 @@ export async function GET(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    const userId = parseInt(params.id)
+    const { id } = await params
+    const userId = parseInt(id)
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
     }
@@ -94,11 +95,11 @@ export async function GET(
 // PUT /api/users/[id] - Update user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization'))
+    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -113,7 +114,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    const userId = parseInt(params.id)
+    const { id } = await params
+    const userId = parseInt(id)
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
     }
@@ -207,7 +209,7 @@ export async function PUT(
           updatedUser: updatedUser.username,
           changes: Object.keys(body).join(', ')
         }),
-        ipAddress: request.headers.get('x-forwarded-for') || request.ip,
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent')
       }
     })
@@ -230,11 +232,11 @@ export async function PUT(
 // DELETE /api/users/[id] - Deactivate user (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization'))
+    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -249,7 +251,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    const userId = parseInt(params.id)
+    const { id } = await params
+    const userId = parseInt(id)
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
     }
@@ -295,7 +298,7 @@ export async function DELETE(
         resource: 'user',
         resourceId: userId,
         details: JSON.stringify({ deactivatedUser: deactivatedUser.username }),
-        ipAddress: request.headers.get('x-forwarded-for') || request.ip,
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent')
       }
     })

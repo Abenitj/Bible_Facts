@@ -18,11 +18,11 @@ function hasPermission(userRole: string, requiredRole: string): boolean {
 // GET /api/users/[id]/activity - Get user activity
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization'))
+    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -37,7 +37,8 @@ export async function GET(
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    const userId = parseInt(params.id)
+    const { id } = await params
+    const userId = parseInt(id)
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
     }
@@ -149,11 +150,11 @@ export async function GET(
 // POST /api/users/[id]/activity - Create user activity log
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization'))
+    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -163,7 +164,8 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const userId = parseInt(params.id)
+    const { id } = await params
+    const userId = parseInt(id)
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
     }
@@ -194,7 +196,7 @@ export async function POST(
         resource,
         resourceId,
         details: details ? JSON.stringify(details) : null,
-        ipAddress: request.headers.get('x-forwarded-for') || request.ip,
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent')
       },
       select: {

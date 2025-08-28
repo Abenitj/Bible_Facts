@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken, getTokenFromHeader, hashPassword } from '@/lib/auth'
-import { resetPasswordSchema } from '@/lib/validation'
+import { verifyToken, getTokenFromHeader } from '@/lib/auth'
 
 // Helper function to check if user has permission
 function hasPermission(userRole: string, requiredRole: string): boolean {
@@ -16,8 +15,8 @@ function hasPermission(userRole: string, requiredRole: string): boolean {
   return userLevel >= requiredLevel
 }
 
-// POST /api/users/[id]/reset-password - Reset user password
-export async function POST(
+// DELETE /api/users/[id]/delete - Permanently delete user account
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -33,9 +32,9 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // Check permissions - only admin and content_manager can reset passwords
-    if (!hasPermission(payload.role, 'content_manager')) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    // Check permissions - only admins can permanently delete users
+    if (!hasPermission(payload.role, 'admin')) {
+      return NextResponse.json({ error: 'Only admins can permanently delete users' }, { status: 403 })
     }
 
     const { id } = await params
@@ -53,56 +52,40 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Prevent non-admins from resetting admin passwords
-    if (existingUser.role === 'admin' && payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Only admins can reset admin passwords' }, { status: 403 })
+    // Prevent users from deleting themselves
+    if (userId === payload.userId) {
+      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 403 })
     }
 
-    // Get request body
-    const body = await request.json()
-
-    // Validate input
-    const validation = resetPasswordSchema.safeParse({
-      userId,
-      newPassword: body.newPassword
-    })
-    
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.issues },
-        { status: 400 }
-      )
+    // Prevent deletion of other admin users (optional safety measure)
+    if (existingUser.role === 'admin') {
+      return NextResponse.json({ error: 'Cannot delete admin users' }, { status: 403 })
     }
 
-    const { newPassword } = validation.data
+    // Store user info for activity log before deletion
+    const userToDelete = {
+      id: existingUser.id,
+      username: existingUser.username,
+      email: existingUser.email,
+      role: existingUser.role
+    }
 
-    // Hash new password
-    const hashedPassword = await hashPassword(newPassword)
-
-    // Update user password
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        status: true,
-        updatedAt: true
-      }
+    // Permanently delete the user
+    await prisma.user.delete({
+      where: { id: userId }
     })
 
     // Log activity
     await prisma.userActivity.create({
       data: {
         userId: payload.userId,
-        action: 'reset_password',
+        action: 'delete_user',
         resource: 'user',
         resourceId: userId,
         details: JSON.stringify({ 
-          resetUser: updatedUser.username,
-          resetBy: payload.username
+          deletedUser: userToDelete.username,
+          deletedUserEmail: userToDelete.email,
+          deletedUserRole: userToDelete.role
         }),
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent')
@@ -111,15 +94,15 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
+      message: 'User permanently deleted successfully',
       data: {
-        id: updatedUser.id,
-        username: updatedUser.username,
-        message: 'Password reset successfully'
+        deletedUser: userToDelete.username,
+        deletedAt: new Date().toISOString()
       }
     })
 
   } catch (error) {
-    console.error('Error resetting password:', error)
+    console.error('Error deleting user:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
