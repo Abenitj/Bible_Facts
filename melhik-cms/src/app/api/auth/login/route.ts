@@ -39,11 +39,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Update last login time
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() }
+    })
+
     // Generate token
     const token = generateToken({
       userId: user.id,
       username: user.username,
       role: user.role
+    })
+    
+    console.log('Generated token for user:', {
+      userId: user.id,
+      username: user.username,
+      role: user.role
+    })
+
+    // Log login activity
+    await prisma.userActivity.create({
+      data: {
+        userId: user.id,
+        action: 'login',
+        resource: 'auth',
+        details: JSON.stringify({ loginMethod: 'username_password' }),
+        ipAddress: request.headers.get('x-forwarded-for') || request.ip,
+        userAgent: request.headers.get('user-agent')
+      }
     })
 
     // Return success response

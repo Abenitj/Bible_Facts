@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { apiCall } from '@/lib/api'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
@@ -57,8 +58,8 @@ export default function Dashboard() {
 
     const loadData = async () => {
       try {
-        const religionsRes = await fetch('/api/religions')
-        const topicsRes = await fetch('/api/topics')
+        const religionsRes = await apiCall('api/religions')
+        const topicsRes = await apiCall('api/topics')
 
         if (religionsRes.ok) {
           const religionsData = await religionsRes.json()

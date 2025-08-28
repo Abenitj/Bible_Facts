@@ -8,8 +8,21 @@ export const loginSchema = z.object({
 
 export const createUserSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Invalid email address').optional(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['admin', 'editor']).default('editor'),
+  role: z.enum(['admin', 'content_manager']).default('content_manager'),
+  status: z.enum(['active', 'inactive']).default('active'),
+})
+
+export const updateUserSchema = createUserSchema.partial().omit({ password: true })
+
+export const updateUserPasswordSchema = z.object({
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+})
+
+export const resetPasswordSchema = z.object({
+  userId: z.number().int().positive('User ID must be a positive integer'),
+  newPassword: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
 // Religion validation schemas
@@ -52,5 +65,16 @@ export const updateTopicDetailSchema = createTopicDetailSchema.partial()
 export const syncCheckSchema = z.object({
   lastSync: z.string().datetime().optional(),
   version: z.number().int().positive().optional(),
+})
+
+// User activity validation schemas
+export const createUserActivitySchema = z.object({
+  userId: z.number().int().positive('User ID must be a positive integer'),
+  action: z.string().min(1, 'Action is required'),
+  resource: z.string().optional(),
+  resourceId: z.number().int().positive().optional(),
+  details: z.string().optional(), // JSON string
+  ipAddress: z.string().optional(),
+  userAgent: z.string().optional(),
 })
 

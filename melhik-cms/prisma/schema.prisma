@@ -50,12 +50,38 @@ model TopicDetail {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  role      String   @default("admin")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int       @id @default(autoincrement())
+  username    String    @unique
+  email       String?   @unique
+  password    String
+            role        String    @default("content_manager") // admin, content_manager
+  status      String    @default("active") // active, inactive
+  lastLoginAt DateTime?
+  createdBy   Int?      // ID of user who created this user
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Self-referencing relationship for createdBy
+  createdUsers User[] @relation("UserCreator")
+  creator      User?  @relation("UserCreator", fields: [createdBy], references: [id])
+
+  // User activities
+  activities UserActivity[]
 
   @@map("users")
+}
+
+model UserActivity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String   // login, logout, create, update, delete, etc.
+  resource  String?  // what resource was affected (user, topic, religion, etc.)
+  resourceId Int?    // ID of the affected resource
+  details   String?  // JSON string with additional details
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_activities")
 }
