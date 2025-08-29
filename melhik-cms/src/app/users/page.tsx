@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import UserCard from '@/components/UserCard'
 import UserForm from '@/components/UserForm'
+import PermissionManager from '@/components/PermissionManager'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 import { authenticatedApiCall } from '@/lib/api'
@@ -16,6 +17,7 @@ interface User {
   email: string | null
   role: string
   status: string
+  permissions?: string | null
   lastLoginAt: string | null
   createdAt: string
   createdByUsername: string | null
@@ -51,6 +53,8 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState('')
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false)
   const [deletingAccountUser, setDeletingAccountUser] = useState<User | null>(null)
+  const [showPermissionManager, setShowPermissionManager] = useState(false)
+  const [managingPermissionsUser, setManagingPermissionsUser] = useState<User | null>(null)
 
   // Auto-dismiss notifications
   useEffect(() => {
@@ -259,6 +263,36 @@ export default function UsersPage() {
     }
   }
 
+  const handleManagePermissions = (user: User) => {
+    setManagingPermissionsUser(user)
+    setShowPermissionManager(true)
+  }
+
+  const handleSavePermissions = async (userId: number, permissions: string[]) => {
+    if (!token) return
+
+    try {
+      const response = await authenticatedApiCall(
+        `/api/users/${userId}/permissions`,
+        'PUT',
+        token,
+        { permissions }
+      )
+      
+      if (response.success) {
+        setSuccess('User permissions updated successfully')
+        setShowPermissionManager(false)
+        setManagingPermissionsUser(null)
+        fetchUsers()
+      } else {
+        setError(response.error || 'Failed to update user permissions')
+      }
+    } catch (error) {
+      console.error('Error updating user permissions:', error)
+      setError('Failed to update user permissions')
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('cms_token')
     localStorage.removeItem('cms_user')
@@ -434,15 +468,16 @@ export default function UsersPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {users.map((user) => (
+              {users.map((userItem) => (
                 <UserCard
-                  key={user.id}
-                  user={user}
+                  key={userItem.id}
+                  user={userItem}
                   currentUser={user}
-                  onEdit={() => setEditingUser(user)}
-                  onDeactivate={() => handleDeactivateUser(user)}
-                  onResetPassword={() => handleResetPassword(user)}
-                  onDelete={() => handleDeleteAccount(user)}
+                  onEdit={() => setEditingUser(userItem)}
+                  onDeactivate={() => handleDeactivateUser(userItem)}
+                  onResetPassword={() => handleResetPassword(userItem)}
+                  onDelete={() => handleDeleteAccount(userItem)}
+                  onManagePermissions={() => handleManagePermissions(userItem)}
                   getRoleColor={getRoleColor}
                   getStatusColor={getStatusColor}
                 />
@@ -710,6 +745,19 @@ export default function UsersPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Permission Manager Modal */}
+      {showPermissionManager && managingPermissionsUser && (
+        <PermissionManager
+          user={managingPermissionsUser}
+          currentUser={user}
+          onSave={handleSavePermissions}
+          onClose={() => {
+            setShowPermissionManager(false)
+            setManagingPermissionsUser(null)
+          }}
+        />
       )}
     </div>
   )

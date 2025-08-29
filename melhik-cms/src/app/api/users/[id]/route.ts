@@ -31,25 +31,25 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        status: true,
-        lastLoginAt: true,
-        createdAt: true,
-        updatedAt: true,
-        createdBy: true,
-        _count: {
-          select: {
-            activities: true
+          const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          role: true,
+          status: true,
+          lastLoginAt: true,
+          createdAt: true,
+          updatedAt: true,
+          createdBy: true,
+          _count: {
+            select: {
+              activities: true
+            }
           }
         }
-      }
-    })
+      })
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })

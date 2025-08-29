@@ -54,8 +54,9 @@ model User {
   username    String    @unique
   email       String?   @unique
   password    String
-            role        String    @default("content_manager") // admin, content_manager
+  role        String    @default("content_manager") // admin, content_manager
   status      String    @default("active") // active, inactive
+  permissions String?   // JSON string for granular permissions
   lastLoginAt DateTime?
   createdBy   Int?      // ID of user who created this user
   createdAt   DateTime  @default(now())
