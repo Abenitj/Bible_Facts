@@ -1,27 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { verifyToken, getTokenFromHeader } from '@/lib/auth'
-import { createUserSchema } from '@/lib/validation'
-import { hashPassword } from '@/lib/auth'
+import { PrismaClient } from '@prisma/client'
+import { verifyToken, hasPermission, PERMISSIONS } from '@/lib/auth'
 
-// Helper function to check if user has permission
-function hasPermission(userRole: string, requiredRole: string): boolean {
-  const roleHierarchy = {
-    'admin': 2,
-    'content_manager': 1
-  }
-  
-  const userLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] || 0
-  const requiredLevel = roleHierarchy[requiredRole as keyof typeof roleHierarchy] || 0
-  
-  return userLevel >= requiredLevel
-}
+const prisma = new PrismaClient()
 
-// GET /api/users - List users
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -30,49 +15,35 @@ export async function GET(request: NextRequest) {
     if (!payload) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
-    
-    console.log('Token payload:', payload)
-    console.log('User role:', payload.role)
-    console.log('Checking permission for content_manager')
-    
-    // Check permissions - only admin and content_manager can view users
-    if (!hasPermission(payload.role, 'content_manager')) {
-      console.log('Permission denied for role:', payload.role)
+
+    // Check if user has permission to view users
+    if (!hasPermission(payload.role as any, PERMISSIONS.VIEW_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
-    
-    console.log('Permission granted for role:', payload.role)
 
-    // Get query parameters
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
     const role = searchParams.get('role') || ''
     const status = searchParams.get('status') || ''
-    const sortBy = searchParams.get('sortBy') || 'createdAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+
+    const skip = (page - 1) * limit
 
     // Build where clause
     const where: any = {}
-    
     if (search) {
       where.OR = [
         { username: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } }
       ]
     }
-    
     if (role) {
       where.role = role
     }
-    
     if (status) {
       where.status = status
     }
-
-    // Calculate pagination
-    const skip = (page - 1) * limit
 
     // Get users with pagination
     const [users, total] = await Promise.all([
@@ -86,55 +57,54 @@ export async function GET(request: NextRequest) {
           status: true,
           lastLoginAt: true,
           createdAt: true,
-          updatedAt: true,
-          creator: {
+          createdBy: true,
+          _count: {
             select: {
-              id: true,
-              username: true
+              activities: true
             }
           }
         },
-        orderBy: {
-          [sortBy]: sortOrder
-        },
         skip,
-        take: limit
+        take: limit,
+        orderBy: { createdAt: 'desc' }
       }),
       prisma.user.count({ where })
     ])
 
-    // Calculate pagination info
-    const totalPages = Math.ceil(total / limit)
-    const hasNext = page < totalPages
-    const hasPrev = page > 1
+    // Get creator usernames
+    const creatorIds = [...new Set(users.map(user => user.createdBy).filter(Boolean))]
+    const creators = creatorIds.length > 0 
+      ? await prisma.user.findMany({
+          where: { id: { in: creatorIds as number[] } },
+          select: { id: true, username: true }
+        })
+      : []
+
+    const creatorMap = new Map(creators.map(c => [c.id, c.username]))
+
+    const usersWithCreators = users.map(user => ({
+      ...user,
+      createdByUsername: user.createdBy ? creatorMap.get(user.createdBy) : null
+    }))
 
     return NextResponse.json({
-      success: true,
-      data: users,
+      users: usersWithCreators,
       pagination: {
         page,
         limit,
         total,
-        totalPages,
-        hasNext,
-        hasPrev
+        pages: Math.ceil(total / limit)
       }
     })
-
   } catch (error) {
     console.error('Error fetching users:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST /api/users - Create new user
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -144,47 +114,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // Check permissions - only admin and content_manager can create users
-    if (!hasPermission(payload.role, 'content_manager')) {
+    // Check if user has permission to create users
+    if (!hasPermission(payload.role as any, PERMISSIONS.CREATE_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    // Additional check: only admin can create admin users
     const body = await request.json()
-    if (body.role === 'admin' && payload.role !== 'admin') {
-      return NextResponse.json({ error: 'Only admins can create admin users' }, { status: 403 })
-    }
+    const { username, email, password, role, status } = body
 
-    // Validate input
-    const validation = createUserSchema.safeParse(body)
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.issues },
-        { status: 400 }
-      )
+    // Validate required fields
+    if (!username || !password || !role) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
-
-    const { username, email, password, role, status } = validation.data
 
     // Check if username already exists
     const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { username },
-          ...(email ? [{ email }] : [])
-        ]
-      }
+      where: { username }
     })
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'Username or email already exists' },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: 'Username already exists' }, { status: 400 })
+    }
+
+    // Check if email already exists (if provided)
+    if (email) {
+      const existingEmail = await prisma.user.findFirst({
+        where: { email }
+      })
+
+      if (existingEmail) {
+        return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
+      }
     }
 
     // Hash password
-    const hashedPassword = await hashPassword(password)
+    const bcrypt = require('bcryptjs')
+    const hashedPassword = await bcrypt.hash(password, 10)
 
     // Create user
     const newUser = await prisma.user.create({
@@ -193,7 +158,7 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         role,
-        status,
+        status: status || 'active',
         createdBy: payload.userId
       },
       select: {
@@ -202,13 +167,7 @@ export async function POST(request: NextRequest) {
         email: true,
         role: true,
         status: true,
-        createdAt: true,
-        creator: {
-          select: {
-            id: true,
-            username: true
-          }
-        }
+        createdAt: true
       }
     })
 
@@ -217,25 +176,18 @@ export async function POST(request: NextRequest) {
       data: {
         userId: payload.userId,
         action: 'create_user',
-        resource: 'user',
-        resourceId: newUser.id,
-        details: JSON.stringify({ createdUser: newUser.username, role: newUser.role }),
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent')
+        details: `Created user: ${username}`,
+        ipAddress: 'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown'
       }
     })
 
-    return NextResponse.json({
-      success: true,
-      data: newUser,
-      message: 'User created successfully'
+    return NextResponse.json({ 
+      message: 'User created successfully', 
+      user: newUser 
     })
-
   } catch (error) {
     console.error('Error creating user:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

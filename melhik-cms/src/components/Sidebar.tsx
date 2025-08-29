@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from './DarkModeToggle'
+import { canAccessUserManagement, ROLES } from '@/lib/auth'
 
 interface MobileMenuProps {
   user: { username: string; role: string } | null
@@ -34,7 +35,8 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
         </svg>
       ),
-      href: '/dashboard'
+      href: '/dashboard',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'religions',
@@ -44,7 +46,8 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
         </svg>
       ),
-      href: '/religions'
+      href: '/religions',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'topics',
@@ -54,7 +57,8 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       ),
-      href: '/topics'
+      href: '/topics',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'content',
@@ -64,7 +68,8 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      href: '/content'
+      href: '/content',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'users',
@@ -74,7 +79,8 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
       ),
-      href: '/users'
+      href: '/users',
+      showForRoles: [ROLES.ADMIN] // Only admins can see Users
     },
     {
       id: 'sync',
@@ -84,7 +90,8 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
       ),
-      href: '/sync'
+      href: '/sync',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'settings',
@@ -95,9 +102,16 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
-      href: '/settings'
+      href: '/settings',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     }
   ]
+
+  // Filter navigation items based on user role
+  const filteredNavigationItems = navigationItems.filter(item => {
+    if (!user) return false
+    return item.showForRoles.includes(user.role as any)
+  })
 
   return (
     <div className={`${sidebarOpen ? 'w-64' : 'w-16'} shadow-lg transition-all duration-300 ease-in-out hidden sm:block`}
@@ -155,7 +169,7 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-4 space-y-1">
-          {navigationItems.map((item) => (
+          {filteredNavigationItems.map((item) => (
             <button
               key={item.id}
               onClick={() => {
@@ -236,7 +250,8 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
         </svg>
       ),
-      href: '/dashboard'
+      href: '/dashboard',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'religions',
@@ -246,7 +261,8 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
         </svg>
       ),
-      href: '/religions'
+      href: '/religions',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'topics',
@@ -256,7 +272,8 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       ),
-      href: '/topics'
+      href: '/topics',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'content',
@@ -266,7 +283,8 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      href: '/content'
+      href: '/content',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     },
     {
       id: 'users',
@@ -276,7 +294,8 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
       ),
-      href: '/users'
+      href: '/users',
+      showForRoles: [ROLES.ADMIN] // Only admins can see Users
     },
     {
       id: 'sync',
@@ -286,9 +305,16 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
       ),
-      href: '/sync'
+      href: '/sync',
+      showForRoles: [ROLES.ADMIN, ROLES.CONTENT_MANAGER]
     }
   ]
+
+  // Filter navigation items based on user role
+  const filteredNavigationItems = navigationItems.filter(item => {
+    if (!user) return false
+    return item.showForRoles.includes(user.role as any)
+  })
 
   return (
     <>
@@ -333,7 +359,7 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
           {/* Mobile Navigation */}
           <nav className="flex-1 px-4 py-6">
             <div className="space-y-2">
-              {navigationItems.map((item) => (
+              {filteredNavigationItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => {

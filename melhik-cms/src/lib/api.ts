@@ -27,15 +27,31 @@ export const apiCall = async (
 
 export const authenticatedApiCall = async (
   endpoint: string,
+  method: string = 'GET',
   token: string,
-  options: RequestInit = {}
-): Promise<Response> => {
-  return apiCall(endpoint, {
-    ...options,
+  body?: any
+): Promise<any> => {
+  const url = apiUrl(endpoint)
+  
+  const options: RequestInit = {
+    method,
     headers: {
-      ...options.headers,
+      'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-  })
+  }
+
+  if (body && method !== 'GET') {
+    options.body = JSON.stringify(body)
+  }
+
+  const response = await fetch(url, options)
+  const data = await response.json()
+
+  return {
+    success: response.ok,
+    data: data,
+    error: data.error || null
+  }
 }
 
