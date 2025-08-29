@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import { authenticatedApiCall } from '@/lib/api'
 
 interface Topic {
   id: number
@@ -85,12 +86,18 @@ export default function ContentEditorPage() {
 
   const loadTopics = async () => {
     try {
-      const response = await fetch('/api/topics')
-      if (response.ok) {
-        const data = await response.json()
-        setTopics(data.data)
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        setLoading(false)
+        return
+      }
+
+      const result = await authenticatedApiCall('/api/topics', 'GET', token)
+      if (result.success) {
+        setTopics(result.data.data)
       } else {
-        setError('Failed to load topics')
+        setError(result.error || 'Failed to load topics')
       }
     } catch (error) {
       setError('Network error')
@@ -128,30 +135,29 @@ export default function ContentEditorPage() {
     setSuccess('')
 
     try {
-      const url = selectedTopic.details 
-        ? `/api/topics/${selectedTopic.id}/content` 
-        : `/api/topics/${selectedTopic.id}/content`
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        setSaving(false)
+        return
+      }
 
-      const response = await fetch(url, {
-        method: selectedTopic.details ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          explanation: formData.explanation,
-          bibleVerses: formData.bibleVerses.filter(v => v.trim()),
-          keyPoints: formData.keyPoints.filter(k => k.trim()),
-          references: formData.references.filter(r => r.verse.trim() && r.text.trim()),
-          version: selectedTopic.details ? selectedTopic.details.version + 1 : 1
-        }),
+      const url = `/api/topics/${selectedTopic.id}/content`
+      const method = selectedTopic.details ? 'PUT' : 'POST'
+
+      const result = await authenticatedApiCall(url, method, token, {
+        explanation: formData.explanation,
+        bibleVerses: formData.bibleVerses.filter(v => v.trim()),
+        keyPoints: formData.keyPoints.filter(k => k.trim()),
+        references: formData.references.filter(r => r.verse.trim() && r.text.trim()),
+        version: selectedTopic.details ? selectedTopic.details.version + 1 : 1
       })
 
-      if (response.ok) {
+      if (result.success) {
         setSuccess('Content saved successfully!')
         await loadTopics() // Reload to get updated data
       } else {
-        const data = await response.json()
-        setError(data.error || 'Failed to save content')
+        setError(result.error || 'Failed to save content')
       }
     } catch (error) {
       setError('Network error')

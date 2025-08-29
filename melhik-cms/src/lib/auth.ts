@@ -19,6 +19,9 @@ export type UserRole = typeof ROLES[keyof typeof ROLES]
 
 // Permission definitions
 export const PERMISSIONS = {
+  // Dashboard
+  VIEW_DASHBOARD: 'view_dashboard',
+  
   // User Management
   VIEW_USERS: 'view_users',
   CREATE_USERS: 'create_users',
@@ -51,6 +54,7 @@ export const PERMISSIONS = {
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   [ROLES.ADMIN]: [
     // Full access to everything
+    PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_USERS,
     PERMISSIONS.CREATE_USERS,
     PERMISSIONS.EDIT_USERS,
@@ -73,6 +77,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   [ROLES.CONTENT_MANAGER]: [
     // Content management only
+    PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_RELIGIONS,
     PERMISSIONS.CREATE_RELIGIONS,
     PERMISSIONS.EDIT_RELIGIONS,
@@ -92,6 +97,24 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
 export function hasPermission(userRole: UserRole, requiredPermission: string): boolean {
   const userPermissions = ROLE_PERMISSIONS[userRole] || []
   return userPermissions.includes(requiredPermission)
+}
+
+// Check individual user permissions (for granular permission control)
+export function hasUserPermission(userPermissions: string[] | null, requiredPermission: string): boolean {
+  if (!userPermissions || !Array.isArray(userPermissions)) {
+    return false
+  }
+  return userPermissions.includes(requiredPermission)
+}
+
+// Check permissions with fallback to role-based permissions
+export function checkPermission(userRole: UserRole, userPermissions: string[] | null, requiredPermission: string): boolean {
+  // If user has explicit granular permissions (even if empty), use only those
+  if (userPermissions !== null) {
+    return hasUserPermission(userPermissions, requiredPermission)
+  }
+  // If no granular permissions are set (null), fallback to role-based permissions
+  return hasPermission(userRole, requiredPermission)
 }
 
 export function hasRole(userRole: UserRole, requiredRole: UserRole): boolean {

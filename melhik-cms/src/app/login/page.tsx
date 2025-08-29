@@ -58,19 +58,22 @@ export default function LoginPage() {
          style={{ 
            background: darkMode 
              ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
-             : 'linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)' 
+             : '#f8fafc' 
          }}>
       <div className="max-w-md w-full space-y-8">
         <div className="text-center relative">
           <div className="absolute top-0 right-0">
             <DarkModeToggle />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Melhik CMS</h1>
-          <p className="text-blue-200">Admin Dashboard Login</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ color: darkMode ? '#ffffff' : '#1e293b' }}>Melhik CMS</h1>
+          <p style={{ color: darkMode ? '#93c5fd' : '#64748b' }}>Admin Dashboard Login</p>
         </div>
 
-        <div className="rounded-lg shadow-xl p-8" 
-             style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+        <div className="rounded-lg border p-8" 
+             style={{ 
+               backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+               borderColor: darkMode ? '#374151' : '#e5e7eb'
+             }}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="username" className="block text-sm font-medium mb-2"
@@ -84,7 +87,7 @@ export default function LoginPage() {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 style={{
                   backgroundColor: darkMode ? '#374151' : '#ffffff',
                   borderColor: darkMode ? '#4b5563' : '#d1d5db',
@@ -106,7 +109,7 @@ export default function LoginPage() {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 style={{
                   backgroundColor: darkMode ? '#374151' : '#ffffff',
                   borderColor: darkMode ? '#4b5563' : '#d1d5db',
@@ -130,18 +133,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Default credentials:</p>
-            <p className="font-mono bg-gray-100 px-2 py-1 rounded mt-1">
-              Username: admin | Password: admin123
-            </p>
-          </div>
+
         </div>
       </div>
     </div>

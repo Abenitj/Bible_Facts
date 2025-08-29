@@ -29,13 +29,9 @@ interface PermissionGroup {
 
 const PERMISSION_GROUPS: PermissionGroup[] = [
   {
-    name: 'User Management',
+    name: 'Dashboard',
     permissions: [
-      { key: PERMISSIONS.VIEW_USERS, label: 'View Users', description: 'Can view user list and details' },
-      { key: PERMISSIONS.CREATE_USERS, label: 'Create Users', description: 'Can create new users' },
-      { key: PERMISSIONS.EDIT_USERS, label: 'Edit Users', description: 'Can edit user information' },
-      { key: PERMISSIONS.DELETE_USERS, label: 'Delete Users', description: 'Can deactivate or delete users' },
-      { key: PERMISSIONS.RESET_USER_PASSWORD, label: 'Reset Passwords', description: 'Can reset user passwords' }
+      { key: PERMISSIONS.VIEW_DASHBOARD, label: 'View Dashboard', description: 'Can access the main dashboard' }
     ]
   },
   {
@@ -73,15 +69,24 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
   useEffect(() => {
     // Initialize with current user permissions or role-based permissions
     if (user.permissions) {
-      try {
-        const parsedPermissions = JSON.parse(user.permissions)
-        setSelectedPermissions(parsedPermissions)
-      } catch (error) {
-        console.error('Error parsing user permissions:', error)
+      let permissionsArray: string[]
+      
+      if (typeof user.permissions === 'string') {
+        try {
+          permissionsArray = JSON.parse(user.permissions)
+        } catch (error) {
+          console.error('Error parsing user permissions:', error)
+          // Set default permissions based on role
+          permissionsArray = getDefaultPermissionsForRole(user.role)
+        }
+      } else if (Array.isArray(user.permissions)) {
+        permissionsArray = user.permissions
+      } else {
         // Set default permissions based on role
-        const defaultPermissions = getDefaultPermissionsForRole(user.role)
-        setSelectedPermissions(defaultPermissions)
+        permissionsArray = getDefaultPermissionsForRole(user.role)
       }
+      
+      setSelectedPermissions(permissionsArray)
     } else {
       // Set default permissions based on role
       const defaultPermissions = getDefaultPermissionsForRole(user.role)
@@ -94,6 +99,7 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
       return Object.values(PERMISSIONS)
     } else if (role === ROLES.CONTENT_MANAGER) {
       return [
+        PERMISSIONS.VIEW_DASHBOARD,
         PERMISSIONS.VIEW_RELIGIONS,
         PERMISSIONS.CREATE_RELIGIONS,
         PERMISSIONS.EDIT_RELIGIONS,
@@ -145,6 +151,8 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
 
   const handleSave = async () => {
     setIsSubmitting(true)
+    console.log('PermissionManager: Saving permissions:', selectedPermissions)
+    console.log('PermissionManager: Selected permissions length:', selectedPermissions.length)
     try {
       await onSave(user.id, selectedPermissions)
     } finally {
@@ -224,9 +232,47 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
               <option value={ROLES.CONTENT_MANAGER}>Content Manager</option>
               <option value={ROLES.ADMIN}>Admin</option>
             </select>
-            <p className="mt-1 text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
+            <p className="mt-1 text-xs" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>
               Changing the role will update the default permissions
             </p>
+          </div>
+
+          {/* Global Actions */}
+          <div className="mb-6 flex space-x-2">
+            <button
+              onClick={() => setSelectedPermissions(Object.values(PERMISSIONS))}
+              className="text-sm px-3 py-1 rounded transition-colors"
+              style={{
+                backgroundColor: darkMode ? '#065f46' : '#dcfce7',
+                color: darkMode ? '#d1fae5' : '#166534',
+                border: `1px solid ${darkMode ? '#047857' : '#bbf7d0'}`
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#047857' : '#bbf7d0'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#065f46' : '#dcfce7'
+              }}
+            >
+              Select All Permissions
+            </button>
+            <button
+              onClick={() => setSelectedPermissions([])}
+              className="text-sm px-3 py-1 rounded transition-colors"
+              style={{
+                backgroundColor: darkMode ? '#7f1d1d' : '#fee2e2',
+                color: darkMode ? '#fecaca' : '#991b1b',
+                border: `1px solid ${darkMode ? '#991b1b' : '#fca5a5'}`
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#991b1b' : '#fca5a5'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#7f1d1d' : '#fee2e2'
+              }}
+            >
+              Deselect All Permissions
+            </button>
           </div>
 
           {/* Permission Groups */}
@@ -241,13 +287,35 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleSelectAll(group.permissions.map(p => p.key))}
-                      className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 transition-colors"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{
+                        backgroundColor: darkMode ? '#1e40af' : '#dbeafe',
+                        color: darkMode ? '#bfdbfe' : '#1e40af',
+                        border: `1px solid ${darkMode ? '#3b82f6' : '#93c5fd'}`
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#93c5fd'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#1e40af' : '#dbeafe'
+                      }}
                     >
                       Select All
                     </button>
                     <button
                       onClick={() => handleDeselectAll(group.permissions.map(p => p.key))}
-                      className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      className="text-xs px-2 py-1 rounded transition-colors"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                        color: darkMode ? '#d1d5db' : '#374151',
+                        border: `1px solid ${darkMode ? '#4b5563' : '#d1d5db'}`
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#4b5563' : '#e5e7eb'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
+                      }}
                     >
                       Deselect All
                     </button>
@@ -272,7 +340,7 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
                         >
                           {permission.label}
                         </label>
-                        <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                        <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>
                           {permission.description}
                         </p>
                       </div>

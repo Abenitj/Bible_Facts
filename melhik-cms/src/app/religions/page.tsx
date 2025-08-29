@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '../../components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import { authenticatedApiCall } from '@/lib/api'
 
 interface Religion {
   id: number
@@ -67,12 +68,18 @@ export default function ReligionsPage() {
 
   const loadReligions = async () => {
     try {
-      const response = await fetch('/api/religions')
-      if (response.ok) {
-        const data = await response.json()
-        setReligions(data.data)
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        setLoading(false)
+        return
+      }
+
+      const result = await authenticatedApiCall('/api/religions', 'GET', token)
+      if (result.success) {
+        setReligions(result.data.data)
       } else {
-        setError('Failed to load religions')
+        setError(result.error || 'Failed to load religions')
       }
     } catch (error) {
       setError('Network error')
@@ -87,24 +94,24 @@ export default function ReligionsPage() {
     setError('')
 
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        setSubmitting(false)
+        return
+      }
+
       const url = editingReligion ? `/api/religions/${editingReligion.id}` : '/api/religions'
       const method = editingReligion ? 'PUT' : 'POST'
       
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+      const result = await authenticatedApiCall(url, method, token, formData)
 
-      if (response.ok) {
+      if (result.success) {
         await loadReligions()
         resetForm()
         setShowForm(false)
       } else {
-        const data = await response.json()
-        setError(data.error || 'Failed to save religion')
+        setError(result.error || 'Failed to save religion')
       }
     } catch (error) {
       setError('Network error')
@@ -133,33 +140,34 @@ export default function ReligionsPage() {
     if (!deletingReligion) return
 
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        return
+      }
+
       console.log('Attempting to delete religion:', deletingReligion.id, deletingReligion.name)
       
-      const response = await fetch(`/api/religions/${deletingReligion.id}`, {
-        method: 'DELETE',
-      })
+      const result = await authenticatedApiCall(`/api/religions/${deletingReligion.id}`, 'DELETE', token)
 
-      console.log('Delete response status:', response.status)
+      console.log('Delete response:', result)
       
-      if (response.ok) {
+      if (result.success) {
         console.log('Religion deleted successfully')
         await loadReligions()
         setShowDeleteConfirm(false)
         setDeletingReligion(null)
         setError('') // Clear any previous errors
       } else {
-        const data = await response.json()
-        console.error('Delete failed:', data)
+        console.error('Delete failed:', result.error)
         
         // Provide specific error messages based on the business rules
-        let errorMessage = data.error || 'Failed to delete religion'
+        let errorMessage = result.error || 'Failed to delete religion'
         
-        if (response.status === 400 && data.error?.includes('topics')) {
+        if (result.error?.includes('topics')) {
           errorMessage = `Cannot delete "${deletingReligion.name}" because it has ${deletingReligion.topics.length} topic(s). Please delete all topics first.`
-        } else if (response.status === 404) {
+        } else if (result.error?.includes('not found')) {
           errorMessage = `Religion "${deletingReligion.name}" not found. It may have been deleted by another user.`
-        } else if (response.status === 500) {
-          errorMessage = 'Server error occurred. Please try again later.'
         }
         
         setError(errorMessage)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { verifyToken, getTokenFromHeader, hasPermission, PERMISSIONS } from '@/lib/auth'
+import { verifyToken, getTokenFromHeader, hasPermission, checkPermission, PERMISSIONS } from '@/lib/auth'
 
 // PUT /api/users/[id]/permissions - Update user permissions
 export async function PUT(
@@ -19,8 +19,22 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const currentUserData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (currentUserData && currentUserData.permissions) {
+      try {
+        userPermissions = JSON.parse(currentUserData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
     // Check permissions - only admins can manage permissions
-    if (!hasPermission(payload.role as any, PERMISSIONS.EDIT_USERS)) {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.EDIT_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -48,6 +62,11 @@ export async function PUT(
     const body = await request.json()
     const { permissions } = body
 
+    console.log('API: Received permissions update request for user', userId)
+    console.log('API: Received permissions:', permissions)
+    console.log('API: Permissions type:', typeof permissions)
+    console.log('API: Permissions length:', permissions.length)
+
     if (!Array.isArray(permissions)) {
       return NextResponse.json({ error: 'Permissions must be an array' }, { status: 400 })
     }
@@ -64,7 +83,17 @@ export async function PUT(
     }
 
     // Update user permissions using raw SQL to avoid Prisma client issues
-    await prisma.$executeRaw`UPDATE users SET permissions = ${JSON.stringify(permissions)} WHERE id = ${userId}`
+    const permissionsJson = JSON.stringify(permissions)
+    console.log('API: Saving permissions JSON:', permissionsJson)
+    
+    // Use parameterized query to avoid SQL injection and ensure proper escaping
+    await prisma.$executeRaw`UPDATE users SET permissions = ${permissionsJson} WHERE id = ${userId}`
+    console.log('API: SQL update completed')
+    
+    // Verify the update by fetching the user again
+    const verifyUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${userId}`
+    const verifyData = Array.isArray(verifyUser) ? verifyUser[0] : verifyUser
+    console.log('API: Verification - permissions in database after update:', verifyData.permissions)
     
     // Get updated user
     const updatedUser = await prisma.user.findUnique({
@@ -132,8 +161,22 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const currentUserData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (currentUserData && currentUserData.permissions) {
+      try {
+        userPermissions = JSON.parse(currentUserData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
     // Check permissions - only admins can view permissions
-    if (!hasPermission(payload.role as any, PERMISSIONS.VIEW_USERS)) {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.VIEW_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -144,30 +187,37 @@ export async function GET(
     }
 
     // Get user with permissions using raw SQL to avoid Prisma client issues
-    const user = await prisma.$queryRaw`SELECT id, username, email, role, status, permissions FROM users WHERE id = ${userId}`
-    const userData = Array.isArray(user) ? user[0] : user
+    const targetUser = await prisma.$queryRaw`SELECT id, username, email, role, status, permissions FROM users WHERE id = ${userId}`
+    const targetUserData = Array.isArray(targetUser) ? targetUser[0] : targetUser
+    
+    console.log('API: Retrieved target user data from database:', targetUserData)
 
-    if (!userData) {
+    if (!targetUserData) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     // Parse permissions from JSON string
     let permissions: string[] = []
-    if (userData.permissions) {
+    console.log('API: Raw permissions from database:', targetUserData.permissions)
+    
+    if (targetUserData.permissions) {
       try {
-        permissions = JSON.parse(userData.permissions)
+        permissions = JSON.parse(targetUserData.permissions)
+        console.log('API: Parsed permissions:', permissions)
       } catch (error) {
         console.error('Error parsing user permissions:', error)
         permissions = []
       }
+    } else {
+      console.log('API: No permissions found in database')
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        id: userData.id,
-        username: userData.username,
-        role: userData.role,
+        id: targetUserData.id,
+        username: targetUserData.username,
+        role: targetUserData.role,
         permissions: permissions
       }
     })

@@ -6,10 +6,12 @@ import { apiCall } from '@/lib/api'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import { checkPermission, PERMISSIONS } from '@/lib/auth'
 
 interface User {
   username: string
   role: string
+  permissions?: string[]
 }
 
 interface Religion {
@@ -33,6 +35,7 @@ interface Topic {
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
+  const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [religions, setReligions] = useState<Religion[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,6 +85,27 @@ export default function Dashboard() {
 
     const loadData = async () => {
       try {
+        // Fetch user permissions
+        const permissionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/users/me/permissions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (permissionsRes.ok) {
+          const permissionsData = await permissionsRes.json()
+          if (permissionsData.success && permissionsData.data.permissions) {
+            setUserPermissions(permissionsData.data.permissions)
+          }
+        }
+
+        // Check if user has dashboard permission
+        if (user && !checkPermission(user.role as any, userPermissions, PERMISSIONS.VIEW_DASHBOARD)) {
+          setLoading(false)
+          return
+        }
+
         // These APIs don't require authentication for GET requests
         const religionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/religions`)
         const topicsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/topics`)
@@ -122,6 +146,54 @@ export default function Dashboard() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if user has any permissions at all
+  if (user && userPermissions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: darkMode ? '#111827' : '#f3f4f6' }}>
+        {/* Login-style page with modal */}
+        <div className="w-full max-w-md mx-4">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+              Welcome Back
+            </h1>
+            <p className="mt-2" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+              Please sign in to continue
+            </p>
+          </div>
+
+          {/* Access Denied Modal */}
+          <div 
+            className="shadow-xl rounded-lg p-6 border transition-colors"
+            style={{ 
+              backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+              borderColor: darkMode ? '#374151' : '#e5e7eb'
+            }}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 text-red-500">
+                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                Access Restricted
+              </h2>
+              <p className="mb-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                Your account has no permissions assigned. Please contact your administrator to request access.
+              </p>
+              <button
+                onClick={handleLogout}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+              >
+                Return to Login
+              </button>
+            </div>
           </div>
         </div>
       </div>

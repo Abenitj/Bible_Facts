@@ -235,11 +235,11 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
             {errors.password && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
             )}
-            {isEditing && (
-              <p className="mt-1 text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
-                Leave blank to keep current password
-              </p>
-            )}
+                          {isEditing && (
+                <p className="mt-1 text-xs" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>
+                  Leave blank to keep current password
+                </p>
+              )}
           </div>
 
           {/* Role */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { updateTopicSchema } from '@/lib/validation'
+import { verifyToken, checkPermission, PERMISSIONS } from '@/lib/auth'
 
 // GET /api/topics/[id] - Get specific topic
 export async function GET(
@@ -8,6 +9,36 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (userData && userData.permissions) {
+      try {
+        userPermissions = JSON.parse(userData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
+    // Check if user has permission to view topics
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.VIEW_TOPICS)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
     const { id: idParam } = await params
     const id = parseInt(idParam)
     
@@ -60,6 +91,36 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (userData && userData.permissions) {
+      try {
+        userPermissions = JSON.parse(userData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
+    // Check if user has permission to edit topics
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.EDIT_TOPICS)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
     const { id: idParam } = await params
     const id = parseInt(idParam)
     

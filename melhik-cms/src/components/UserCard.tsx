@@ -93,7 +93,12 @@ export default function UserCard({
                   {user.username}
                 </h3>
                 {isOwnAccount && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  <span className="text-xs px-2 py-1 rounded-full border transition-colors"
+                        style={{
+                          backgroundColor: darkMode ? '#1e40af' : '#dbeafe',
+                          color: darkMode ? '#bfdbfe' : '#1e40af',
+                          borderColor: darkMode ? '#3b82f6' : '#93c5fd'
+                        }}>
                     You
                   </span>
                 )}
@@ -107,13 +112,33 @@ export default function UserCard({
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 mb-4">
-            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getRoleColor(user.role)}`}>
+                    <div className="flex items-center space-x-3 mb-4">
+            <span 
+              className={`inline-block ${getRoleColor(user.role)}`}
+              style={{
+                backgroundColor: user.role === 'admin' 
+                  ? (darkMode ? '#7f1d1d' : '#fee2e2')
+                  : (darkMode ? '#1e40af' : '#dbeafe'),
+                color: user.role === 'admin'
+                  ? (darkMode ? '#fecaca' : '#991b1b')
+                  : (darkMode ? '#bfdbfe' : '#1e40af')
+              }}
+            >
               {user.role === 'content_manager' ? 'Content Manager' : 
                user.role.charAt(0).toUpperCase() + user.role.slice(1)}
             </span>
             
-            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(user.status)}`}>
+            <span 
+              className={`inline-block ${getStatusColor(user.status)}`}
+              style={{
+                backgroundColor: user.status === 'active'
+                  ? (darkMode ? '#065f46' : '#dcfce7')
+                  : (darkMode ? '#7f1d1d' : '#fee2e2'),
+                color: user.status === 'active'
+                  ? (darkMode ? '#d1fae5' : '#166534')
+                  : (darkMode ? '#fecaca' : '#991b1b')
+              }}
+            >
               {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
             </span>
           </div>
@@ -125,7 +150,7 @@ export default function UserCard({
                 {formatDate(user.createdAt)}
               </p>
               {user.creator && (
-                <p className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
+                <p className="text-xs" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>
                   by {user.creator.username}
                 </p>
               )}
@@ -219,7 +244,7 @@ export default function UserCard({
             </span>
           </div>
           
-          <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
+          <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>
             ID: {user.id}
           </span>
         </div>

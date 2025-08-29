@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { verifyToken, hasPermission, PERMISSIONS } from '@/lib/auth'
+import { verifyToken, hasPermission, checkPermission, PERMISSIONS } from '@/lib/auth'
 
 const prisma = new PrismaClient()
 
@@ -19,8 +19,22 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (userData && userData.permissions) {
+      try {
+        userPermissions = JSON.parse(userData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
     // Check if user has permission to view users
-    if (!hasPermission(payload.role as any, PERMISSIONS.VIEW_USERS)) {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.VIEW_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -90,8 +104,22 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (userData && userData.permissions) {
+      try {
+        userPermissions = JSON.parse(userData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
     // Check if user has permission to edit users
-    if (!hasPermission(payload.role as any, PERMISSIONS.EDIT_USERS)) {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.EDIT_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -198,8 +226,22 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] = []
+    
+    if (userData && userData.permissions) {
+      try {
+        userPermissions = JSON.parse(userData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = []
+      }
+    }
+
     // Check if user has permission to delete users
-    if (!hasPermission(payload.role as any, PERMISSIONS.DELETE_USERS)) {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.DELETE_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

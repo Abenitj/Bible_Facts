@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '../../components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import { authenticatedApiCall } from '@/lib/api'
 
 interface Religion {
   id: number
@@ -76,20 +77,25 @@ export default function TopicsPage() {
 
   const loadData = async () => {
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        setLoading(false)
+        return
+      }
+
       // Load religions first
-      const religionsResponse = await fetch('/api/religions')
-      if (religionsResponse.ok) {
-        const religionsData = await religionsResponse.json()
-        setReligions(religionsData.data)
+      const religionsResult = await authenticatedApiCall('/api/religions', 'GET', token)
+      if (religionsResult.success) {
+        setReligions(religionsResult.data.data)
       }
 
       // Load topics
-      const topicsResponse = await fetch('/api/topics')
-      if (topicsResponse.ok) {
-        const topicsData = await topicsResponse.json()
-        setTopics(topicsData.data)
+      const topicsResult = await authenticatedApiCall('/api/topics', 'GET', token)
+      if (topicsResult.success) {
+        setTopics(topicsResult.data.data)
       } else {
-        setError('Failed to load topics')
+        setError(topicsResult.error || 'Failed to load topics')
       }
     } catch (error) {
       setError('Network error')
@@ -104,24 +110,24 @@ export default function TopicsPage() {
     setError('')
 
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        setSubmitting(false)
+        return
+      }
+
       const url = editingTopic ? `/api/topics/${editingTopic.id}` : '/api/topics'
       const method = editingTopic ? 'PUT' : 'POST'
       
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+      const result = await authenticatedApiCall(url, method, token, formData)
 
-      if (response.ok) {
+      if (result.success) {
         await loadData()
         resetForm()
         setShowForm(false)
       } else {
-        const data = await response.json()
-        setError(data.error || 'Failed to save topic')
+        setError(result.error || 'Failed to save topic')
       }
     } catch (error) {
       setError('Network error')
@@ -150,33 +156,34 @@ export default function TopicsPage() {
     if (!deletingTopic) return
 
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('No authentication token')
+        return
+      }
+
       console.log('Attempting to delete topic:', deletingTopic.id, deletingTopic.title)
       
-      const response = await fetch(`/api/topics/${deletingTopic.id}`, {
-        method: 'DELETE',
-      })
+      const result = await authenticatedApiCall(`/api/topics/${deletingTopic.id}`, 'DELETE', token)
 
-      console.log('Delete response status:', response.status)
+      console.log('Delete response:', result)
       
-      if (response.ok) {
+      if (result.success) {
         console.log('Topic deleted successfully')
         await loadData()
         setShowDeleteConfirm(false)
         setDeletingTopic(null)
         setError('') // Clear any previous errors
       } else {
-        const data = await response.json()
-        console.error('Delete failed:', data)
+        console.error('Delete failed:', result.error)
         
         // Provide specific error messages based on the business rules
-        let errorMessage = data.error || 'Failed to delete topic'
+        let errorMessage = result.error || 'Failed to delete topic'
         
-        if (response.status === 400 && data.error?.includes('content')) {
+        if (result.error?.includes('content')) {
           errorMessage = `Cannot delete "${deletingTopic.title}" because it has content. Please delete the content first from the Content Editor.`
-        } else if (response.status === 404) {
+        } else if (result.error?.includes('not found')) {
           errorMessage = `Topic "${deletingTopic.title}" not found. It may have been deleted by another user.`
-        } else if (response.status === 500) {
-          errorMessage = 'Server error occurred. Please try again later.'
         }
         
         setError(errorMessage)

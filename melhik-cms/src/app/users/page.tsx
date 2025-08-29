@@ -269,9 +269,18 @@ export default function UsersPage() {
   }
 
   const handleSavePermissions = async (userId: number, permissions: string[]) => {
-    if (!token) return
+    if (!token) {
+      console.error('No token available for saving permissions')
+      return
+    }
+
+    console.log('Saving permissions for user', userId, ':', permissions)
+    console.log('Permissions array length:', permissions.length)
+    console.log('Permissions array type:', typeof permissions)
+    console.log('Token available:', !!token)
 
     try {
+      console.log('Making API call to save permissions...')
       const response = await authenticatedApiCall(
         `/api/users/${userId}/permissions`,
         'PUT',
@@ -279,12 +288,24 @@ export default function UsersPage() {
         { permissions }
       )
       
+      console.log('API response:', response)
+      
       if (response.success) {
+        console.log('Permissions saved successfully')
         setSuccess('User permissions updated successfully')
         setShowPermissionManager(false)
         setManagingPermissionsUser(null)
-        fetchUsers()
+        
+        // Update the user in the local state with the new permissions
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.id === userId 
+              ? { ...user, permissions: JSON.stringify(permissions) }
+              : user
+          )
+        )
       } else {
+        console.error('Failed to save permissions:', response.error)
         setError(response.error || 'Failed to update user permissions')
       }
     } catch (error) {
@@ -302,22 +323,22 @@ export default function UsersPage() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+        return 'px-2 py-1 text-xs rounded-full'
       case 'content_manager':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+        return 'px-2 py-1 text-xs rounded-full'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+        return 'px-2 py-1 text-xs rounded-full'
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+        return 'px-2 py-1 text-xs rounded-full'
       case 'inactive':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+        return 'px-2 py-1 text-xs rounded-full'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+        return 'px-2 py-1 text-xs rounded-full'
     }
   }
 
@@ -409,6 +430,8 @@ export default function UsersPage() {
 
         {/* Content */}
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+
+
 
           {/* Filters */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
