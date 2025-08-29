@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Sidebar from '@/components/Sidebar'
+import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import UserCard from '@/components/UserCard'
 import UserForm from '@/components/UserForm'
 import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 import { authenticatedApiCall } from '@/lib/api'
 import { canAccessUserManagement, ROLES } from '@/lib/auth'
 
@@ -36,6 +37,7 @@ export default function UsersPage() {
   const [user, setUser] = useState<{ username: string; role: string } | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [activeSection, setActiveSection] = useState('users')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode } = useDarkMode()
   const router = useRouter()
 
@@ -49,6 +51,18 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState('')
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false)
   const [deletingAccountUser, setDeletingAccountUser] = useState<User | null>(null)
+
+  // Auto-dismiss notifications
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null)
+        setSuccess(null)
+      }, 5000) // Auto-dismiss after 5 seconds
+
+      return () => clearTimeout(timer)
+    }
+  }, [error, success])
 
   useEffect(() => {
     const storedUser = localStorage.getItem('cms_user')
@@ -177,15 +191,29 @@ export default function UsersPage() {
     setShowPasswordResetConfirm(true)
   }
 
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long'
+    }
+    return null
+  }
+
   const confirmResetPassword = async () => {
     if (!token || !resettingPasswordUser || !newPassword) return
+
+    // Validate password on frontend first
+    const validationError = validatePassword(newPassword)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
 
     try {
       const response = await authenticatedApiCall(
         `/api/users/${resettingPasswordUser.id}/reset-password`,
         'POST',
         token,
-        { password: newPassword }
+        { newPassword: newPassword }
       )
       
       if (response.success) {
@@ -259,32 +287,95 @@ export default function UsersPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
+        {/* Sidebar */}
+        <Sidebar 
+          user={user} 
+          activeSection={activeSection} 
+          onLogout={handleLogout} 
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 flex items-center justify-center overflow-hidden">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Loading users...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!user) {
     return <div>Loading...</div>
   }
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
-      <Sidebar user={user} activeSection={activeSection} onLogout={handleLogout} />
+    <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
+      {/* Sidebar */}
+      <Sidebar 
+        user={user} 
+        activeSection={activeSection} 
+        onLogout={handleLogout} 
+      />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <MobileMenu
+        user={user}
+        activeSection={activeSection}
+        onLogout={handleLogout}
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Add New User
-              </button>
+        <header className="shadow-sm border-b" 
+                 style={{ 
+                   backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                   borderColor: darkMode ? '#374151' : '#e5e7eb'
+                 }}>
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>User Management</h1>
+                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Manage system users and permissions</p>
+              </div>
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="sm:hidden p-2 rounded-md transition-colors duration-200"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                    color: darkMode ? '#d1d5db' : '#374151'
+                  }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <DarkModeToggle />
+                <button
+                  onClick={() => setShowCreateForm(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center text-sm"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="hidden sm:inline">Add User</span>
+                  <span className="sm:hidden">Add</span>
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Content */}
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+
           {/* Filters */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
             <input
@@ -292,12 +383,22 @@ export default function UsersPage() {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              style={{
+                backgroundColor: darkMode ? '#374151' : '#ffffff',
+                borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                color: darkMode ? '#f9fafb' : '#111827'
+              }}
             />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              style={{
+                backgroundColor: darkMode ? '#374151' : '#ffffff',
+                borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                color: darkMode ? '#f9fafb' : '#111827'
+              }}
             >
               <option value="">All Roles</option>
               <option value="admin">Admin</option>
@@ -306,7 +407,12 @@ export default function UsersPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              style={{
+                backgroundColor: darkMode ? '#374151' : '#ffffff',
+                borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                color: darkMode ? '#f9fafb' : '#111827'
+              }}
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -315,13 +421,16 @@ export default function UsersPage() {
           </div>
 
           {/* Users Grid */}
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : users.length === 0 ? (
+          {users.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-gray-400">No users found</p>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
+                   style={{ backgroundColor: darkMode ? '#374151' : '#f3f4f6' }}>
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>No users found</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -329,6 +438,7 @@ export default function UsersPage() {
                 <UserCard
                   key={user.id}
                   user={user}
+                  currentUser={user}
                   onEdit={() => setEditingUser(user)}
                   onDeactivate={() => handleDeactivateUser(user)}
                   onResetPassword={() => handleResetPassword(user)}
@@ -347,17 +457,27 @@ export default function UsersPage() {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-white"
+                  className="px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#ffffff',
+                    borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                    color: darkMode ? '#f9fafb' : '#111827'
+                  }}
                 >
                   Previous
                 </button>
-                <span className="px-3 py-2 text-gray-700 dark:text-gray-300">
+                <span className="px-3 py-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-white"
+                  className="px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#ffffff',
+                    borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                    color: darkMode ? '#f9fafb' : '#111827'
+                  }}
                 >
                   Next
                 </button>
@@ -371,8 +491,8 @@ export default function UsersPage() {
       {showCreateForm && (
         <UserForm
           onSubmit={handleCreateUser}
-          onCancel={() => setShowCreateForm(false)}
-          isEditing={false}
+          onClose={() => setShowCreateForm(false)}
+          currentUser={user}
         />
       )}
 
@@ -381,55 +501,83 @@ export default function UsersPage() {
         <UserForm
           user={editingUser}
           onSubmit={handleUpdateUser}
-          onCancel={() => setEditingUser(null)}
-          isEditing={true}
+          onClose={() => setEditingUser(null)}
+          currentUser={user}
         />
       )}
 
-      {/* Error Modal */}
-      {error && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Error</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {success && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Success</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">{success}</p>
-            <button
-              onClick={() => setSuccess(null)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors"
-            >
-              Close
-            </button>
-          </div>
+      {/* Toast Notifications */}
+      {(error || success) && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm animate-in slide-in-from-right-2 duration-300">
+          {error && (
+            <div className="mb-2 p-4 rounded-lg shadow-lg border-l-4 border-red-500 flex items-center justify-between transform transition-all duration-300"
+                 style={{
+                   backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                   borderColor: darkMode ? '#991b1b' : '#fecaca'
+                 }}>
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"
+                     style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <p style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>{error}</p>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="ml-4 p-1 rounded-full hover:bg-black/10 transition-colors"
+                style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+          
+          {success && (
+            <div className="mb-2 p-4 rounded-lg shadow-lg border-l-4 border-green-500 flex items-center justify-between transform transition-all duration-300"
+                 style={{
+                   backgroundColor: darkMode ? '#064e3b' : '#f0fdf4',
+                   borderColor: darkMode ? '#065f46' : '#bbf7d0'
+                 }}>
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"
+                     style={{ color: darkMode ? '#6ee7b7' : '#166534' }}>
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <p style={{ color: darkMode ? '#6ee7b7' : '#166534' }}>{success}</p>
+              </div>
+              <button
+                onClick={() => setSuccess(null)}
+                className="ml-4 p-1 rounded-full hover:bg-black/10 transition-colors"
+                style={{ color: darkMode ? '#6ee7b7' : '#166534' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && deletingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirm Deactivation</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Confirm Deactivation</h3>
+            <p className="mb-6" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
               Are you sure you want to deactivate user "{deletingUser.username}"? This action can be undone.
             </p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 py-2 px-4 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                  color: darkMode ? '#d1d5db' : '#374151'
+                }}
               >
                 Cancel
               </button>
@@ -446,32 +594,83 @@ export default function UsersPage() {
 
       {/* Password Reset Confirmation Modal */}
       {showPasswordResetConfirm && resettingPasswordUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reset Password</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Reset Password</h3>
+            <p className="mb-4" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
               Enter new password for user "{resettingPasswordUser.username}":
             </p>
+            
+            {/* Password Requirements */}
+            <div className="mb-4 p-3 rounded-lg border"
+                 style={{
+                   backgroundColor: darkMode ? '#1e293b' : '#f8fafc',
+                   borderColor: darkMode ? '#475569' : '#e2e8f0'
+                 }}>
+              <p className="text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                Password Requirements:
+              </p>
+              <ul className="text-xs space-y-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                <li className={`flex items-center ${newPassword.length >= 6 ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  <svg className={`w-3 h-3 mr-2 ${newPassword.length >= 6 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  At least 6 characters long
+                </li>
+                <li className={`flex items-center ${/[A-Z]/.test(newPassword) ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  <svg className={`w-3 h-3 mr-2 ${/[A-Z]/.test(newPassword) ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Contains uppercase letter
+                </li>
+                <li className={`flex items-center ${/[a-z]/.test(newPassword) ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  <svg className={`w-3 h-3 mr-2 ${/[a-z]/.test(newPassword) ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Contains lowercase letter
+                </li>
+                <li className={`flex items-center ${/\d/.test(newPassword) ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  <svg className={`w-3 h-3 mr-2 ${/\d/.test(newPassword) ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Contains number
+                </li>
+              </ul>
+            </div>
+            
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="New password"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white mb-6"
+              placeholder="Enter new password"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6 transition-colors ${
+                newPassword.length > 0 && newPassword.length < 6 ? 'border-red-500' : ''
+              }`}
+              style={{
+                backgroundColor: darkMode ? '#374151' : '#ffffff',
+                borderColor: newPassword.length > 0 && newPassword.length < 6 ? '#ef4444' : (darkMode ? '#4b5563' : '#d1d5db'),
+                color: darkMode ? '#f9fafb' : '#111827'
+              }}
             />
+            
             <div className="flex space-x-3">
               <button
                 onClick={() => {
                   setShowPasswordResetConfirm(false)
                   setNewPassword('')
                 }}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 py-2 px-4 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                  color: darkMode ? '#d1d5db' : '#374151'
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmResetPassword}
-                disabled={!newPassword}
+                disabled={!newPassword || newPassword.length < 6}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Reset Password
@@ -483,17 +682,22 @@ export default function UsersPage() {
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteAccountConfirm && deletingAccountUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">⚠️ Permanent Delete</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>⚠️ Permanent Delete</h3>
+            <p className="mb-6" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
               Are you sure you want to <strong>permanently delete</strong> user "{deletingAccountUser.username}"? 
               This action cannot be undone and will remove all user data.
             </p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowDeleteAccountConfirm(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 py-2 px-4 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                  color: darkMode ? '#d1d5db' : '#374151'
+                }}
               >
                 Cancel
               </button>

@@ -196,6 +196,28 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
             <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
               Password {!isEditing && '*'}
             </label>
+            
+            {/* Password Requirements - only show for new users or when password is being changed */}
+            {(!isEditing || formData.password.length > 0) && (
+              <div className="mb-3 p-2 rounded-lg border"
+                   style={{
+                     backgroundColor: darkMode ? '#1e293b' : '#f8fafc',
+                     borderColor: darkMode ? '#475569' : '#e2e8f0'
+                   }}>
+                <p className="text-xs font-medium mb-1" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                  Password Requirements:
+                </p>
+                <ul className="text-xs space-y-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                  <li className={`flex items-center ${formData.password.length >= 6 ? 'text-green-600 dark:text-green-400' : ''}`}>
+                    <svg className={`w-3 h-3 mr-1 ${formData.password.length >= 6 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    At least 6 characters
+                  </li>
+                </ul>
+              </div>
+            )}
+            
             <input
               type="password"
               value={formData.password}
