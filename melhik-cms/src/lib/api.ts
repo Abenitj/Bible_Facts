@@ -1,5 +1,5 @@
 // API utility functions
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
 
 export const apiUrl = (endpoint: string): string => {
   // Remove leading slash if present to avoid double slashes
@@ -45,13 +45,24 @@ export const authenticatedApiCall = async (
     options.body = JSON.stringify(body)
   }
 
-  const response = await fetch(url, options)
-  const data = await response.json()
+  try {
+    const response = await fetch(url, options)
+    const data = await response.json()
 
-  return {
-    success: response.ok,
-    data: data,
-    error: data.error || null
+    return {
+      success: response.ok,
+      data: data,
+      error: data.error || null
+    }
+  } catch (error) {
+    console.error('API call failed:', error);
+    console.error('URL:', url);
+    console.error('Options:', options);
+    return {
+      success: false,
+      data: null,
+      error: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    }
   }
 }
 

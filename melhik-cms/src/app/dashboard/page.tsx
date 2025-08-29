@@ -42,24 +42,49 @@ export default function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('cms_token')
+    const storedUser = localStorage.getItem('cms_user')
+    
     if (!token) {
       router.push('/login')
       return
     }
 
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      setUser(payload)
-    } catch (error) {
-      localStorage.removeItem('cms_token')
-      router.push('/login')
-      return
+    // Use stored user data if available, otherwise decode from token
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser)
+        setUser(userData)
+      } catch (error) {
+        console.error('Error parsing stored user data:', error)
+        // Fallback to token decoding
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]))
+          setUser(payload)
+        } catch (tokenError) {
+          localStorage.removeItem('cms_token')
+          localStorage.removeItem('cms_user')
+          router.push('/login')
+          return
+        }
+      }
+    } else {
+      // Fallback to token decoding
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        setUser(payload)
+      } catch (error) {
+        localStorage.removeItem('cms_token')
+        localStorage.removeItem('cms_user')
+        router.push('/login')
+        return
+      }
     }
 
     const loadData = async () => {
       try {
-        const religionsRes = await apiCall('api/religions')
-        const topicsRes = await apiCall('api/topics')
+        // These APIs don't require authentication for GET requests
+        const religionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/religions`)
+        const topicsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/topics`)
 
         if (religionsRes.ok) {
           const religionsData = await religionsRes.json()
