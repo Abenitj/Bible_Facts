@@ -35,6 +35,16 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
     ]
   },
   {
+    name: 'User Management',
+    permissions: [
+      { key: PERMISSIONS.VIEW_USERS, label: 'View Users', description: 'Can view user list and details' },
+      { key: PERMISSIONS.CREATE_USERS, label: 'Create Users', description: 'Can create new users' },
+      { key: PERMISSIONS.EDIT_USERS, label: 'Edit Users', description: 'Can edit user information' },
+      { key: PERMISSIONS.DELETE_USERS, label: 'Delete Users', description: 'Can delete users' },
+      { key: PERMISSIONS.RESET_USER_PASSWORD, label: 'Reset User Password', description: 'Can reset user passwords' }
+    ]
+  },
+  {
     name: 'Content Management',
     permissions: [
       { key: PERMISSIONS.VIEW_RELIGIONS, label: 'View Religions', description: 'Can view religion list and details' },
@@ -295,10 +305,11 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
           {/* Permission Groups */}
           <div className="space-y-6">
             {PERMISSION_GROUPS.filter(group => {
-              // For content managers, only show Profile Settings
+              // For content managers, show Dashboard, Content Management, and Profile Settings
               if (selectedRole === ROLES.CONTENT_MANAGER) {
-                return group.name === 'Profile Settings'
+                return ['Dashboard', 'Content Management', 'Profile Settings'].includes(group.name)
               }
+              // For admins, show all groups
               return true
             }).map((group) => (
               <div key={group.name} className="border rounded-lg p-4"
