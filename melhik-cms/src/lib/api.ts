@@ -56,8 +56,6 @@ export const authenticatedApiCall = async (
     }
   } catch (error) {
     console.error('API call failed:', error);
-    console.error('URL:', url);
-    console.error('Options:', options);
     return {
       success: false,
       data: null,

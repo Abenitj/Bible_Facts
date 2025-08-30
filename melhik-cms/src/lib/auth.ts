@@ -47,7 +47,14 @@ export const PERMISSIONS = {
   VIEW_SYNC: 'view_sync',
   MANAGE_SYNC: 'manage_sync',
   VIEW_SETTINGS: 'view_settings',
-  MANAGE_SETTINGS: 'manage_settings'
+  MANAGE_SETTINGS: 'manage_settings',
+  
+  // SMTP Configuration Management
+  VIEW_SMTP_CONFIG: 'view_smtp_config',
+  CREATE_SMTP_CONFIG: 'create_smtp_config',
+  EDIT_SMTP_CONFIG: 'edit_smtp_config',
+  DELETE_SMTP_CONFIG: 'delete_smtp_config',
+  TEST_SMTP_CONFIG: 'test_smtp_config'
 } as const
 
 // Role permissions mapping
@@ -73,7 +80,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.VIEW_SYNC,
     PERMISSIONS.MANAGE_SYNC,
     PERMISSIONS.VIEW_SETTINGS,
-    PERMISSIONS.MANAGE_SETTINGS
+    PERMISSIONS.MANAGE_SETTINGS,
+    PERMISSIONS.VIEW_SMTP_CONFIG,
+    PERMISSIONS.CREATE_SMTP_CONFIG,
+    PERMISSIONS.EDIT_SMTP_CONFIG,
+    PERMISSIONS.DELETE_SMTP_CONFIG,
+    PERMISSIONS.TEST_SMTP_CONFIG
   ],
   [ROLES.CONTENT_MANAGER]: [
     // Content management only

@@ -69,6 +69,9 @@ model User {
   // User activities
   activities UserActivity[]
 
+  // SMTP configurations created by this user
+  smtpConfigs SmtpConfig[] @relation("SmtpConfigCreator")
+
   @@map("users")
 }
 
@@ -85,4 +88,23 @@ model UserActivity {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_activities")
+}
+
+model SmtpConfig {
+  id          Int      @id @default(autoincrement())
+  name        String   // Configuration name (e.g., "Default", "Gmail", "Outlook")
+  host        String   // SMTP server host
+  port        Int      // SMTP server port
+  secure      Boolean  @default(false) // Use SSL/TLS
+  username    String   // SMTP username/email
+  password    String   // SMTP password (encrypted)
+  fromEmail   String   // Default from email address
+  fromName    String?  // Default from name
+  isActive    Boolean  @default(true) // Whether this config is active
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int?     // ID of user who created this config
+  creator     User?    @relation("SmtpConfigCreator", fields: [createdBy], references: [id])
+
+  @@map("smtp_configs")
 }
