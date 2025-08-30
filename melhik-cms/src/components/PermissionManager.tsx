@@ -50,12 +50,29 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
     ]
   },
   {
+    name: 'Profile Settings',
+    permissions: [
+      { key: PERMISSIONS.VIEW_PROFILE_SETTINGS, label: 'View Profile Settings', description: 'Can view profile settings' },
+      { key: PERMISSIONS.EDIT_PROFILE_SETTINGS, label: 'Edit Profile Settings', description: 'Can modify profile settings' }
+    ]
+  },
+  {
     name: 'System Management',
     permissions: [
       { key: PERMISSIONS.VIEW_SYNC, label: 'View Sync', description: 'Can view sync status' },
       { key: PERMISSIONS.MANAGE_SYNC, label: 'Manage Sync', description: 'Can manage sync operations' },
-      { key: PERMISSIONS.VIEW_SETTINGS, label: 'View Settings', description: 'Can view system settings' },
-      { key: PERMISSIONS.MANAGE_SETTINGS, label: 'Manage Settings', description: 'Can modify system settings' }
+      { key: PERMISSIONS.VIEW_SYSTEM_SETTINGS, label: 'View System Settings', description: 'Can view system settings' },
+      { key: PERMISSIONS.MANAGE_SYSTEM_SETTINGS, label: 'Manage System Settings', description: 'Can modify system settings' }
+    ]
+  },
+  {
+    name: 'SMTP Configuration',
+    permissions: [
+      { key: PERMISSIONS.VIEW_SMTP_CONFIG, label: 'View SMTP Config', description: 'Can view SMTP configurations' },
+      { key: PERMISSIONS.CREATE_SMTP_CONFIG, label: 'Create SMTP Config', description: 'Can create new SMTP configurations' },
+      { key: PERMISSIONS.EDIT_SMTP_CONFIG, label: 'Edit SMTP Config', description: 'Can edit SMTP configurations' },
+      { key: PERMISSIONS.DELETE_SMTP_CONFIG, label: 'Delete SMTP Config', description: 'Can delete SMTP configurations' },
+      { key: PERMISSIONS.TEST_SMTP_CONFIG, label: 'Test SMTP Config', description: 'Can test SMTP configurations' }
     ]
   }
 ]
@@ -110,8 +127,8 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
         PERMISSIONS.DELETE_TOPICS,
         PERMISSIONS.VIEW_CONTENT,
         PERMISSIONS.EDIT_CONTENT,
-        PERMISSIONS.VIEW_SYNC,
-        PERMISSIONS.VIEW_SETTINGS
+        PERMISSIONS.VIEW_PROFILE_SETTINGS,
+        PERMISSIONS.EDIT_PROFILE_SETTINGS
       ]
     }
     return []
@@ -240,7 +257,7 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
           {/* Global Actions */}
           <div className="mb-6 flex space-x-2">
             <button
-              onClick={() => setSelectedPermissions(Object.values(PERMISSIONS))}
+              onClick={() => setSelectedPermissions(getDefaultPermissionsForRole(selectedRole))}
               className="text-sm px-3 py-1 rounded transition-colors"
               style={{
                 backgroundColor: darkMode ? '#065f46' : '#dcfce7',
@@ -254,7 +271,7 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
                 e.currentTarget.style.backgroundColor = darkMode ? '#065f46' : '#dcfce7'
               }}
             >
-              Select All Permissions
+              Select Role Defaults
             </button>
             <button
               onClick={() => setSelectedPermissions([])}
@@ -277,7 +294,13 @@ export default function PermissionManager({ user, currentUser, onSave, onClose }
 
           {/* Permission Groups */}
           <div className="space-y-6">
-            {PERMISSION_GROUPS.map((group) => (
+            {PERMISSION_GROUPS.filter(group => {
+              // For content managers, only show Profile Settings
+              if (selectedRole === ROLES.CONTENT_MANAGER) {
+                return group.name === 'Profile Settings'
+              }
+              return true
+            }).map((group) => (
               <div key={group.name} className="border rounded-lg p-4"
                    style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
                 <div className="flex items-center justify-between mb-4">

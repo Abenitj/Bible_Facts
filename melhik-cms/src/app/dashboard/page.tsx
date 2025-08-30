@@ -106,18 +106,32 @@ export default function Dashboard() {
           return
         }
 
-        // These APIs don't require authentication for GET requests
-        const religionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/religions`)
-        const topicsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/topics`)
+        // Fetch religions and topics with authentication
+        const religionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/religions`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        const topicsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/topics`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
 
         if (religionsRes.ok) {
           const religionsData = await religionsRes.json()
           setReligions(religionsData.data || religionsData)
+        } else {
+          console.error('Failed to fetch religions:', religionsRes.status, religionsRes.statusText)
         }
 
         if (topicsRes.ok) {
           const topicsData = await topicsRes.json()
           setTopics(topicsData.data || topicsData)
+        } else {
+          console.error('Failed to fetch topics:', topicsRes.status, topicsRes.statusText)
         }
       } catch (error) {
         console.error('Error loading data:', error)

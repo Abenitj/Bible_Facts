@@ -43,11 +43,15 @@ export const PERMISSIONS = {
   VIEW_CONTENT: 'view_content',
   EDIT_CONTENT: 'edit_content',
   
-  // System Management
+  // Profile Settings (available to all users)
+  VIEW_PROFILE_SETTINGS: 'view_profile_settings',
+  EDIT_PROFILE_SETTINGS: 'edit_profile_settings',
+  
+  // System Management (admin only)
   VIEW_SYNC: 'view_sync',
   MANAGE_SYNC: 'manage_sync',
-  VIEW_SETTINGS: 'view_settings',
-  MANAGE_SETTINGS: 'manage_settings',
+  VIEW_SYSTEM_SETTINGS: 'view_system_settings',
+  MANAGE_SYSTEM_SETTINGS: 'manage_system_settings',
   
   // SMTP Configuration Management
   VIEW_SMTP_CONFIG: 'view_smtp_config',
@@ -79,8 +83,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_SYNC,
     PERMISSIONS.MANAGE_SYNC,
-    PERMISSIONS.VIEW_SETTINGS,
-    PERMISSIONS.MANAGE_SETTINGS,
+    PERMISSIONS.VIEW_SYSTEM_SETTINGS,
+    PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
     PERMISSIONS.VIEW_SMTP_CONFIG,
     PERMISSIONS.CREATE_SMTP_CONFIG,
     PERMISSIONS.EDIT_SMTP_CONFIG,
@@ -88,7 +92,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.TEST_SMTP_CONFIG
   ],
   [ROLES.CONTENT_MANAGER]: [
-    // Content management only
+    // Content management and profile settings only
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_RELIGIONS,
     PERMISSIONS.CREATE_RELIGIONS,
@@ -100,8 +104,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.DELETE_TOPICS,
     PERMISSIONS.VIEW_CONTENT,
     PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.VIEW_SYNC,
-    PERMISSIONS.VIEW_SETTINGS
+    PERMISSIONS.VIEW_PROFILE_SETTINGS,
+    PERMISSIONS.EDIT_PROFILE_SETTINGS
   ]
 }
 
@@ -152,12 +156,20 @@ export function canAccessContentManagement(userRole: UserRole): boolean {
          hasPermission(userRole, PERMISSIONS.VIEW_CONTENT)
 }
 
+export function canAccessProfileSettings(userRole: UserRole): boolean {
+  return hasPermission(userRole, PERMISSIONS.VIEW_PROFILE_SETTINGS)
+}
+
+export function canManageProfileSettings(userRole: UserRole): boolean {
+  return hasPermission(userRole, PERMISSIONS.EDIT_PROFILE_SETTINGS)
+}
+
 export function canAccessSystemSettings(userRole: UserRole): boolean {
-  return hasPermission(userRole, PERMISSIONS.VIEW_SETTINGS)
+  return hasPermission(userRole, PERMISSIONS.VIEW_SYSTEM_SETTINGS)
 }
 
 export function canManageSystemSettings(userRole: UserRole): boolean {
-  return hasPermission(userRole, PERMISSIONS.MANAGE_SETTINGS)
+  return hasPermission(userRole, PERMISSIONS.MANAGE_SYSTEM_SETTINGS)
 }
 
 export async function hashPassword(password: string): Promise<string> {

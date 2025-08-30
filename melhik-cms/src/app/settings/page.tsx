@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import { ROLES } from '@/lib/auth'
 
 interface User {
   username: string
@@ -186,7 +187,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
             {/* Profile Settings */}
             <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="px-6 py-4 border-b" 
@@ -296,7 +297,8 @@ export default function SettingsPage() {
               </form>
             </div>
 
-            {/* System Settings */}
+            {/* System Settings - Admin Only */}
+            {user?.role === ROLES.ADMIN && (
             <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
               <div className="px-6 py-4 border-b" 
                    style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
@@ -389,45 +391,48 @@ export default function SettingsPage() {
                 </button>
               </form>
             </div>
-          </div>
+            )}
 
-          {/* System Information */}
-          <div className="mt-6 rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
-            <div className="px-6 py-4 border-b" 
-                 style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Information</h3>
-              <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Current system status and actions</p>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                  <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>User Information</h4>
-                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Username: {user?.username}
-                  </p>
-                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Role: {user?.role}
-                  </p>
-                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Last Login: {new Date().toLocaleString()}
-                  </p>
-                </div>
+            {/* System Information - Admin Only */}
+            {user?.role === ROLES.ADMIN && (
+            <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+              <div className="px-6 py-4 border-b" 
+                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Information</h3>
+                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Current system status and actions</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                    <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>User Information</h4>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Username: {user?.username}
+                    </p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Role: {user?.role}
+                    </p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Last Login: {new Date().toLocaleString()}
+                    </p>
+                  </div>
 
-                <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                  <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Status</h4>
-                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Status: Online
-                  </p>
-                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Version: 1.0.0
-                  </p>
-                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Database: Connected
-                  </p>
+                  <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                    <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Status</h4>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Status: Online
+                    </p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Version: 1.0.0
+                    </p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Database: Connected
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
+            )}
           </div>
         </main>
       </div>
