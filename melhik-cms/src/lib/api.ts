@@ -1,5 +1,16 @@
 // API utility functions
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'
+
+// Get the current port from environment or default to 3000
+const getCurrentPort = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use the current window location port
+    return window.location.port || '3000'
+  }
+  // Server-side: use environment variable or default
+  return process.env.PORT || '3000'
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || `http://localhost:${getCurrentPort()}`
 
 export const apiUrl = (endpoint: string): string => {
   // Remove leading slash if present to avoid double slashes

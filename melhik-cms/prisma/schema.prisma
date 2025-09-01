@@ -58,6 +58,8 @@ model User {
   status      String    @default("active") // active, inactive
   permissions String?   // JSON string for granular permissions
   lastLoginAt DateTime?
+  isFirstLogin Boolean  @default(true) // Track if user has logged in for the first time
+  requiresPasswordChange Boolean @default(false) // Track if user needs to change password
   createdBy   Int?      // ID of user who created this user
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

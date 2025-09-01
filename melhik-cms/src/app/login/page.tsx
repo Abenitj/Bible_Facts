@@ -34,8 +34,13 @@ export default function LoginPage() {
         localStorage.setItem('cms_token', data.data.token)
         localStorage.setItem('cms_user', JSON.stringify(data.data.user))
         
-        // Redirect to dashboard
-        router.push('/dashboard')
+        // Check if user needs to change password (first-time login)
+        if (data.data.requiresPasswordChange) {
+          router.push('/change-password')
+        } else {
+          // Redirect to dashboard
+          router.push('/dashboard')
+        }
       } else {
         setError(data.error || 'Login failed')
       }

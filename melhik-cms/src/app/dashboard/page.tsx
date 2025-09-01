@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { apiCall } from '@/lib/api'
+import { apiCall, apiUrl } from '@/lib/api'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
+import WelcomeModal from '@/components/WelcomeModal'
 import { checkPermission, PERMISSIONS } from '@/lib/auth'
 
 interface User {
@@ -35,12 +36,13 @@ interface Topic {
 export default function Dashboard() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
-  const [userPermissions, setUserPermissions] = useState<string[]>([])
+  const [userPermissions, setUserPermissions] = useState<string[] | null>(null)
   const [religions, setReligions] = useState<Religion[]>([])
   const [topics, setTopics] = useState<Topic[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState('dashboard')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const { darkMode } = useDarkMode()
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function Dashboard() {
     const loadData = async () => {
       try {
         // Fetch user permissions
-        const permissionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/users/me/permissions`, {
+        const permissionsRes = await fetch(apiUrl('/api/users/me/permissions'), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -95,7 +97,7 @@ export default function Dashboard() {
 
         if (permissionsRes.ok) {
           const permissionsData = await permissionsRes.json()
-          if (permissionsData.success && permissionsData.data.permissions) {
+          if (permissionsData.success) {
             setUserPermissions(permissionsData.data.permissions)
           }
         }
@@ -107,13 +109,13 @@ export default function Dashboard() {
         }
 
         // Fetch religions and topics with authentication
-        const religionsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/religions`, {
+        const religionsRes = await fetch(apiUrl('/api/religions'), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         })
-        const topicsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000'}/api/topics`, {
+        const topicsRes = await fetch(apiUrl('/api/topics'), {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -141,6 +143,18 @@ export default function Dashboard() {
     }
     loadData()
   }, [router])
+
+  // Show welcome modal for first-time users
+  useEffect(() => {
+    if (!loading && user) {
+      // Check if this is the user's first login (they just came from password change)
+      const hasCompletedOnboarding = localStorage.getItem('cms_onboarding_completed')
+      if (!hasCompletedOnboarding) {
+        setShowWelcomeModal(true)
+        localStorage.setItem('cms_onboarding_completed', 'true')
+      }
+    }
+  }, [loading, user])
 
   const handleLogout = () => {
     localStorage.removeItem('cms_token')
@@ -850,6 +864,16 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Welcome Modal */}
+      {user && (
+        <WelcomeModal
+          isOpen={showWelcomeModal}
+          onClose={() => setShowWelcomeModal(false)}
+          username={user.username}
+          role={user.role}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { verifyToken, hasPermission, checkPermission, PERMISSIONS } from '@/lib/auth'
+import { generateTemporaryPassword, sendWelcomeEmail } from '@/lib/email'
 
 const prisma = new PrismaClient()
 
@@ -149,12 +150,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { username, email, password, role, status } = body
+    const { username, email, password, role, status, permissions, sendWelcomeEmail: shouldSendEmail } = body
 
     // Validate required fields
-    if (!username || !password || !role) {
+    if (!username || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
+
+    // Always generate a random password for new users
+    const finalPassword = generateTemporaryPassword()
 
     // Check if username already exists
     const existingUser = await prisma.user.findFirst({
@@ -162,7 +166,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingUser) {
-      return NextResponse.json({ error: 'Username already exists' }, { status: 400 })
+      return NextResponse.json({ 
+        error: `Username "${username}" is already taken. Please choose a different username.` 
+      }, { status: 400 })
     }
 
     // Check if email already exists (if provided)
@@ -172,13 +178,15 @@ export async function POST(request: NextRequest) {
       })
 
       if (existingEmail) {
-        return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
+        return NextResponse.json({ 
+          error: `Email address "${email}" is already registered. Please use a different email address.` 
+        }, { status: 400 })
       }
     }
 
     // Hash password
     const bcrypt = require('bcryptjs')
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(finalPassword, 10)
 
     // Create user
     const newUser = await prisma.user.create({
@@ -188,6 +196,9 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         role,
         status: status || 'active',
+        permissions: permissions ? JSON.stringify(permissions) : null,
+        isFirstLogin: true,
+        requiresPasswordChange: true, // Always require password change for new users
         createdBy: payload.userId
       },
       select: {
@@ -196,16 +207,49 @@ export async function POST(request: NextRequest) {
         email: true,
         role: true,
         status: true,
+        permissions: true,
+        isFirstLogin: true,
+        requiresPasswordChange: true,
         createdAt: true
       }
     })
+
+    // Always send welcome email with random password if email is provided
+    let emailSent = false
+    if (email) {
+      try {
+        // Get admin name for the email
+        const admin = await prisma.user.findUnique({
+          where: { id: payload.userId },
+          select: { username: true }
+        })
+
+        const baseUrl =
+          request.headers.get('origin') ||
+          process.env.APP_BASE_URL ||
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          `http://localhost:${process.env.PORT || '3000'}`
+        const loginUrl = `${baseUrl}/login`
+        
+        emailSent = await sendWelcomeEmail({
+          username,
+          email,
+          temporaryPassword: finalPassword,
+          loginUrl,
+          adminName: admin?.username
+        })
+      } catch (error) {
+        console.error('Error sending welcome email:', error)
+        // Don't fail the user creation if email fails
+      }
+    }
 
     // Log activity
     await prisma.userActivity.create({
       data: {
         userId: payload.userId,
         action: 'create_user',
-        details: `Created user: ${username}`,
+        details: `Created user: ${username}${emailSent ? ' (welcome email sent)' : ''}`,
         ipAddress: 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown'
       }
@@ -213,7 +257,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       message: 'User created successfully', 
-      user: newUser 
+      user: newUser,
+      emailSent,
+      temporaryPassword: finalPassword
     })
   } catch (error) {
     console.error('Error creating user:', error)

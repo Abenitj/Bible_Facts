@@ -197,7 +197,7 @@ export async function GET(
     }
 
     // Parse permissions from JSON string
-    let permissions: string[] = []
+    let permissions: string[] | null = null
     console.log('API: Raw permissions from database:', targetUserData.permissions)
     
     if (targetUserData.permissions) {
@@ -206,7 +206,7 @@ export async function GET(
         console.log('API: Parsed permissions:', permissions)
       } catch (error) {
         console.error('Error parsing user permissions:', error)
-        permissions = []
+        permissions = null
       }
     } else {
       console.log('API: No permissions found in database')

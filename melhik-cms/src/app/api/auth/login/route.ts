@@ -39,10 +39,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update last login time
+    // Check if this is first login or requires password change
+    const isFirstLogin = user.isFirstLogin
+    const requiresPasswordChange = user.requiresPasswordChange
+    
+    // Update last login time and first login status
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() }
+      data: { 
+        lastLoginAt: new Date(),
+        isFirstLogin: false // Mark as no longer first login
+      }
     })
 
     // Generate token
@@ -79,7 +86,9 @@ export async function POST(request: NextRequest) {
           username: user.username,
           role: user.role
         },
-        token
+        token,
+        isFirstLogin,
+        requiresPasswordChange
       }
     })
 

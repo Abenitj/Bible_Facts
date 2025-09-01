@@ -134,9 +134,20 @@ export default function UsersPage() {
       const response = await authenticatedApiCall('/api/users', 'POST', token, userData)
       
       if (response.success) {
-        setSuccess('User created successfully')
+        let successMessage = 'User created successfully'
+        
+        if (response.data.emailSent) {
+          successMessage += ' and welcome email sent'
+        } else if (response.data.temporaryPassword) {
+          successMessage += ' (temporary password generated)'
+        }
+        
+        setSuccess(successMessage)
         setShowCreateForm(false)
         fetchUsers()
+        
+        // Return the response data for the form to handle
+        return response.data
       } else {
         setError(response.error || 'Failed to create user')
       }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { authenticatedApiCall } from '@/lib/api'
+import { authenticatedApiCall, apiUrl } from '@/lib/api'
 
 export default function TestApiPage() {
   const [result, setResult] = useState<any>(null)
@@ -14,7 +14,7 @@ export default function TestApiPage() {
     
     try {
       // First try to login
-      const loginResponse = await fetch('http://localhost:3000/api/auth/login', {
+      const loginResponse = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

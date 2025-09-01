@@ -27,13 +27,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Parse permissions
-    let permissions: string[] = []
+    let permissions: string[] | null = null
     if (currentUserData.permissions) {
       try {
         permissions = JSON.parse(currentUserData.permissions)
       } catch (error) {
         console.error('Error parsing permissions:', error)
-        permissions = []
+        permissions = null
       }
     }
 
