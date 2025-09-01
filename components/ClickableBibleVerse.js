@@ -96,7 +96,7 @@ const ClickableBibleVerse = ({ verse, text, explanation, style }) => {
 
 const styles = StyleSheet.create({
   verseLink: {
-    color: '#654321',
+    color: '#1F2937',
     textDecorationLine: 'underline',
     fontWeight: '600',
     fontSize: 16,
@@ -109,18 +109,18 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#F5F5DC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     width: '100%',
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: '#DEB887',
-    shadowColor: '#8B4513',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -130,8 +130,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#DEB887',
-    backgroundColor: '#654321',
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#3B82F6',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },
@@ -162,26 +162,26 @@ const styles = StyleSheet.create({
   },
   verseText: {
     fontSize: 16,
-    color: '#8B4513',
+    color: '#374151',
     lineHeight: 24,
     fontStyle: 'italic',
   },
   explanationContainer: {
     borderTopWidth: 1,
-    borderTopColor: '#DEB887',
+    borderTopColor: '#E5E7EB',
     paddingTop: 16,
   },
   explanationLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#1F2937',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   explanationText: {
     fontSize: 16,
-    color: '#A0522D',
+    color: '#6B7280',
     lineHeight: 24,
   },
 });

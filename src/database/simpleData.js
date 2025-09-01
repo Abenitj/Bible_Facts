@@ -1,8 +1,12 @@
 // Simple data layer that bypasses SQLite completely
-import { initializeFallbackData, getReligionsFallback, getTopicsByReligionFallback, getTopicByIdFallback } from './fallbackData';
+import { initializeFallbackData, getReligionsFallback, getTopicsByReligionFallback, getTopicByIdFallback, getReligionByIdFallback } from './fallbackData';
 
 // Initialize data immediately
-initializeFallbackData();
+try {
+  initializeFallbackData();
+} catch (error) {
+  console.error('Error initializing fallback data:', error);
+}
 
 // Simple wrapper functions that always use fallback data
 export const initDatabase = () => {
@@ -11,23 +15,43 @@ export const initDatabase = () => {
 };
 
 export const getReligions = () => {
-  console.log('Simple data layer: Getting religions from fallback');
-  return getReligionsFallback();
+  try {
+    console.log('Simple data layer: Getting religions from fallback');
+    return getReligionsFallback();
+  } catch (error) {
+    console.error('Error getting religions:', error);
+    return Promise.resolve([]);
+  }
 };
 
 export const getTopicsByReligion = (religionId) => {
-  console.log('Simple data layer: Getting topics for religion', religionId);
-  return getTopicsByReligionFallback(religionId);
+  try {
+    console.log('Simple data layer: Getting topics for religion', religionId);
+    return getTopicsByReligionFallback(religionId);
+  } catch (error) {
+    console.error('Error getting topics by religion:', error);
+    return Promise.resolve([]);
+  }
 };
 
 export const getTopicById = (id) => {
-  console.log('Simple data layer: Getting topic by id', id);
-  return getTopicByIdFallback(id);
+  try {
+    console.log('Simple data layer: Getting topic by id', id);
+    return getTopicByIdFallback(id);
+  } catch (error) {
+    console.error('Error getting topic by id:', error);
+    return Promise.resolve(null);
+  }
 };
 
 export const getReligionById = (id) => {
-  console.log('Simple data layer: Getting religion by id', id);
-  return getReligionByIdFallback(id);
+  try {
+    console.log('Simple data layer: Getting religion by id', id);
+    return getReligionByIdFallback(id);
+  } catch (error) {
+    console.error('Error getting religion by id:', error);
+    return Promise.resolve(null);
+  }
 };
 
 export const insertReligion = (religion) => {

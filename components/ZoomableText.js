@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   text: {
-    color: '#A0522D',
+    color: '#6B7280',
     lineHeight: 24,
     textAlign: 'justify',
   },

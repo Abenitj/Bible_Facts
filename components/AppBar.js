@@ -10,9 +10,7 @@ import AmharicText from '../src/components/AmharicText';
 const AppBar = ({ 
   title, 
   showBack = false, 
-  onBackPress, 
-  showMenu = false, 
-  onMenuPress 
+  onBackPress
 }) => {
   return (
     <View style={styles.appBar}>
@@ -24,19 +22,6 @@ const AppBar = ({
             activeOpacity={0.6}
           >
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
-        {showMenu && (
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={onMenuPress}
-            activeOpacity={0.6}
-          >
-            <View style={styles.menuIcon}>
-              <View style={[styles.menuLine, { marginBottom: 4 }]} />
-              <View style={[styles.menuLine, { marginBottom: 4 }]} />
-              <View style={styles.menuLine} />
-            </View>
           </TouchableOpacity>
         )}
       </View>
@@ -60,17 +45,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#654321',
+    backgroundColor: '#3B82F6',
     borderBottomWidth: 1,
-    borderBottomColor: '#8B4513',
+    borderBottomColor: '#2563EB',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     position: 'relative',
   },
   leftSection: {
@@ -84,24 +69,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-  },
-  menuButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-  },
-  menuIcon: {
-    width: 20,
-    height: 16,
-    justifyContent: 'space-between',
-  },
-  menuLine: {
-    width: '100%',
-    height: 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 1,
   },
   titleSection: {
     flex: 1,
@@ -119,7 +86,7 @@ const styles = StyleSheet.create({
   titleIndicator: {
     width: 20,
     height: 2,
-    backgroundColor: '#F5F5DC',
+    backgroundColor: '#DBEAFE',
     borderRadius: 1,
     alignSelf: 'center',
   },

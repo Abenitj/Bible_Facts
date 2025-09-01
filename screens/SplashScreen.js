@@ -66,7 +66,7 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#654321" />
+      <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
       
 
 
@@ -123,7 +123,7 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#654321',
+    backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   appSubtitle: {
     fontSize: 18,
-    color: '#F5F5DC',
+    color: '#DBEAFE',
     fontWeight: '600',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   },
   footerReference: {
     fontSize: 14,
-    color: '#F5F5DC',
+    color: '#DBEAFE',
     fontWeight: 'bold',
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },

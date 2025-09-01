@@ -86,7 +86,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
         <AppBar 
           title="ዝርዝር መረጃ"
           showBack={true}
-          onBackPress={() => navigation.navigate('Topics', { religion })}
+          onBackPress={() => navigation.goBack()}
         />
         <View style={styles.loadingContainer}>
           <AmharicText variant="body">ይዘት እያደረገ ነው...</AmharicText>
@@ -98,9 +98,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <AppBar 
-        title={topic.title}
+        title="ዝርዝር መረጃ"
         showBack={true}
-        onBackPress={() => navigation.navigate('Topics', { religion })}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Content */}
@@ -157,7 +157,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0E6D2',
+    backgroundColor: '#F9FAFB',
   },
   loadingContainer: {
     flex: 1,
@@ -174,14 +174,14 @@ const styles = StyleSheet.create({
   questionSection: {
     marginBottom: 16,
     padding: 16,
-    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
     borderRadius: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#8B4513',
+    borderLeftColor: '#3B82F6',
   },
   questionText: {
     fontSize: 18,
-    color: '#654321',
+    color: '#1F2937',
     lineHeight: 26,
     fontWeight: 'bold',
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    backgroundColor: 'rgba(139, 69, 19, 0.2)',
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
     marginVertical: 8,
   },
   questionShareButton: {
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#1F2937',
     flex: 1,
   },
   shareButton: {
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   explanationText: {
     fontSize: 16,
-    color: '#A0522D',
+    color: '#6B7280',
     lineHeight: 24,
   },
   // Footer styles removed

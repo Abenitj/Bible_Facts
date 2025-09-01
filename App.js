@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Text, View, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import 'react-native-gesture-handler';
 
 // Import database
@@ -16,71 +17,79 @@ import TopicsScreen from './screens/TopicsScreen';
 import TopicDetailScreen from './screens/TopicDetailScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
-// Import custom drawer content
-import CustomDrawerContent from './components/CustomDrawerContent';
-
 const Stack = createStackNavigator();
-const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
-// Main App with Drawer Navigation
+// Main App with Bottom Tab Navigation
 function MainApp() {
   return (
-    <Drawer.Navigator
+    <Tab.Navigator
       initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
-        cardStyle: { backgroundColor: '#F0E6D2' },
-        drawerStyle: {
-          backgroundColor: '#F0E6D2',
-          width: 280,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Topics') {
+            iconName = focused ? 'book' : 'book-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
-        drawerActiveBackgroundColor: '#D2B48C',
-        drawerActiveTintColor: '#654321',
-        drawerInactiveTintColor: '#8B4513',
-      }}
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#6B7280',
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+          paddingBottom: 5,
+          paddingTop: 5,
+          height: 60,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
+        cardStyle: { backgroundColor: '#F9FAFB' },
+      })}
     >
-      <Drawer.Screen 
+      <Tab.Screen 
         name="Home" 
         component={HomeScreen}
         options={{
           title: 'ዋና ገጽ',
+          tabBarLabel: 'Home',
         }}
       />
-      <Drawer.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{
-          title: 'ቅንብሮች',
-        }}
-      />
-      <Drawer.Screen 
+      <Tab.Screen 
         name="Topics" 
         component={TopicsScreen}
         options={{
           title: 'ርዕሰ መልእክቶች',
-          drawerItemStyle: { display: 'none' }
+          tabBarLabel: 'Topics',
         }}
       />
-      <Drawer.Screen 
-        name="TopicDetail" 
-        component={TopicDetailScreen}
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsScreen}
         options={{
-          title: 'ዝርዝር መረጃ',
-          drawerItemStyle: { display: 'none' }
+          title: 'ቅንብሮች',
+          tabBarLabel: 'Settings',
         }}
       />
-    </Drawer.Navigator>
+    </Tab.Navigator>
   );
 }
 
-
-
 // Loading component
 const LoadingScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F0E6D2' }}>
-    <ActivityIndicator size="large" color="#654321" />
-    <Text style={{ marginTop: 16, color: '#654321', fontSize: 16 }}>ይዘት እያደረገ ነው...</Text>
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
+    <ActivityIndicator size="large" color="#3B82F6" />
+    <Text style={{ marginTop: 16, color: '#374151', fontSize: 16 }}>ይዘት እያደረገ ነው...</Text>
   </View>
 );
 
@@ -92,6 +101,7 @@ export default function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log('Starting app initialization...');
         // Initialize database
         await initDatabase();
         console.log('Database initialized successfully');
@@ -128,7 +138,7 @@ export default function App() {
           initialRouteName={isInitialized ? "MainApp" : "Splash"}
           screenOptions={{
             headerShown: false,
-            cardStyle: { backgroundColor: '#F0E6D2' }
+            cardStyle: { backgroundColor: '#F9FAFB' }
           }}
         >
           <Stack.Screen 
@@ -138,6 +148,13 @@ export default function App() {
           <Stack.Screen 
             name="MainApp" 
             component={MainApp}
+          />
+          <Stack.Screen 
+            name="TopicDetail" 
+            component={TopicDetailScreen}
+            options={{
+              title: 'ዝርዝር መረጃ',
+            }}
           />
         </Stack.Navigator>
       </NavigationContainer>

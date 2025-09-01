@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
 import { getReligions, initializeSampleData } from '../src/database/simpleData';
 import SyncService from '../src/services/SyncService';
@@ -80,7 +79,7 @@ const ReligionCard = ({ item, index, onPress }) => {
         </View>
         
         <View style={styles.arrowContainer}>
-          <Ionicons name="chevron-forward" size={20} color="#8B4513" />
+          <Ionicons name="chevron-forward" size={20} color="#3B82F6" />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -154,7 +153,8 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const navigateToReligion = (religion) => {
+  const handleReligionPress = (religion) => {
+    // Navigate to Topics tab and pass the religion data
     navigation.navigate('Topics', { religion });
   };
 
@@ -162,7 +162,7 @@ const HomeScreen = ({ navigation }) => {
     <ReligionCard 
       item={item} 
       index={index} 
-      onPress={() => navigateToReligion(item)}
+      onPress={() => handleReligionPress(item)}
     />
   );
 
@@ -181,7 +181,7 @@ const HomeScreen = ({ navigation }) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="book-outline" size={64} color="#8B4513" />
+      <Ionicons name="book-outline" size={64} color="#374151" />
       <AmharicText variant="subheading" style={styles.emptyTitle}>ሃይማኖቶች የሉም</AmharicText>
       <AmharicText variant="body" style={styles.emptyText}>
         ሃይማኖቶች በቅርቡ ይጨመራሉ።
@@ -191,12 +191,25 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppBar 
-        title="Melhik" 
-        showMenu={true}
-        onMenuPress={() => navigation.openDrawer()}
-      />
-      
+      {/* Welcome Header */}
+      <Animated.View 
+        style={[
+          styles.welcomeSection,
+          { 
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        <AmharicText variant="heading" style={styles.welcomeTitle}>
+          እንኳን ደስ አለዎት!
+        </AmharicText>
+        <AmharicText variant="body" style={styles.welcomeSubtitle}>
+          የመጽሐፍ ቅዱስ መልሶችን ለማግኘት ሃይማኖት ይምረጡ
+        </AmharicText>
+      </Animated.View>
+
+      {/* Religions List */}
       <FlatList
         data={religions}
         renderItem={renderReligionCard}
@@ -216,7 +229,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0E6D2',
+    backgroundColor: '#F9FAFB',
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -227,18 +240,18 @@ const styles = StyleSheet.create({
     padding: 24,
     margin: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
+    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
   },
   welcomeTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#654321',
+    color: '#1F2937',
     marginBottom: 8,
     textAlign: 'center',
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: '#8B4513',
+    color: '#374151',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -250,18 +263,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderLeftWidth: 4,
-    borderLeftColor: '#8B4513',
+    borderLeftColor: '#3B82F6',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 69, 19, 0.15)',
-    backgroundColor: '#F5F0E0',
+    borderBottomColor: 'rgba(59, 130, 246, 0.15)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    shadowColor: '#8B4513',
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 2,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 2,
   },
   content: {
@@ -270,19 +283,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#654321',
+    color: '#1F2937',
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#8B4513',
+    color: '#6B7280',
     lineHeight: 20,
   },
   arrowContainer: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#DEB887',
+    backgroundColor: '#DBEAFE',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -296,13 +309,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#374151',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
-    color: '#A0522D',
+    color: '#6B7280',
     textAlign: 'center',
     paddingHorizontal: 32,
   },

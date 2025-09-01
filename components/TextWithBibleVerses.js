@@ -95,12 +95,12 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: '#A0522D',
+    color: '#6B7280',
     lineHeight: 24,
   },
   inlineVerse: {
     fontSize: 16,
-    color: '#654321',
+    color: '#1F2937',
     textDecorationLine: 'underline',
     fontWeight: '600',
   },

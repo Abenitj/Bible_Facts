@@ -76,7 +76,7 @@ const TopicCard = ({ topic, onPress, index = 0 }) => {
         </View>
         
         <View style={styles.arrowContainer}>
-          <Ionicons name="chevron-forward" size={20} color="#8B4513" />
+          <Ionicons name="chevron-forward" size={20} color="#3B82F6" />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -93,18 +93,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderLeftWidth: 4,
-    borderLeftColor: '#8B4513',
+    borderLeftColor: '#3B82F6',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 69, 19, 0.15)',
-    backgroundColor: '#F5F0E0',
+    borderBottomColor: 'rgba(59, 130, 246, 0.15)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    shadowColor: '#8B4513',
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 3,
+      height: 2,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 2,
   },
   content: {
@@ -113,19 +113,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#8B4513',
+    color: '#1F2937',
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#A0522D',
+    color: '#6B7280',
     lineHeight: 20,
   },
   arrowContainer: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#DEB887',
+    backgroundColor: '#DBEAFE',
     justifyContent: 'center',
     alignItems: 'center',
   },

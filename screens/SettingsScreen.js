@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AppBar from '../components/AppBar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsScreen = ({ navigation }) => {
@@ -61,7 +60,7 @@ const SettingsScreen = ({ navigation }) => {
       disabled={!onPress}
     >
       <View style={styles.settingItemLeft}>
-        <Ionicons name={icon} size={24} color="#8B4513" style={styles.settingIcon} />
+        <Ionicons name={icon} size={24} color="#3B82F6" style={styles.settingIcon} />
         <View style={styles.settingTextContainer}>
           <Text style={styles.settingTitle}>{title}</Text>
           <Text style={styles.settingSubtitle}>{subtitle}</Text>
@@ -71,22 +70,23 @@ const SettingsScreen = ({ navigation }) => {
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: '#D2B48C', true: '#8B4513' }}
-          thumbColor={switchValue ? '#FFFFFF' : '#F5F5DC'}
+          trackColor={{ false: '#E5E7EB', true: '#3B82F6' }}
+          thumbColor={switchValue ? '#FFFFFF' : '#FFFFFF'}
         />
       ) : onPress ? (
-        <Ionicons name="chevron-forward" size={20} color="#A0522D" style={styles.settingArrow} />
+        <Ionicons name="chevron-forward" size={20} color="#6B7280" style={styles.settingArrow} />
       ) : null}
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppBar 
-        title="Settings"
-        showBack={true}
-        onBackPress={() => navigation.navigate('Home')}
-      />
+      {/* Settings Header */}
+      <View style={styles.header}>
+        <View style={styles.headerSpacer} />
+        <Text style={styles.headerTitle}>Settings</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
       <ScrollView style={styles.scrollView}>
         {/* Appearance Section */}
@@ -168,7 +168,7 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0E6D2',
+    backgroundColor: '#F9FAFB',
   },
   header: {
     flexDirection: 'row',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#9b59b6',
+    backgroundColor: '#3B82F6',
   },
   backButton: {
     padding: 8,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#654321',
+    color: '#1F2937',
     marginBottom: 8,
     paddingHorizontal: 16,
   },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 69, 19, 0.2)',
+    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
   },
   settingItemLeft: {
     flexDirection: 'row',
@@ -231,16 +231,16 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#654321',
+    color: '#1F2937',
     marginBottom: 2,
   },
   settingSubtitle: {
     fontSize: 14,
-    color: '#8B4513',
+    color: '#6B7280',
   },
   settingArrow: {
     fontSize: 20,
-    color: '#A0522D',
+    color: '#6B7280',
     fontWeight: 'bold',
   },
   footer: {
@@ -250,13 +250,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 16,
-    color: '#8B4513',
+    color: '#374151',
     textAlign: 'center',
     marginBottom: 4,
   },
   footerSubtext: {
     fontSize: 14,
-    color: '#A0522D',
+    color: '#6B7280',
     textAlign: 'center',
   },
 });
