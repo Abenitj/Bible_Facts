@@ -258,18 +258,26 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const onRefresh = async () => {
+    if (refreshing) return; // Prevent multiple simultaneous refreshes
+    
     setRefreshing(true);
     try {
-      const syncService = new SyncService();
-      const hasUpdates = await syncService.checkForUpdates();
-      if (hasUpdates) {
-        const religionsData = await getReligions();
+      // Simple refresh - just reload the data
+      const religionsData = await getReligions();
+      if (religionsData && Array.isArray(religionsData)) {
         setReligions(religionsData);
+        console.log('Data refreshed successfully');
+      } else {
+        console.warn('Invalid data received during refresh');
       }
     } catch (error) {
       console.error('Error refreshing:', error);
+      // Don't crash the app, just log the error
     } finally {
-      setRefreshing(false);
+      // Add a small delay to ensure smooth UX
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 500);
     }
   };
 

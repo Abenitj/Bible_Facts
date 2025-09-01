@@ -108,21 +108,57 @@ export const initializeFallbackData = () => {
 };
 
 // Fallback functions
-export const getReligionsFallback = () => {
-  return Promise.resolve(religionsData);
+export const getReligionsFallback = async () => {
+  try {
+    if (!religionsData || !Array.isArray(religionsData)) {
+      console.warn('Religions data not properly initialized, reinitializing...');
+      initializeFallbackData();
+    }
+    return religionsData || [];
+  } catch (error) {
+    console.error('Error in getReligionsFallback:', error);
+    return [];
+  }
 };
 
-export const getTopicsByReligionFallback = (religionId) => {
-  const topics = topicsData.filter(topic => topic.religionId === religionId);
-  return Promise.resolve(topics);
+export const getTopicsByReligionFallback = async (religionId) => {
+  try {
+    if (!topicsData || !Array.isArray(topicsData)) {
+      console.warn('Topics data not properly initialized, reinitializing...');
+      initializeFallbackData();
+    }
+    const topics = topicsData.filter(topic => topic.religionId === religionId);
+    return topics || [];
+  } catch (error) {
+    console.error('Error in getTopicsByReligionFallback:', error);
+    return [];
+  }
 };
 
-export const getTopicByIdFallback = (id) => {
-  const topic = topicsData.find(topic => topic.id === id);
-  return Promise.resolve(topic || null);
+export const getTopicByIdFallback = async (id) => {
+  try {
+    if (!topicsData || !Array.isArray(topicsData)) {
+      console.warn('Topics data not properly initialized, reinitializing...');
+      initializeFallbackData();
+    }
+    const topic = topicsData.find(topic => topic.id === id);
+    return topic || null;
+  } catch (error) {
+    console.error('Error in getTopicByIdFallback:', error);
+    return null;
+  }
 };
 
-export const getReligionByIdFallback = (id) => {
-  const religion = religionsData.find(religion => religion.id === id);
-  return Promise.resolve(religion || null);
+export const getReligionByIdFallback = async (id) => {
+  try {
+    if (!religionsData || !Array.isArray(religionsData)) {
+      console.warn('Religions data not properly initialized, reinitializing...');
+      initializeFallbackData();
+    }
+    const religion = religionsData.find(religion => religion.id === id);
+    return religion || null;
+  } catch (error) {
+    console.error('Error in getReligionByIdFallback:', error);
+    return null;
+  }
 };

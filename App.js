@@ -89,7 +89,11 @@ function MainApp() {
           fontWeight: '500',
           marginTop: 2,
         },
-        cardStyle: { backgroundColor: isDarkMode ? '#111827' : '#F9FAFB' },
+        cardStyle: { 
+          backgroundColor: isDarkMode ? '#111827' : '#F9FAFB',
+        },
+        animationEnabled: true,
+        gestureEnabled: true,
       })}
     >
       <Tab.Screen 
@@ -167,12 +171,28 @@ export default function App() {
 
   return (
     <DarkModeProvider>
-      <SafeAreaProvider>
-        <NavigationContainer>
+      <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
+        <NavigationContainer
+          theme={{
+            dark: true,
+            colors: {
+              primary: '#60A5FA',
+              background: '#111827',
+              card: '#1F2937',
+              text: '#F9FAFB',
+              border: '#374151',
+              notification: '#EF4444',
+            },
+          }}
+        >
           <Stack.Navigator
             initialRouteName={isInitialized ? "MainApp" : "Splash"}
             screenOptions={{
               headerShown: false,
+              cardStyle: { backgroundColor: '#111827' },
+              cardOverlayEnabled: false,
+              animationEnabled: true,
+              gestureEnabled: true,
             }}
           >
             <Stack.Screen 

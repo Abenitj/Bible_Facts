@@ -14,43 +14,47 @@ export const initDatabase = () => {
   return Promise.resolve();
 };
 
-export const getReligions = () => {
+export const getReligions = async () => {
   try {
     console.log('Simple data layer: Getting religions from fallback');
-    return getReligionsFallback();
+    const religions = await getReligionsFallback();
+    return religions || [];
   } catch (error) {
     console.error('Error getting religions:', error);
-    return Promise.resolve([]);
+    return [];
   }
 };
 
-export const getTopicsByReligion = (religionId) => {
+export const getTopicsByReligion = async (religionId) => {
   try {
     console.log('Simple data layer: Getting topics for religion', religionId);
-    return getTopicsByReligionFallback(religionId);
+    const topics = await getTopicsByReligionFallback(religionId);
+    return topics || [];
   } catch (error) {
     console.error('Error getting topics by religion:', error);
-    return Promise.resolve([]);
+    return [];
   }
 };
 
-export const getTopicById = (id) => {
+export const getTopicById = async (id) => {
   try {
     console.log('Simple data layer: Getting topic by id', id);
-    return getTopicByIdFallback(id);
+    const topic = await getTopicByIdFallback(id);
+    return topic || null;
   } catch (error) {
     console.error('Error getting topic by id:', error);
-    return Promise.resolve(null);
+    return null;
   }
 };
 
-export const getReligionById = (id) => {
+export const getReligionById = async (id) => {
   try {
     console.log('Simple data layer: Getting religion by id', id);
-    return getReligionByIdFallback(id);
+    const religion = await getReligionByIdFallback(id);
+    return religion || null;
   } catch (error) {
     console.error('Error getting religion by id:', error);
-    return Promise.resolve(null);
+    return null;
   }
 };
 
