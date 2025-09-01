@@ -240,7 +240,10 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
             {sidebarOpen && (
               <div className="flex flex-col">
                 <p className="text-sm font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                  {user?.username || 'User'}
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.username || 'User'
+                  }
                 </p>
                 <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                   {user?.role || 'User'}
@@ -249,33 +252,30 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
             )}
           </div>
           
-          {/* Dark Mode Toggle and Collapse Button */}
-          <div className="flex items-center space-x-2">
-            {sidebarOpen && <DarkModeToggle />}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-md transition-colors duration-200"
-              style={{
-                backgroundColor: 'transparent',
-                color: darkMode ? '#9ca3af' : '#6b7280'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-              }}
-              title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {sidebarOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                )}
-              </svg>
-            </button>
-          </div>
+          {/* Collapse Button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-md transition-colors duration-200"
+            style={{
+              backgroundColor: 'transparent',
+              color: darkMode ? '#9ca3af' : '#6b7280'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+            title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {sidebarOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              )}
+            </svg>
+          </button>
         </div>
 
         {/* Navigation */}
@@ -334,7 +334,12 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
               </div>
               {sidebarOpen && (
                 <div className="ml-3 flex-1 text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.username}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {user?.firstName && user?.lastName 
+                      ? `${user.firstName} ${user.lastName}`
+                      : user?.username || 'User'
+                    }
+                  </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role}</p>
                 </div>
               )}
@@ -509,7 +514,10 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
                   </div>
                   <div>
                     <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                      {user.username}
+                      {user.firstName && user.lastName 
+                        ? `${user.firstName} ${user.lastName}`
+                        : user.username
+                      }
                     </p>
                     <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                       {user.role}

@@ -6,6 +6,8 @@ import { useDarkMode } from '@/contexts/DarkModeContext'
 interface User {
   id: number
   username: string
+  firstName?: string
+  lastName?: string
   email?: string
   role: string
   status: string
@@ -90,7 +92,10 @@ export default function UserCard({
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
                 <h3 className="text-lg font-semibold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                  {user.username}
+                  {user.firstName && user.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user.username
+                  }
                 </h3>
                 {isOwnAccount && (
                   <span className="text-xs px-2 py-1 rounded-full border transition-colors"
@@ -104,9 +109,10 @@ export default function UserCard({
                 )}
               </div>
               
-              {user.email && (
+              {/* Show username as subtitle if full name is displayed */}
+              {user.firstName && user.lastName && (
                 <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                  {user.email}
+                  @{user.username}
                 </p>
               )}
             </div>
@@ -145,6 +151,13 @@ export default function UserCard({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
+              <p className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Email</p>
+              <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                {user.email || 'No email'}
+              </p>
+            </div>
+            
+            <div>
               <p className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Created</p>
               <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                 {formatDate(user.createdAt)}
@@ -155,7 +168,9 @@ export default function UserCard({
                 </p>
               )}
             </div>
-            
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4">
             <div>
               <p className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Last Login</p>
               <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>

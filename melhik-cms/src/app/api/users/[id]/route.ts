@@ -50,6 +50,8 @@ export async function GET(
         select: {
           id: true,
           username: true,
+          firstName: true,
+          lastName: true,
           email: true,
           role: true,
           status: true,
@@ -131,7 +133,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { username, email, role, status, permissions } = body
+    const { username, firstName, lastName, email, role, status, permissions } = body
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -174,6 +176,8 @@ export async function PUT(
       where: { id: userId },
       data: {
         ...(username && { username }),
+        ...(firstName !== undefined && { firstName }),
+        ...(lastName !== undefined && { lastName }),
         ...(email && { email }),
         ...(role && { role }),
         ...(status && { status }),
@@ -182,6 +186,8 @@ export async function PUT(
       select: {
         id: true,
         username: true,
+        firstName: true,
+        lastName: true,
         email: true,
         role: true,
         status: true,

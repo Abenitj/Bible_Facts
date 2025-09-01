@@ -7,6 +7,8 @@ import { PERMISSIONS, ROLES } from '@/lib/auth'
 interface User {
   id: number
   username: string
+  firstName?: string
+  lastName?: string
   email?: string
   role: string
   status: string
@@ -92,12 +94,16 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
   const { darkMode } = useDarkMode()
   const [formData, setFormData] = useState({
     username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'content_manager',
     status: 'active'
   } as {
     username: string
+    firstName: string
+    lastName: string
     email: string
     password: string
     role: string
@@ -140,6 +146,8 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
     if (user) {
       setFormData({
         username: user.username,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
         email: user.email || '',
         password: '',
         role: user.role,
@@ -369,6 +377,47 @@ export default function UserForm({ user, onSubmit, onClose, currentUser }: UserF
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
               )}
+            </div>
+          </div>
+
+          {/* Name Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* First Name */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                First Name
+              </label>
+              <input
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#f9fafb' : '#111827'
+                }}
+                placeholder="Enter first name (optional)"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#f9fafb' : '#111827'
+                }}
+                placeholder="Enter last name (optional)"
+              />
             </div>
           </div>
 

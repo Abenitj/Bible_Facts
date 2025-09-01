@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 import { ROLES } from '@/lib/auth'
 import { apiUrl } from '@/lib/api'
 
@@ -25,6 +26,8 @@ export default function SettingsPage() {
 
   const [profileForm, setProfileForm] = useState({
     username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     currentPassword: '',
     newPassword: '',
@@ -62,8 +65,21 @@ export default function SettingsPage() {
         if (res.ok) {
           const data = await res.json()
           const p = data.data
-          setProfileForm(prev => ({ ...prev, username: p.username || '', email: p.email || '' }))
+          setProfileForm(prev => ({ 
+            ...prev, 
+            username: p.username || '', 
+            firstName: p.firstName || '',
+            lastName: p.lastName || '',
+            email: p.email || '' 
+          }))
           if (p.avatarUrl) setAvatarPreview(p.avatarUrl)
+          // Update user with full profile data
+          setUser(prev => ({
+            ...prev,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            avatarUrl: p.avatarUrl
+          }))
         }
       }).catch(() => {})
     } catch (error) {
@@ -101,10 +117,14 @@ export default function SettingsPage() {
 
       const formData = new FormData()
       formData.append('username', profileForm.username)
+      formData.append('firstName', profileForm.firstName)
+      formData.append('lastName', profileForm.lastName)
       formData.append('email', profileForm.email)
       if (profileForm.currentPassword) formData.append('currentPassword', profileForm.currentPassword)
       if (profileForm.newPassword) formData.append('newPassword', profileForm.newPassword)
-      if (avatarFile) formData.append('avatar', avatarFile)
+      if (avatarFile) {
+        formData.append('avatar', avatarFile)
+      }
 
       const res = await fetch(apiUrl('/api/profile'), {
         method: 'PUT',
@@ -126,7 +146,16 @@ export default function SettingsPage() {
           newPassword: '',
           confirmPassword: ''
         }))
-        if (data.data?.avatarUrl) setAvatarPreview(data.data.avatarUrl)
+        if (data.data?.avatarUrl) {
+          setAvatarPreview(data.data.avatarUrl)
+        }
+        // Update user state with new profile data
+        setUser(prev => ({
+          ...prev,
+          firstName: data.data?.firstName,
+          lastName: data.data?.lastName,
+          avatarUrl: data.data?.avatarUrl
+        }))
       }
     } catch (error) {
       setError('Failed to update profile')
@@ -186,28 +215,13 @@ export default function SettingsPage() {
                  }}>
           <div className="px-4 sm:px-6 py-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-              <div className="flex items-center space-x-4">
-                {/* User Info */}
-                <div className="flex flex-col">
-                  <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                    {user?.username || 'User'}
-                  </h1>
-                  <div className="flex items-center space-x-3 mt-1">
-                    <span className="text-sm font-medium px-2 py-1 rounded-full" 
-                          style={{ 
-                            backgroundColor: darkMode ? '#374151' : '#f3f4f6',
-                            color: darkMode ? '#d1d5db' : '#374151'
-                          }}>
-                      {user?.role || 'User'}
-                    </span>
-                    <span className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Melhik CMS
-                    </span>
-                  </div>
-                  <p className="text-sm mt-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                    Account Settings & System Preferences
-                  </p>
-                </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                  Settings
+                </h1>
+                <p className="mt-1 text-sm sm:text-base" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                  Manage your account settings and system preferences
+                </p>
               </div>
               
               <div className="flex items-center space-x-3">
@@ -223,6 +237,7 @@ export default function SettingsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
+                <DarkModeToggle />
               </div>
             </div>
           </div>
@@ -295,6 +310,44 @@ export default function SettingsPage() {
                         color: darkMode ? '#ffffff' : '#000000'
                       }}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2" 
+                             style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.firstName}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{
+                          backgroundColor: darkMode ? '#374151' : '#ffffff',
+                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                          color: darkMode ? '#ffffff' : '#000000'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2" 
+                             style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.lastName}
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{
+                          backgroundColor: darkMode ? '#374151' : '#ffffff',
+                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                          color: darkMode ? '#ffffff' : '#000000'
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -372,7 +425,20 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{
+                      backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                      color: darkMode ? '#ffffff' : '#1e40af',
+                      border: darkMode ? 'none' : '1px solid #93c5fd'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!saving) {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                    }}
                   >
                     {saving ? 'Updating...' : 'Update Profile'}
                   </button>
@@ -468,7 +534,20 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   disabled={saving}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{
+                    backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                    color: darkMode ? '#ffffff' : '#1e40af',
+                    border: darkMode ? 'none' : '1px solid #93c5fd'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saving) {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                  }}
                 >
                   {saving ? 'Saving...' : 'Save Settings'}
                 </button>
@@ -558,7 +637,10 @@ export default function SettingsPage() {
                     onChange={(e) => {
                       const file = e.target.files?.[0] || null
                       setAvatarFile(file)
-                      if (file) setAvatarPreview(URL.createObjectURL(file))
+                      if (file) {
+                        const objectUrl = URL.createObjectURL(file)
+                        setAvatarPreview(objectUrl)
+                      }
                     }}
                   />
                 </label>

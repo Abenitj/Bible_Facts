@@ -326,25 +326,37 @@ export default function SmtpConfigPage() {
                   </svg>
                 </button>
                 <DarkModeToggle />
-                              <div className="flex space-x-2">
-
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center text-sm"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="hidden sm:inline">Add Configuration</span>
-                  <span className="sm:hidden">Add</span>
-                </button>
-              </div>
               </div>
             </div>
           </div>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+          {/* Add Configuration Button - Right Side */}
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="px-4 py-2 rounded-md transition-colors flex items-center text-sm"
+              style={{
+                backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                color: darkMode ? '#ffffff' : '#1e40af',
+                border: darkMode ? 'none' : '1px solid #93c5fd'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+              }}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="hidden sm:inline">Add Configuration</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
@@ -364,7 +376,18 @@ export default function SmtpConfigPage() {
               <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>No SMTP configurations found</p>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="mt-4 px-4 py-2 rounded-md transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                  color: darkMode ? '#ffffff' : '#1e40af',
+                  border: darkMode ? 'none' : '1px solid #93c5fd'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                }}
               >
                 Create First Configuration
               </button>

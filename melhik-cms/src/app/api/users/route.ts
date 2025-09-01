@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { username: { contains: search, mode: 'insensitive' } },
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } }
       ]
     }
@@ -67,6 +69,8 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           username: true,
+          firstName: true,
+          lastName: true,
           email: true,
           role: true,
           status: true,
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { username, email, password, role, status, permissions, sendWelcomeEmail: shouldSendEmail } = body
+    const { username, firstName, lastName, email, password, role, status, permissions, sendWelcomeEmail: shouldSendEmail } = body
 
     // Validate required fields
     if (!username || !role) {
@@ -192,6 +196,8 @@ export async function POST(request: NextRequest) {
     const newUser = await prisma.user.create({
       data: {
         username,
+        firstName,
+        lastName,
         email,
         password: hashedPassword,
         role,
@@ -204,6 +210,8 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         username: true,
+        firstName: true,
+        lastName: true,
         email: true,
         role: true,
         status: true,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { apiCall, apiUrl } from '@/lib/api'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
+import DarkModeToggle from '@/components/DarkModeToggle'
 import WelcomeModal from '@/components/WelcomeModal'
 import { checkPermission, PERMISSIONS } from '@/lib/auth'
 
@@ -13,6 +14,8 @@ interface User {
   role: string
   permissions?: string[]
   avatarUrl?: string
+  firstName?: string
+  lastName?: string
 }
 
 interface Religion {
@@ -113,8 +116,15 @@ export default function Dashboard() {
 
         if (profileRes.ok) {
           const profileData = await profileRes.json()
-          if (profileData.success && profileData.data?.avatarUrl) {
-            setAvatarUrl(profileData.data.avatarUrl)
+          if (profileData.success) {
+            setAvatarUrl(profileData.data?.avatarUrl || '')
+            // Update user with full profile data
+            setUser(prev => ({
+              ...prev,
+              firstName: profileData.data?.firstName,
+              lastName: profileData.data?.lastName,
+              avatarUrl: profileData.data?.avatarUrl
+            }))
           }
         }
 
@@ -233,7 +243,18 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={handleLogout}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+                className="w-full py-2 px-4 rounded-lg transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                  color: darkMode ? '#ffffff' : '#1e40af',
+                  border: darkMode ? 'none' : '1px solid #93c5fd'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                }}
               >
                 Return to Login
               </button>
@@ -315,16 +336,7 @@ export default function Dashboard() {
                 </svg>
               </button>
               
-              <div className="flex items-center space-x-2 text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="hidden sm:inline">Live</span>
-                <span className="ml-2 px-2 py-1 rounded text-xs" style={{ 
-                  backgroundColor: darkMode ? '#374151' : '#f3f4f6',
-                  color: darkMode ? '#d1d5db' : '#374151'
-                }}>
-                  {darkMode ? '🌙' : '☀️'}
-                </span>
-              </div>
+              <DarkModeToggle />
             </div>
           </div>
 
@@ -515,7 +527,18 @@ export default function Dashboard() {
                   <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No religions found. Add your first religion to get started.</p>
                   <button
                     onClick={() => router.push('/religions')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 rounded-md transition-colors"
+                    style={{
+                      backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                      color: darkMode ? '#ffffff' : '#1e40af',
+                      border: darkMode ? 'none' : '1px solid #93c5fd'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                    }}
                   >
                     Add Religion
                   </button>
@@ -593,12 +616,23 @@ export default function Dashboard() {
                 <div className="text-center py-8">
                   <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                        style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0 3.332.477 4.5 1.253" />
                   </svg>
                   <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No topics found.</p>
                   <button
                     onClick={() => router.push('/topics')}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+                    className="px-4 py-2 rounded-md transition-colors"
+                    style={{
+                      backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                      color: darkMode ? '#ffffff' : '#1e40af',
+                      border: darkMode ? 'none' : '1px solid #93c5fd'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                    }}
                   >
                     Add Topic
                   </button>

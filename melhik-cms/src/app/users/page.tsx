@@ -14,6 +14,8 @@ import { canAccessUserManagement, ROLES } from '@/lib/auth'
 interface User {
   id: number
   username: string
+  firstName?: string
+  lastName?: string
   email: string | null
   role: string
   status: string
@@ -424,16 +426,6 @@ export default function UsersPage() {
                   </svg>
                 </button>
                 <DarkModeToggle />
-                <button
-                  onClick={() => setShowCreateForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center text-sm"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="hidden sm:inline">Add User</span>
-                  <span className="sm:hidden">Add</span>
-                </button>
               </div>
             </div>
           </div>
@@ -442,7 +434,30 @@ export default function UsersPage() {
         {/* Content */}
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
 
-
+          {/* Add User Button - Right Side */}
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="px-4 py-2 rounded-md transition-colors flex items-center text-sm"
+              style={{
+                backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                color: darkMode ? '#ffffff' : '#1e40af',
+                border: darkMode ? 'none' : '1px solid #93c5fd'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+              }}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="hidden sm:inline">Add User</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          </div>
 
           {/* Filters */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">

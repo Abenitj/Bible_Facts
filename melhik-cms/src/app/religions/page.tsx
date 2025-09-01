@@ -275,16 +275,6 @@ export default function ReligionsPage() {
                   </svg>
                 </button>
                 <DarkModeToggle />
-                <button
-                  onClick={() => setShowForm(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center text-sm"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span className="hidden sm:inline">Add Religion</span>
-                  <span className="sm:hidden">Add</span>
-                </button>
               </div>
             </div>
           </div>
@@ -302,6 +292,31 @@ export default function ReligionsPage() {
             {error}
           </div>
         )}
+
+        {/* Add Religion Button - Right Side */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 rounded-md transition-colors flex items-center text-sm"
+            style={{
+              backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+              color: darkMode ? '#ffffff' : '#1e40af',
+              border: darkMode ? 'none' : '1px solid #93c5fd'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+            }}
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span className="hidden sm:inline">Add Religion</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        </div>
 
         {/* Religion Form */}
         {showForm && (
@@ -406,7 +421,20 @@ export default function ReligionsPage() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{
+                      backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                      color: darkMode ? '#ffffff' : '#1e40af',
+                      border: darkMode ? 'none' : '1px solid #93c5fd'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!submitting) {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                    }}
                   >
                     {submitting ? 'Saving...' : (editingReligion ? 'Update' : 'Create')}
                   </button>
@@ -491,7 +519,18 @@ export default function ReligionsPage() {
               <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No religions found</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 rounded-md transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                  color: darkMode ? '#ffffff' : '#1e40af',
+                  border: darkMode ? 'none' : '1px solid #93c5fd'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+                }}
               >
                 Add First Religion
               </button>

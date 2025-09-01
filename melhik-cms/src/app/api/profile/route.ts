@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, username: true, email: true, role: true, avatarUrl: true }
+      select: { id: true, username: true, firstName: true, lastName: true, email: true, role: true, avatarUrl: true }
     })
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -33,7 +33,10 @@ export async function PUT(request: NextRequest) {
     if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
     const contentType = request.headers.get('content-type') || ''
+    
     let username: string | undefined
+    let firstName: string | undefined
+    let lastName: string | undefined
     let email: string | null | undefined
     let currentPassword: string | undefined
     let newPassword: string | undefined
@@ -44,17 +47,24 @@ export async function PUT(request: NextRequest) {
     if (contentType.includes('application/json')) {
       const body = await request.json()
       username = body.username
+      firstName = body.firstName
+      lastName = body.lastName
       email = body.email
       currentPassword = body.currentPassword
       newPassword = body.newPassword
     } else if (contentType.includes('multipart/form-data')) {
       const form = await request.formData()
+      
       username = (form.get('username') as string) || undefined
+      firstName = (form.get('firstName') as string) || undefined
+      lastName = (form.get('lastName') as string) || undefined
       email = (form.get('email') as string) || undefined
       currentPassword = (form.get('currentPassword') as string) || undefined
       newPassword = (form.get('newPassword') as string) || undefined
       removeAvatar = ((form.get('removeAvatar') as string) || 'false') === 'true'
+      
       const file = form.get('avatar') as File | null
+      
       if (file) {
         const arrayBuffer = await file.arrayBuffer()
         avatarBuffer = Buffer.from(arrayBuffer)
@@ -68,6 +78,8 @@ export async function PUT(request: NextRequest) {
 
     const updates: any = {}
     if (username) updates.username = username
+    if (firstName !== undefined) updates.firstName = firstName
+    if (lastName !== undefined) updates.lastName = lastName
     if (typeof email !== 'undefined') updates.email = email
 
     // Handle password change
@@ -100,7 +112,7 @@ export async function PUT(request: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: payload.userId },
       data: updates,
-      select: { id: true, username: true, email: true, role: true, avatarUrl: true }
+      select: { id: true, username: true, firstName: true, lastName: true, email: true, role: true, avatarUrl: true }
     })
 
     return NextResponse.json({ success: true, data: updated })
