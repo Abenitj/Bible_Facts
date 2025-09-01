@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 100,
     flexGrow: 1,
   },
   welcomeSection: {

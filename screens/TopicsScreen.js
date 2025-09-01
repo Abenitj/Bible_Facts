@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
   },
   topicsList: {
     paddingVertical: 16,
+    paddingBottom: 100,
   },
   listHeader: {
     paddingHorizontal: 20,

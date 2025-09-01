@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    paddingBottom: 100,
   },
   section: {
     marginTop: 24,

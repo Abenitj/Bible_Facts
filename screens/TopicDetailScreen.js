@@ -169,6 +169,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 12,
+    paddingBottom: 100,
   },
   // questionContainer removed - question now included in description container
   questionSection: {
