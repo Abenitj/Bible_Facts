@@ -2,8 +2,13 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import AmharicText from '../src/components/AmharicText';
 import ClickableBibleVerse from './ClickableBibleVerse';
+import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { getColors } from '../src/theme/colors';
 
 const TextWithBibleVerses = ({ text, style, verseData = [] }) => {
+  const { isDarkMode } = useDarkMode();
+  const colors = getColors(isDarkMode);
+
   // Function to detect Bible verse patterns in text
   const detectVerses = (text) => {
     // Common Bible verse patterns - simplified to avoid regex issues
@@ -68,12 +73,12 @@ const TextWithBibleVerses = ({ text, style, verseData = [] }) => {
             verse={part.content}
             text={verseInfo?.text || 'ይህ ጥቅስ በአሁኑ ጊዜ አይገኝም።'}
             explanation={verseInfo?.explanation}
-            style={styles.inlineVerse}
+            style={[styles.inlineVerse, { color: colors.primary }]}
           />
         );
       } else {
         return (
-          <AmharicText key={index} style={[styles.text, style]}>
+          <AmharicText key={index} style={[styles.text, { color: colors.textSecondary }, style]}>
             {part.content}
           </AmharicText>
         );
@@ -95,12 +100,10 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    color: '#6B7280',
     lineHeight: 24,
   },
   inlineVerse: {
     fontSize: 16,
-    color: '#1F2937',
     textDecorationLine: 'underline',
     fontWeight: '600',
   },
