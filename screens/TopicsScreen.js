@@ -4,7 +4,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,11 +11,14 @@ import AppBar from '../components/AppBar';
 import TopicCard from '../components/TopicCard';
 import AmharicText from '../src/components/AmharicText';
 import { getTopicsByReligion } from '../src/database/simpleData';
+import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { getColors } from '../src/theme/colors';
 
 const TopicsScreen = ({ navigation, route }) => {
   const { religion } = route.params || {};
   const [topics, setTopics] = useState([]);
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const { isDarkMode } = useDarkMode();
+  const colors = getColors(isDarkMode);
 
   useEffect(() => {
     if (religion) {
@@ -30,34 +32,39 @@ const TopicsScreen = ({ navigation, route }) => {
     try {
       const religionTopics = await getTopicsByReligion(religion.id);
       setTopics(religionTopics);
-      
-      // Entrance animation
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }).start();
     } catch (error) {
       console.error('Error loading topics:', error);
     }
   };
 
   const navigateToTopic = (topic) => {
-    if (religion) {
-      navigation.navigate('TopicDetail', { religion, topicId: topic.id });
+    try {
+      if (religion && navigation) {
+        navigation.navigate('TopicDetail', { religion, topicId: topic.id });
+      } else {
+        console.warn('Religion or navigation not available');
+        if (navigation) {
+          navigation.goBack();
+        }
+      }
+    } catch (error) {
+      console.error('Error navigating to topic:', error);
+      if (navigation) {
+        navigation.goBack();
+      }
     }
   };
 
   // If no religion is provided, show a message
   if (!religion) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="book-outline" size={64} color="#374151" />
-          <AmharicText variant="subheading" style={styles.emptyTitle}>
+          <Ionicons name="book-outline" size={64} color={colors.textSecondary} />
+          <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>
             ሃይማኖት ይምረጡ
           </AmharicText>
-          <AmharicText variant="body" style={styles.emptyText}>
+          <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
             ርዕሰ መልእክቶችን ለማግኘት ዋና ገጽ ላይ ሃይማኖት ይምረጡ።
           </AmharicText>
         </View>
@@ -70,15 +77,33 @@ const TopicsScreen = ({ navigation, route }) => {
       topic={item}
       onPress={() => navigateToTopic(item)}
       index={index}
+      colors={colors}
     />
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <AppBar 
         title={religion.name}
         showBack={true}
-        onBackPress={() => navigation.navigate('Home')}
+        onBackPress={() => {
+          console.log('Back button pressed in TopicsScreen');
+          console.log('Navigation object:', navigation);
+          console.log('Can go back:', navigation.canGoBack());
+          try {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              console.log('Cannot go back, navigating to Home');
+              navigation.navigate('Home');
+            }
+          } catch (error) {
+            console.error('Error going back:', error);
+            // Fallback: try to navigate to Home
+            navigation.navigate('Home');
+          }
+        }}
+        colors={colors}
       />
 
       {/* Topics List */}
@@ -86,33 +111,18 @@ const TopicsScreen = ({ navigation, route }) => {
         data={topics}
         renderItem={renderTopic}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.topicsList}
+        contentContainerStyle={[styles.topicsList, { paddingBottom: 80 }]}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <Animated.View 
-            style={[
-              styles.listHeader,
-              { opacity: fadeAnim }
-            ]}
-          >
-            <AmharicText variant="subheading" style={styles.listHeaderTitle}>
-              {topics.length} ርዕሰ መልእክት{topics.length !== 1 ? 'ዎች' : ''} ይገኛሉ
-            </AmharicText>
-            <AmharicText variant="caption" style={styles.listHeaderSubtitle}>
-              የመጽሐፍ ቅዱስ መልሶችን ለማግኘት ርዕሰ መልእክት ይንኩ
-            </AmharicText>
-          </Animated.View>
-        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="book-outline" size={64} color="#374151" />
-            <AmharicText variant="subheading" style={styles.emptyTitle}>ርዕሰ መልእክቶች የሉም</AmharicText>
-            <AmharicText variant="body" style={styles.emptyText}>
-              ለዚህ ሃይማኖት ርዕሰ መልእክቶች በቅርቡ ይጨመራሉ።
+            <Ionicons name="book-outline" size={64} color={colors.textSecondary} />
+            <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>ርዕሰ መልእክት{topics.length !== 1 ? 'ዎች' : ''} የሉም</AmharicText>
+            <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
+              ለዚህ ሃይማኖት ርዕሰ መልእክት{topics.length !== 1 ? 'ዎች' : ''} በቅርቡ ይጨመራሉ።
             </AmharicText>
           </View>
         }
-              />
+      />
     </SafeAreaView>
   );
 };
@@ -120,51 +130,28 @@ const TopicsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  topicsList: {
-    paddingVertical: 16,
-    paddingBottom: 80,
-  },
-  listHeader: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
-  },
-  listHeaderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  listHeaderSubtitle: {
-    fontSize: 14,
-    color: '#374151',
-    textAlign: 'center',
   },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
+    marginTop: 40,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#374151',
+    marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
     paddingHorizontal: 32,
+  },
+  topicsList: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
 });
 

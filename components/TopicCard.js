@@ -11,7 +11,19 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const TopicCard = ({ topic, onPress, index = 0 }) => {
+const TopicCard = ({ topic, onPress, index = 0, colors = {} }) => {
+  // Default colors if none provided
+  const defaultColors = {
+    card: '#FFFFFF',
+    border: '#E5E7EB',
+    primary: '#3B82F6',
+    primaryLight: '#DBEAFE',
+    textPrimary: '#1F2937',
+    textSecondary: '#6B7280'
+  };
+  
+  const finalColors = Object.keys(colors).length > 0 ? colors : defaultColors;
+  
   const [scaleValue] = useState(new Animated.Value(1));
   const [opacityValue] = useState(new Animated.Value(0));
 
@@ -64,19 +76,23 @@ const TopicCard = ({ topic, onPress, index = 0 }) => {
       ]}
     >
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { 
+          backgroundColor: finalColors.card,
+          borderBottomColor: finalColors.border,
+          borderLeftColor: finalColors.primary,
+        }]}
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={0.9}
       >
         <View style={styles.content}>
-          <Text style={styles.title}>{topic.title}</Text>
-          <Text style={styles.description}>{topic.description}</Text>
+          <Text style={[styles.title, { color: finalColors.textPrimary }]}>{topic.title}</Text>
+          <Text style={[styles.description, { color: finalColors.textSecondary }]}>{topic.description}</Text>
         </View>
         
-        <View style={styles.arrowContainer}>
-          <Ionicons name="chevron-forward" size={20} color="#3B82F6" />
+        <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
+          <Ionicons name="chevron-forward" size={20} color={finalColors.primary} />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -85,7 +101,6 @@ const TopicCard = ({ topic, onPress, index = 0 }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 16,
     marginVertical: 6,
   },
   card: {
@@ -93,10 +108,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(59, 130, 246, 0.15)',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000000',
     shadowOffset: {
@@ -113,19 +125,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#6B7280',
     lineHeight: 20,
   },
   arrowContainer: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#DBEAFE',
     justifyContent: 'center',
     alignItems: 'center',
   },

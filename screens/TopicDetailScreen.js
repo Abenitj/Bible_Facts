@@ -17,12 +17,16 @@ import ZoomableText from '../components/ZoomableText';
 import TextWithBibleVerses from '../components/TextWithBibleVerses';
 import { getTopicById } from '../src/database/simpleData';
 import { mockBibleVerses } from '../src/database/mockBibleVerses';
+import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { getColors } from '../src/theme/colors';
 
 const TopicDetailScreen = ({ navigation, route }) => {
   const { religion, topicId } = route.params;
   const [topic, setTopic] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
+  const { isDarkMode } = useDarkMode();
+  const colors = getColors(isDarkMode);
 
   useEffect(() => {
     loadTopic();
@@ -82,25 +86,57 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
   if (!topic) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <AppBar 
           title="ዝርዝር መረጃ"
           showBack={true}
-          onBackPress={() => navigation.goBack()}
+          onBackPress={() => {
+            console.log('Back button pressed in TopicDetailScreen (loading)');
+            console.log('Navigation object:', navigation);
+            console.log('Can go back:', navigation.canGoBack());
+            try {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                console.log('Cannot go back, navigating to Home');
+                navigation.navigate('Home');
+              }
+            } catch (error) {
+              console.error('Error going back:', error);
+              navigation.navigate('Home');
+            }
+          }}
+          colors={colors}
         />
         <View style={styles.loadingContainer}>
-          <AmharicText variant="body">ይዘት እያደረገ ነው...</AmharicText>
+          <AmharicText variant="body" style={{ color: colors.textSecondary }}>ይዘቱ እያደረገ ነው...</AmharicText>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <AppBar 
         title="ዝርዝር መረጃ"
         showBack={true}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => {
+          console.log('Back button pressed in TopicDetailScreen');
+          console.log('Navigation object:', navigation);
+          console.log('Can go back:', navigation.canGoBack());
+          try {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              console.log('Cannot go back, navigating to Home');
+              navigation.navigate('Home');
+            }
+          } catch (error) {
+            console.error('Error going back:', error);
+            navigation.navigate('Home');
+          }
+        }}
+        colors={colors}
       />
 
       {/* Content */}
@@ -120,33 +156,36 @@ const TopicDetailScreen = ({ navigation, route }) => {
             ]}
           >
             {/* Question Section */}
-            <View style={styles.questionSection}>
-              <AmharicText variant="subheading" style={styles.questionText}>{topic.description}</AmharicText>
+            <View style={[styles.questionSection, { 
+              backgroundColor: colors.primaryLight,
+              borderLeftColor: colors.primary,
+            }]}>
+              <AmharicText variant="subheading" style={[styles.questionText, { color: colors.textPrimary }]}>{topic.description}</AmharicText>
             </View>
             
             {/* Separator Above */}
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.border }]} />
             
             {/* Description Title */}
             <View style={styles.descriptionTitleSection}>
-              <Ionicons name="create-outline" size={20} color="#8B4513" style={styles.sectionIcon} />
-              <AmharicText variant="subheading" style={styles.sectionTitle}>ዝርዝር ማብራሪያ</AmharicText>
+              <Ionicons name="create-outline" size={20} color={colors.primary} style={styles.sectionIcon} />
+              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>ዝርዝር ማብራሪያ</AmharicText>
             </View>
             
             {/* Separator Below */}
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.border }]} />
             
             <View style={styles.sectionContent}>
               <TextWithBibleVerses 
                 text={topic.content.explanation}
-                style={styles.explanationText}
+                style={[styles.explanationText, { color: colors.textSecondary }]}
                 verseData={mockBibleVerses}
               />
             </View>
             
             {/* Share Button at Bottom */}
             <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-              <Ionicons name="share-social" size={18} color="#8B4513" />
+              <Ionicons name="share-social" size={18} color={colors.primary} />
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -157,45 +196,41 @@ const TopicDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 2,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    padding: 12,
+    paddingHorizontal: 2,
+    paddingVertical: 16,
     paddingBottom: 80,
   },
-  // questionContainer removed - question now included in description container
   questionSection: {
     marginBottom: 16,
     padding: 16,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    borderRadius: 8,
+    borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
   },
   questionText: {
     fontSize: 18,
-    color: '#1F2937',
     lineHeight: 26,
     fontWeight: 'bold',
   },
   descriptionTitleSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
     marginBottom: 16,
   },
   separator: {
     height: 1,
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    marginVertical: 8,
+    marginVertical: 12,
   },
   questionShareButton: {
     position: 'absolute',
@@ -209,47 +244,44 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   descriptionContainer: {
-    padding: 20,
+    padding: 16,
     marginBottom: 20,
     position: 'relative',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     justifyContent: 'space-between',
   },
   sectionIcon: {
     fontSize: 24,
-    marginRight: 12,
+    marginRight: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#1F2937',
     flex: 1,
   },
   shareButton: {
     position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 40,
-    height: 40,
+    bottom: 24,
+    right: 24,
+    width: 48,
+    height: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 24,
     zIndex: 1,
   },
   sectionContent: {
     flex: 1,
-    paddingBottom: 60, // Add space for the share button
+    paddingBottom: 80,
   },
   explanationText: {
     fontSize: 16,
-    color: '#6B7280',
-    lineHeight: 24,
+    lineHeight: 26,
   },
-  // Footer styles removed
 });
 
 export default TopicDetailScreen;

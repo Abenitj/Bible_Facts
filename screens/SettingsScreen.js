@@ -1,150 +1,130 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   Switch,
-  Alert,
+  TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AmharicText from '../src/components/AmharicText';
+import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { getColors } from '../src/theme/colors';
 
 const SettingsScreen = ({ navigation }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const colors = getColors(isDarkMode);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const clearAllData = () => {
-    Alert.alert(
-      'Clear All Settings',
-      'Are you sure you want to clear all settings? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.clear();
-              Alert.alert('Success', 'All settings have been cleared.');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to clear settings.');
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const contactSupport = () => {
-    Alert.alert('Contact Support', 'Support feature coming soon!');
-  };
-
-  const openPrivacyPolicy = () => {
-    Alert.alert('Privacy Policy', 'Privacy policy coming soon!');
-  };
-
-  const openTermsOfService = () => {
-    Alert.alert('Terms of Service', 'Terms of service coming soon!');
-  };
-
-  const renderSettingItem = ({ icon, title, subtitle, showSwitch = false, switchValue = false, onSwitchChange, onPress }) => (
+  const renderSettingItem = ({ 
+    icon, 
+    title, 
+    subtitle, 
+    onPress, 
+    showSwitch = false, 
+    switchValue = false, 
+    onSwitchChange,
+    showArrow = true 
+  }) => (
     <TouchableOpacity
-      style={styles.settingItem}
+      style={[styles.settingItem, { borderBottomColor: colors.border }]}
       onPress={onPress}
-      disabled={!onPress}
+      activeOpacity={0.7}
     >
-      <View style={styles.settingItemLeft}>
-        <Ionicons name={icon} size={24} color="#3B82F6" style={styles.settingIcon} />
-        <View style={styles.settingTextContainer}>
-          <Text style={styles.settingTitle}>{title}</Text>
-          <Text style={styles.settingSubtitle}>{subtitle}</Text>
+      <View style={styles.settingLeft}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name={icon} size={20} color={colors.primary} />
+        </View>
+        <View style={styles.settingText}>
+          <AmharicText variant="subheading" style={[styles.settingTitle, { color: colors.textPrimary }]}>
+            {title}
+          </AmharicText>
+          {subtitle && (
+            <AmharicText variant="caption" style={[styles.settingSubtitle, { color: colors.textSecondary }]}>
+              {subtitle}
+            </AmharicText>
+          )}
         </View>
       </View>
-      {showSwitch ? (
-        <Switch
-          value={switchValue}
-          onValueChange={onSwitchChange}
-          trackColor={{ false: '#E5E7EB', true: '#3B82F6' }}
-          thumbColor={switchValue ? '#FFFFFF' : '#FFFFFF'}
-        />
-      ) : onPress ? (
-        <Ionicons name="chevron-forward" size={20} color="#6B7280" style={styles.settingArrow} />
-      ) : null}
+      
+      <View style={styles.settingRight}>
+        {showSwitch ? (
+          <Switch
+            value={switchValue}
+            onValueChange={onSwitchChange}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={switchValue ? colors.primaryLight : colors.textTertiary}
+          />
+        ) : showArrow ? (
+          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+        ) : null}
+      </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Settings Header */}
-      <View style={styles.header}>
-        <View style={styles.headerSpacer} />
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.headerSpacer} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <AmharicText variant="heading" style={[styles.headerTitle, { color: colors.textPrimary }]}>
+          ቅንብሮች
+        </AmharicText>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 80 }]}
+      >
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appearance</Text>
+          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Appearance
+          </AmharicText>
           {renderSettingItem({
-            icon: 'moon-outline',
+            icon: isDarkMode ? 'moon' : 'sunny',
             title: 'Dark Mode',
             subtitle: 'Switch between light and dark themes',
             showSwitch: true,
             switchValue: isDarkMode,
-            onSwitchChange: toggleTheme,
-          })}
-        </View>
-
-        {/* Data Management Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data Management</Text>
-          {renderSettingItem({
-            icon: 'trash-outline',
-            title: 'Clear All Settings',
-            subtitle: 'Remove all app data and settings',
-            onPress: clearAllData,
+            onSwitchChange: toggleDarkMode,
+            showArrow: false
           })}
         </View>
 
         {/* Support Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
+          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Support
+          </AmharicText>
           {renderSettingItem({
             icon: 'help-circle-outline',
             title: 'Contact Support',
-            subtitle: 'Get help with the app',
-            onPress: contactSupport,
+            subtitle: 'Get help and report issues',
+            onPress: () => console.log('Contact Support pressed')
           })}
         </View>
 
         {/* Legal Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Legal</Text>
+          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+            Legal
+          </AmharicText>
           {renderSettingItem({
             icon: 'shield-checkmark-outline',
             title: 'Privacy Policy',
-            subtitle: 'Read our privacy policy',
-            onPress: openPrivacyPolicy,
-          })}
-          {renderSettingItem({
-            icon: 'document-text-outline',
-            title: 'Terms of Service',
-            subtitle: 'Read our terms of service',
-            onPress: openTermsOfService,
+            subtitle: 'Learn about data collection and usage',
+            onPress: () => console.log('Privacy Policy pressed')
           })}
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Melhik Evangelism Tool</Text>
-          <Text style={styles.footerSubtext}>Version 1.0.0</Text>
+          <AmharicText variant="caption" style={[styles.footerText, { color: colors.textTertiary }]}>
+            Melhik Bible Facts App
+          </AmharicText>
+          <AmharicText variant="caption" style={[styles.footerText, { color: colors.textTertiary }]}>
+            Version 1.0.0
+          </AmharicText>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -154,97 +134,79 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#3B82F6',
-  },
-  backButton: {
-    padding: 8,
-  },
-  backButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  headerSpacer: {
-    width: 50,
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     paddingBottom: 80,
   },
   section: {
     marginTop: 24,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
-    paddingHorizontal: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
   },
-  settingItemLeft: {
+  settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  settingIcon: {
-    fontSize: 24,
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
-  settingTextContainer: {
+  settingText: {
     flex: 1,
   },
   settingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   settingSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    lineHeight: 20,
   },
-  settingArrow: {
-    fontSize: 20,
-    color: '#6B7280',
-    fontWeight: 'bold',
+  settingRight: {
+    width: 50,
+    alignItems: 'flex-end',
   },
   footer: {
+    marginTop: 40,
     alignItems: 'center',
-    paddingVertical: 32,
     paddingHorizontal: 16,
   },
   footerText: {
-    fontSize: 16,
-    color: '#374151',
+    fontSize: 14,
     textAlign: 'center',
     marginBottom: 4,
-  },
-  footerSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
   },
 });
 

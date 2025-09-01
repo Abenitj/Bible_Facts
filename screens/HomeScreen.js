@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,17 +6,147 @@ import {
   Animated,
   RefreshControl,
   FlatList,
+  ScrollView,
+  Dimensions,
+  Image,
+  Text,
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 import { getReligions, initializeSampleData } from '../src/database/simpleData';
 import SyncService from '../src/services/SyncService';
+import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { getColors } from '../src/theme/colors';
+
+const { width } = Dimensions.get('window');
+
+// Image Slider Component
+const ImageSlider = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const slideRef = useRef(null);
+  
+  const images = [
+    { 
+      id: 1, 
+      source: require('../assets/home/img1.webp'), 
+      title: 'Biblical Truths', 
+      subtitle: 'Discover amazing facts' 
+    },
+    { 
+      id: 2, 
+      source: require('../assets/home/img2.webp'), 
+      title: 'Faith & Knowledge', 
+      subtitle: 'Learn and grow' 
+    },
+    { 
+      id: 3, 
+      source: require('../assets/home/img3.webp'), 
+      title: 'Spiritual Growth', 
+      subtitle: 'Deepen your understanding' 
+    },
+  ];
+
+  // Safety check for images array
+  if (!images || images.length === 0) {
+    return null;
+  }
+
+  useEffect(() => {
+    if (images.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 20000); // 20 seconds
+
+      return () => clearInterval(timer);
+    }
+  }, [images.length]);
+
+  const onGestureEvent = (event) => {
+    try {
+      const { translationX, state } = event.nativeEvent;
+      
+      if (state === State.END) {
+        const swipeThreshold = width * 0.15; // 15% of screen width for easier swiping
+        
+        if (translationX > swipeThreshold) {
+          // Swipe right - go to previous slide
+          setCurrentIndex((prevIndex) => 
+            prevIndex === 0 ? images.length - 1 : prevIndex - 1
+          );
+        } else if (translationX < -swipeThreshold) {
+          // Swipe left - go to next slide
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling gesture:', error);
+    }
+  };
+
+  const goToSlide = (index) => {
+    try {
+      if (index >= 0 && index < images.length) {
+        setCurrentIndex(index);
+      }
+    } catch (error) {
+      console.error('Error going to slide:', error);
+    }
+  };
+
+  return (
+    <View style={styles.sliderContainer}>
+      <PanGestureHandler
+        ref={slideRef}
+        onGestureEvent={onGestureEvent}
+        activeOffsetX={[-5, 5]}
+        failOffsetY={[-20, 20]}
+        shouldCancelWhenOutside={false}
+      >
+        <View style={styles.sliderContent}>
+          <Image 
+            source={images[currentIndex]?.source || images[0].source}
+            style={styles.sliderImage}
+            resizeMode="cover"
+            onError={(error) => console.error('Image loading error:', error)}
+          />
+          
+          <View style={styles.sliderTextOverlay}>
+            <Text style={styles.sliderTitle}>{images[currentIndex]?.title || images[0].title}</Text>
+            <Text style={styles.sliderSubtitle}>{images[currentIndex]?.subtitle || images[0].subtitle}</Text>
+          </View>
+        </View>
+      </PanGestureHandler>
+      
+      {/* Dots indicator */}
+      <View style={styles.dotsContainer}>
+        {images.map((_, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => goToSlide(index)}
+            style={styles.dotButton}
+          >
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: index === currentIndex ? '#3B82F6' : '#E5E7EB' }
+              ]}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
 
 // ReligionCard component with animation
-const ReligionCard = ({ item, index, onPress }) => {
+const ReligionCard = ({ item, index, onPress, colors }) => {
   const [scaleValue] = useState(new Animated.Value(1));
   const [opacityValue] = useState(new Animated.Value(0));
+
+  // Safety check for item
+  if (!item) return null;
 
   useEffect(() => {
     // Staggered animation for cards
@@ -67,19 +197,23 @@ const ReligionCard = ({ item, index, onPress }) => {
       ]}
     >
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { 
+          backgroundColor: colors.card,
+          borderBottomColor: colors.border,
+          borderLeftColor: colors.primary,
+        }]}
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={0.9}
       >
         <View style={styles.content}>
-          <AmharicText variant="subheading" style={styles.title}>{item.name}</AmharicText>
-          <AmharicText variant="caption" style={styles.description}>{item.description}</AmharicText>
+          <AmharicText variant="subheading" style={[styles.title, { color: colors.textPrimary }]}>{item.name || 'Unknown Religion'}</AmharicText>
+          <AmharicText variant="caption" style={[styles.description, { color: colors.textSecondary }]}>{item.description || 'No description available'}</AmharicText>
         </View>
         
-        <View style={styles.arrowContainer}>
-          <Ionicons name="chevron-forward" size={20} color="#3B82F6" />
+        <View style={[styles.arrowContainer, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="chevron-forward" size={20} color={colors.primary} />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -91,28 +225,20 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
+  const { isDarkMode } = useDarkMode();
+  const colors = getColors(isDarkMode);
 
   useEffect(() => {
     initializeScreen();
   }, []);
 
   const initializeScreen = async () => {
-    console.log('HomeScreen: Starting initialization...');
-    
     try {
-      // Initialize sample data
       await initializeSampleData();
-      console.log('HomeScreen: Sample data initialized');
+      const religionsData = await getReligions();
+      setReligions(religionsData);
       
-      // Load religions
-      await loadReligions();
-      console.log('HomeScreen: Religions loaded');
-      
-      // Check for updates
-      await SyncService.checkForUpdates();
-      console.log('HomeScreen: Sync check completed');
-      
-      // Start entrance animation
+      // Entrance animation
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -126,102 +252,108 @@ const HomeScreen = ({ navigation }) => {
           useNativeDriver: true,
         }),
       ]).start();
-      console.log('HomeScreen: Animation started');
     } catch (error) {
-      console.error('HomeScreen initialization failed:', error);
-    }
-  };
-
-  const loadReligions = async () => {
-    try {
-      const data = await getReligions();
-      setReligions(data);
-    } catch (error) {
-      console.error('Error loading religions:', error);
+      console.error('Error initializing screen:', error);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await loadReligions();
-      await SyncService.checkForUpdates();
+      const syncService = new SyncService();
+      const hasUpdates = await syncService.checkForUpdates();
+      if (hasUpdates) {
+        const religionsData = await getReligions();
+        setReligions(religionsData);
+      }
     } catch (error) {
-      console.error('Refresh failed:', error);
+      console.error('Error refreshing:', error);
     } finally {
       setRefreshing(false);
     }
   };
 
   const handleReligionPress = (religion) => {
-    // Navigate to Topics tab and pass the religion data
-    navigation.navigate('Topics', { religion });
+    try {
+      if (navigation && religion) {
+        // Navigate to ReligionTopics screen and pass the religion data
+        navigation.navigate('ReligionTopics', { religion });
+      } else {
+        console.warn('Navigation or religion data not available');
+      }
+    } catch (error) {
+      console.error('Error navigating to religion topics:', error);
+      // Fallback: try to go back or show error
+      if (navigation) {
+        navigation.goBack();
+      }
+    }
   };
 
-  const renderReligionCard = ({ item, index }) => (
-    <ReligionCard 
-      item={item} 
-      index={index} 
-      onPress={() => handleReligionPress(item)}
-    />
-  );
+  const renderReligionCard = ({ item, index }) => {
+    if (!item) return null;
+    
+    return (
+      <ReligionCard 
+        item={item} 
+        index={index} 
+        onPress={() => handleReligionPress(item)}
+        colors={colors}
+      />
+    );
+  };
 
   const renderHeader = () => (
     <Animated.View 
       style={[
-        styles.welcomeSection,
-        {
+        styles.headerSection,
+        { 
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
+          transform: [{ translateY: slideAnim }]
+        }
       ]}
     >
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Religions</Text>
+      <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>Select a religion to explore topics and biblical answers</Text>
     </Animated.View>
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <Ionicons name="book-outline" size={64} color="#374151" />
-      <AmharicText variant="subheading" style={styles.emptyTitle}>ሃይማኖቶች የሉም</AmharicText>
-      <AmharicText variant="body" style={styles.emptyText}>
-        ሃይማኖቶች በቅርቡ ይጨመራሉ።
+      <Ionicons name="book-outline" size={64} color={colors.textSecondary} />
+      <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>ሃይማኖቶች የሉም</AmharicText>
+      <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
+        ሃይማኖቶች በቅርቡ ይጨመራሉ። እባክዎ በቅርቡ ይመልሱ።
       </AmharicText>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Welcome Header */}
-      <Animated.View 
-        style={[
-          styles.welcomeSection,
-          { 
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}
-      >
-        <AmharicText variant="heading" style={styles.welcomeTitle}>
-          እንኳን ደስ አለዎት!
-        </AmharicText>
-        <AmharicText variant="body" style={styles.welcomeSubtitle}>
-          የመጽሐፍ ቅዱስ መልሶችን ለማግኘት ሃይማኖት ይምረጡ
-        </AmharicText>
-      </Animated.View>
-
-      {/* Religions List */}
-      <FlatList
-        data={religions}
-        renderItem={renderReligionCard}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={styles.listContainer}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        showsVerticalScrollIndicator={false}
-      />
+      >
+        {/* Image Slider */}
+        <ImageSlider />
+
+        {/* Religions List */}
+        <View style={styles.religionsSection}>
+          {renderHeader()}
+          <FlatList
+            data={religions}
+            renderItem={renderReligionCard}
+            keyExtractor={(item) => item?.id?.toString() || Math.random().toString()}
+            ListEmptyComponent={renderEmpty()}
+            contentContainerStyle={styles.listContainer}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -231,29 +363,93 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  listContainer: {
+  scrollView: {
+    flex: 1,
+  },
+  sliderContainer: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  sliderContent: {
+    position: 'relative',
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  sliderImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+  },
+  sliderTextOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    padding: 20,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  sliderTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  sliderSubtitle: {
+    fontSize: 14,
+    color: '#E5E7EB',
+    fontWeight: '500',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  dotButton: {
+    padding: 4,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  religionsSection: {
     paddingHorizontal: 16,
     paddingBottom: 80,
-    flexGrow: 1,
   },
-  welcomeSection: {
-    padding: 24,
-    margin: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(59, 130, 246, 0.2)',
+  headerSection: {
+    marginBottom: 20,
   },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '600',
     marginBottom: 8,
-    textAlign: 'center',
   },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#374151',
-    textAlign: 'center',
-    lineHeight: 24,
+  sectionSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  listContainer: {
+    flexGrow: 1,
   },
   religionCard: {
     marginVertical: 6,
@@ -263,10 +459,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(59, 130, 246, 0.15)',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000000',
     shadowOffset: {
@@ -283,19 +476,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 4,
   },
   description: {
     fontSize: 14,
-    color: '#6B7280',
     lineHeight: 20,
   },
   arrowContainer: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#DBEAFE',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -309,13 +499,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#374151',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
     paddingHorizontal: 32,
   },

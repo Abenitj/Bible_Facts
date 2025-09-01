@@ -10,25 +10,51 @@ import AmharicText from '../src/components/AmharicText';
 const AppBar = ({ 
   title, 
   showBack = false, 
-  onBackPress
+  onBackPress,
+  colors = {}
 }) => {
+  // Default colors if none provided
+  const defaultColors = {
+    primary: '#3B82F6',
+    primaryDark: '#2563EB',
+    primaryLight: '#DBEAFE',
+    textInverse: '#FFFFFF'
+  };
+  
+  const finalColors = Object.keys(colors).length > 0 ? colors : defaultColors;
+  
+  // Ensure text and icons are always white for good contrast
+  const textColor = '#FFFFFF';
+  const iconColor = '#FFFFFF';
+  const indicatorColor = finalColors.primaryLight || '#DBEAFE';
+  
   return (
-    <View style={styles.appBar}>
+    <View style={[styles.appBar, { 
+      backgroundColor: finalColors.primary,
+      borderBottomColor: finalColors.primaryDark,
+    }]}>
       <View style={styles.leftSection}>
         {showBack && (
           <TouchableOpacity
             style={styles.backButton}
-            onPress={onBackPress}
+            onPress={() => {
+              console.log('AppBar back button pressed');
+              if (onBackPress) {
+                onBackPress();
+              } else {
+                console.warn('No onBackPress handler provided');
+              }
+            }}
             activeOpacity={0.6}
           >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={24} color={iconColor} />
           </TouchableOpacity>
         )}
       </View>
       
       <View style={styles.titleSection}>
-        <AmharicText variant="subheading" style={styles.title}>{title}</AmharicText>
-        <View style={styles.titleIndicator} />
+        <AmharicText variant="subheading" style={[styles.title, { color: textColor }]}>{title}</AmharicText>
+        <View style={[styles.titleIndicator, { backgroundColor: indicatorColor }]} />
       </View>
       
       <View style={styles.rightSection}>
@@ -45,9 +71,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#3B82F6',
     borderBottomWidth: 1,
-    borderBottomColor: '#2563EB',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -78,7 +102,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 0.5,
     marginBottom: 2,
@@ -86,7 +109,6 @@ const styles = StyleSheet.create({
   titleIndicator: {
     width: 20,
     height: 2,
-    backgroundColor: '#DBEAFE',
     borderRadius: 1,
     alignSelf: 'center',
   },
