@@ -40,6 +40,7 @@ const filterNavigationItems = (items: any[], currentUser: any, currentPermission
 
 // Shared navigation items configuration
 const getNavigationItems = () => [
+  // Profile is managed inside Settings; no standalone nav item
   {
     id: 'dashboard',
     name: 'Dashboard',
@@ -142,7 +143,7 @@ const getNavigationItems = () => [
 ]
 
 interface MobileMenuProps {
-  user: { username: string; role: string } | null
+  user: { username: string; role: string; avatarUrl?: string } | null
   activeSection: string
   onLogout: () => void
   isOpen: boolean
@@ -150,7 +151,7 @@ interface MobileMenuProps {
 }
 
 interface SidebarProps {
-  user: { username: string; role: string } | null
+  user: { username: string; role: string; avatarUrl?: string } | null
   activeSection: string
   onLogout: () => void
 }
@@ -214,57 +215,67 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
   const filteredNavigationItems = filterNavigationItems(navigationItems, user, userPermissions, 'Sidebar')
 
   return (
-    <div className={`${sidebarOpen ? 'w-64' : 'w-16'} shadow-lg transition-all duration-300 ease-in-out hidden sm:block`}
+    <div className={`${sidebarOpen ? 'w-64' : 'w-16'} shadow-lg transition-all duration-300 ease-in-out hidden sm:block relative`}
          style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
       <div className="flex flex-col h-full">
-        {/* Logo/Brand */}
-        <div className="flex items-center justify-between p-4 border-b"
+        {/* Header with User Avatar and Dark Mode Toggle */}
+        <div className="flex items-center justify-between p-4 border-b" 
              style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-          {sidebarOpen ? (
-            <button 
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          <div className="flex items-center space-x-3">
+            {/* User Avatar */}
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 cursor-pointer" 
+                 style={{ borderColor: darkMode ? '#4b5563' : '#e5e7eb' }}
+                 onClick={() => router.push('/settings')}
+                 title="Go to Settings">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
+              )}
+            </div>
+            
+            {/* User Info (only show when sidebar is open) */}
+            {sidebarOpen && (
+              <div className="flex flex-col">
+                <p className="text-sm font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                  {user?.username || 'User'}
+                </p>
+                <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                  {user?.role || 'User'}
+                </p>
               </div>
-              <span className="text-lg font-bold" style={{ color: darkMode ? '#ffffff' : '#111827' }}>Melhik CMS</span>
-            </button>
-          ) : (
-            <button 
-              onClick={() => router.push('/dashboard')}
-              className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto hover:opacity-80 transition-opacity"
+            )}
+          </div>
+          
+          {/* Dark Mode Toggle and Collapse Button */}
+          <div className="flex items-center space-x-2">
+            {sidebarOpen && <DarkModeToggle />}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md transition-colors duration-200"
+              style={{
+                backgroundColor: 'transparent',
+                color: darkMode ? '#9ca3af' : '#6b7280'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
+              title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {sidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                )}
               </svg>
             </button>
-          )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-md transition-colors duration-200"
-            style={{
-              backgroundColor: 'transparent',
-              color: darkMode ? '#9ca3af' : '#6b7280'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
-            title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {sidebarOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              )}
-            </svg>
-          </button>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -310,21 +321,28 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
 
         {/* User Profile */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            {sidebarOpen && (
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.username}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role}</p>
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => router.push('/settings')}
+              className="flex items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md p-2 flex-1"
+              title="Go to Settings"
+            >
+              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </div>
-            )}
+              {sidebarOpen && (
+                <div className="ml-3 flex-1 text-left">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.username}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role}</p>
+                </div>
+              )}
+            </button>
+            
             <button
               onClick={onLogout}
-              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-2"
               title="Logout"
             >
               <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -480,10 +498,14 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
             <div className="p-4 border-t" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-white font-medium text-sm">
-                      {user.username.charAt(0).toUpperCase()}
-                    </span>
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3 overflow-hidden">
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-medium text-sm">
+                        {user.username.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>

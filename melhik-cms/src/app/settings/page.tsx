@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
-import DarkModeToggle from '@/components/DarkModeToggle'
 import { ROLES } from '@/lib/auth'
+import { apiUrl } from '@/lib/api'
 
 interface User {
   username: string
@@ -30,6 +30,11 @@ export default function SettingsPage() {
     newPassword: '',
     confirmPassword: ''
   })
+  const [avatarPreview, setAvatarPreview] = useState<string>('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false)
+  const [fullImageOpen, setFullImageOpen] = useState(false)
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false)
 
   const [systemForm, setSystemForm] = useState({
     autoBackup: true,
@@ -48,7 +53,19 @@ export default function SettingsPage() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       setUser(payload)
-      setProfileForm(prev => ({ ...prev, username: payload.username }))
+      // Fetch full profile
+      fetch(apiUrl('/api/profile'), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.data
+          setProfileForm(prev => ({ ...prev, username: p.username || '', email: p.email || '' }))
+          if (p.avatarUrl) setAvatarPreview(p.avatarUrl)
+        }
+      }).catch(() => {})
     } catch (error) {
       localStorage.removeItem('cms_token')
       router.push('/login')
@@ -75,15 +92,42 @@ export default function SettingsPage() {
         setSaving(false)
         return
       }
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        setError('Not authenticated')
+        setSaving(false)
+        return
+      }
 
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setSuccess('Profile updated successfully!')
-      setProfileForm(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }))
+      const formData = new FormData()
+      formData.append('username', profileForm.username)
+      formData.append('email', profileForm.email)
+      if (profileForm.currentPassword) formData.append('currentPassword', profileForm.currentPassword)
+      if (profileForm.newPassword) formData.append('newPassword', profileForm.newPassword)
+      if (avatarFile) formData.append('avatar', avatarFile)
+
+      const res = await fetch(apiUrl('/api/profile'), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setError(err.error || 'Failed to update profile')
+      } else {
+        const data = await res.json()
+        setSuccess('Profile updated successfully!')
+        setProfileForm(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        }))
+        if (data.data?.avatarUrl) setAvatarPreview(data.data.avatarUrl)
+      }
     } catch (error) {
       setError('Failed to update profile')
     } finally {
@@ -91,26 +135,27 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSystemUpdate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setSuccess('System settings updated successfully!')
-    } catch (error) {
-      setError('Failed to update system settings')
-    } finally {
-      setSaving(false)
+  const removeAvatar = async () => {
+    const token = localStorage.getItem('cms_token')
+    if (!token) return
+    const formData = new FormData()
+    formData.append('removeAvatar', 'true')
+    const res = await fetch(apiUrl('/api/profile'), {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+    if (res.ok) {
+      setAvatarPreview('')
+      setAvatarFile(null)
+      setSuccess('Profile image removed')
     }
   }
 
   if (loading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
-        <Sidebar user={user} activeSection={activeSection} onLogout={handleLogout} />
+        <Sidebar user={{ ...user, avatarUrl: avatarPreview }} activeSection={activeSection} onLogout={handleLogout} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -139,13 +184,33 @@ export default function SettingsPage() {
                    backgroundColor: darkMode ? '#1f2937' : '#ffffff',
                    borderColor: darkMode ? '#374151' : '#e5e7eb'
                  }}>
-          <div className="px-4 sm:px-6 py-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Settings</h1>
-                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Manage your account and system preferences</p>
+          <div className="px-4 sm:px-6 py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-4">
+                {/* User Info */}
+                <div className="flex flex-col">
+                  <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                    {user?.username || 'User'}
+                  </h1>
+                  <div className="flex items-center space-x-3 mt-1">
+                    <span className="text-sm font-medium px-2 py-1 rounded-full" 
+                          style={{ 
+                            backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                            color: darkMode ? '#d1d5db' : '#374151'
+                          }}>
+                      {user?.role || 'User'}
+                    </span>
+                    <span className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      Melhik CMS
+                    </span>
+                  </div>
+                  <p className="text-sm mt-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Account Settings & System Preferences
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
+              
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={() => setMobileMenuOpen(true)}
                   className="sm:hidden p-2 rounded-md transition-colors duration-200"
@@ -158,7 +223,6 @@ export default function SettingsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
-                <DarkModeToggle />
               </div>
             </div>
           </div>
@@ -196,105 +260,124 @@ export default function SettingsPage() {
                 <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Update your account information</p>
               </div>
               
-              <form onSubmit={handleProfileUpdate} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={profileForm.username}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  />
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer"
+                       onClick={() => setAvatarModalOpen(true)}
+                  >
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Click image to change</p>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={profileForm.email}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  />
-                </div>
+                <form onSubmit={handleProfileUpdate} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.username}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    value={profileForm.currentPassword}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={profileForm.email}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={profileForm.newPassword}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={profileForm.currentPassword}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={profileForm.confirmPassword}
-                    onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={profileForm.newPassword}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    />
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {saving ? 'Updating...' : 'Update Profile'}
-                </button>
-              </form>
+                  <div>
+                    <label className="block text-sm font-medium mb-2" 
+                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      value={profileForm.confirmPassword}
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {saving ? 'Updating...' : 'Update Profile'}
+                  </button>
+                </form>
+              </div>
             </div>
 
             {/* System Settings - Admin Only */}
@@ -306,7 +389,7 @@ export default function SettingsPage() {
                 <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Configure system preferences</p>
               </div>
               
-              <form onSubmit={handleSystemUpdate} className="p-6 space-y-4">
+              <form onSubmit={() => {}} className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
@@ -363,7 +446,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" 
+                  <label className="block text-sm font-medium mb-2"
                          style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
                     Language
                   </label>
@@ -383,7 +466,7 @@ export default function SettingsPage() {
                 </div>
 
                 <button
-                  type="submit"
+                  type="button"
                   disabled={saving}
                   className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
@@ -436,6 +519,100 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
+
+      {/* Avatar Modal */}
+      {avatarModalOpen && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Manage Profile Image</h3>
+                <button onClick={() => setAvatarModalOpen(false)} className="p-2 rounded-md" style={{ backgroundColor: darkMode ? '#374151' : '#f3f4f6' }}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6 flex flex-col items-center">
+              <button type="button" className="w-48 h-48 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center focus:outline-none"
+                      onClick={() => avatarPreview && setFullImageOpen(true)}
+                      title={avatarPreview ? 'Click to view full image' : ''}>
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                )}
+              </button>
+              <div className="mt-4 flex gap-3">
+                <label className="px-3 py-2 rounded-md text-sm cursor-pointer" 
+                       style={{ backgroundColor: darkMode ? '#374151' : '#f3f4f6', color: darkMode ? '#d1d5db' : '#374151' }}>
+                  Choose Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null
+                      setAvatarFile(file)
+                      if (file) setAvatarPreview(URL.createObjectURL(file))
+                    }}
+                  />
+                </label>
+                {avatarPreview && (
+                  <button type="button" onClick={() => setConfirmRemoveOpen(true)} className="px-3 py-2 rounded-md text-sm"
+                          style={{ backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2', color: darkMode ? '#fca5a5' : '#dc2626' }}>
+                    Remove Image
+                  </button>
+                )}
+                <button type="button" onClick={() => setAvatarModalOpen(false)} className="px-3 py-2 rounded-md text-sm"
+                        style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff', color: darkMode ? '#d1d5db' : '#374151', border: '1px solid', borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Image Viewer */}
+      {fullImageOpen && avatarPreview && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="relative rounded-lg shadow-xl max-w-4xl w-full p-4" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <img src={avatarPreview} alt="Full avatar" className="object-contain max-w-full max-h-[80vh] rounded-md" />
+            <button onClick={() => setFullImageOpen(false)} className="absolute top-3 right-3 p-2 rounded-md" style={{ backgroundColor: darkMode ? '#374151' : '#f3f4f6' }}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Remove Modal */}
+      {confirmRemoveOpen && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Confirm Delete</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Are you sure you want to remove your profile image?</p>
+              <div className="flex space-x-3 pt-2">
+                <button type="button" onClick={async () => { await removeAvatar(); setConfirmRemoveOpen(false); }} className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors">
+                  Delete
+                </button>
+                <button type="button" onClick={() => setConfirmRemoveOpen(false)} className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

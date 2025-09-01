@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { apiCall, apiUrl } from '@/lib/api'
 import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
-import DarkModeToggle from '@/components/DarkModeToggle'
 import WelcomeModal from '@/components/WelcomeModal'
 import { checkPermission, PERMISSIONS } from '@/lib/auth'
 
@@ -13,6 +12,7 @@ interface User {
   username: string
   role: string
   permissions?: string[]
+  avatarUrl?: string
 }
 
 interface Religion {
@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [activeSection, setActiveSection] = useState('dashboard')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string>('')
   const { darkMode } = useDarkMode()
 
   useEffect(() => {
@@ -99,6 +100,21 @@ export default function Dashboard() {
           const permissionsData = await permissionsRes.json()
           if (permissionsData.success) {
             setUserPermissions(permissionsData.data.permissions)
+          }
+        }
+
+        // Fetch user profile for avatar
+        const profileRes = await fetch(apiUrl('/api/profile'), {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (profileRes.ok) {
+          const profileData = await profileRes.json()
+          if (profileData.success && profileData.data?.avatarUrl) {
+            setAvatarUrl(profileData.data.avatarUrl)
           }
         }
 
@@ -166,7 +182,7 @@ export default function Dashboard() {
     return (
       <div className="flex h-screen" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
         <Sidebar
-          user={user}
+          user={{ ...user, avatarUrl }}
           activeSection={activeSection}
           onLogout={handleLogout}
         />
@@ -256,13 +272,13 @@ export default function Dashboard() {
     <div className="flex h-screen" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
       {/* Sidebar */}
       <Sidebar
-        user={user}
+        user={{ ...user, avatarUrl }}
         activeSection={activeSection}
         onLogout={handleLogout}
       />
       
       <MobileMenu
-        user={user}
+        user={{ ...user, avatarUrl }}
         activeSection={activeSection}
         onLogout={handleLogout}
         isOpen={mobileMenuOpen}
@@ -309,7 +325,6 @@ export default function Dashboard() {
                   {darkMode ? '🌙' : '☀️'}
                 </span>
               </div>
-              <DarkModeToggle />
             </div>
           </div>
 
