@@ -143,7 +143,13 @@ const getNavigationItems = () => [
 ]
 
 interface MobileMenuProps {
-  user: { username: string; role: string; avatarUrl?: string } | null
+  user: { 
+    username: string; 
+    role: string; 
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string 
+  } | null
   activeSection: string
   onLogout: () => void
   isOpen: boolean
@@ -151,7 +157,13 @@ interface MobileMenuProps {
 }
 
 interface SidebarProps {
-  user: { username: string; role: string; avatarUrl?: string } | null
+  user: { 
+    username: string; 
+    role: string; 
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string 
+  } | null
   activeSection: string
   onLogout: () => void
 }
@@ -218,64 +230,67 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
     <div className={`${sidebarOpen ? 'w-64' : 'w-16'} shadow-lg transition-all duration-300 ease-in-out hidden sm:block relative`}
          style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
       <div className="flex flex-col h-full">
-        {/* Header with User Avatar and Dark Mode Toggle */}
-        <div className="flex items-center justify-between p-4 border-b" 
-             style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-          <div className="flex items-center space-x-3">
+        {/* Header with Collapse Button and Avatar */}
+        <div className="px-4 py-3 border-b" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+          <div className="flex items-center justify-between">
             {/* User Avatar */}
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 cursor-pointer" 
-                 style={{ borderColor: darkMode ? '#4b5563' : '#e5e7eb' }}
-                 onClick={() => router.push('/settings')}
-                 title="Go to Settings">
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              )}
-            </div>
-            
-            {/* User Info (only show when sidebar is open) */}
-            {sidebarOpen && (
-              <div className="flex flex-col">
-                <p className="text-sm font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                  {user?.firstName && user?.lastName 
-                    ? `${user.firstName} ${user.lastName}`
-                    : user?.username || 'User'
-                  }
-                </p>
-                <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                  {user?.role || 'User'}
-                </p>
+            {user && (
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 cursor-pointer" 
+                     style={{ borderColor: darkMode ? '#4b5563' : '#e5e7eb' }}
+                     onClick={() => router.push('/settings')}
+                     title="Go to Settings">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  )}
+                </div>
+                
+                {/* User Info (only show when sidebar is open) */}
+                {sidebarOpen && (
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+                      {user.firstName && user.lastName 
+                        ? `${user.firstName} ${user.lastName}`
+                        : user.username
+                      }
+                    </p>
+                    <p className="text-xs truncate" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                      {user.role === 'content_manager' ? 'Content Manager' : user.role}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Collapse Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md transition-colors duration-200"
+              style={{
+                backgroundColor: 'transparent',
+                color: darkMode ? '#9ca3af' : '#6b7280'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
+              title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {sidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                )}
+              </svg>
+            </button>
           </div>
-          
-          {/* Collapse Button */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-md transition-colors duration-200"
-            style={{
-              backgroundColor: 'transparent',
-              color: darkMode ? '#9ca3af' : '#6b7280'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
-            title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {sidebarOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              )}
-            </svg>
-          </button>
         </div>
 
         {/* Navigation */}
@@ -319,42 +334,28 @@ export default function Sidebar({ user, activeSection, onLogout }: SidebarProps)
           ))}
         </nav>
 
-        {/* User Profile */}
+        {/* Logout Button */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => router.push('/settings')}
-              className="flex items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md p-2 flex-1"
-              title="Go to Settings"
-            >
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              {sidebarOpen && (
-                <div className="ml-3 flex-1 text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.firstName && user?.lastName 
-                      ? `${user.firstName} ${user.lastName}`
-                      : user?.username || 'User'
-                    }
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role}</p>
-                </div>
-              )}
-            </button>
-            
-            <button
-              onClick={onLogout}
-              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-2"
-              title="Logout"
-            >
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={onLogout}
+            className="w-full p-3 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
+            style={{
+              backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+              color: darkMode ? '#fca5a5' : '#dc2626'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkMode ? '#991b1b' : '#fee2e2'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = darkMode ? '#7f1d1d' : '#fef2f2'
+            }}
+            title="Logout"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            {sidebarOpen && <span className="font-medium">Logout</span>}
+          </button>
         </div>
       </div>
     </div>
@@ -498,50 +499,31 @@ export function MobileMenu({ user, activeSection, onLogout, isOpen, onClose }: M
             </div>
           </nav>
 
-          {/* Mobile User Profile */}
-          {user && (
-            <div className="p-4 border-t" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3 overflow-hidden">
-                    {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white font-medium text-sm">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-                      {user.firstName && user.lastName 
-                        ? `${user.firstName} ${user.lastName}`
-                        : user.username
-                      }
-                    </p>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      {user.role}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    onLogout()
-                    onClose()
-                  }}
-                  className="p-2 rounded-md transition-colors duration-200"
-                  style={{
-                    backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
-                    color: darkMode ? '#fca5a5' : '#dc2626'
-                  }}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Mobile Logout Button */}
+          <div className="p-4 border-t" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+            <button
+              onClick={() => {
+                onLogout()
+                onClose()
+              }}
+              className="w-full p-3 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
+              style={{
+                backgroundColor: darkMode ? '#7f1d1d' : '#fef2f2',
+                color: darkMode ? '#fca5a5' : '#dc2626'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#991b1b' : '#fee2e2'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#7f1d1d' : '#fef2f2'
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
         </div>
       </div>
     </>

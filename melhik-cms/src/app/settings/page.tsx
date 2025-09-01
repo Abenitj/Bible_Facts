@@ -11,6 +11,10 @@ import { apiUrl } from '@/lib/api'
 interface User {
   username: string
   role: string
+  firstName?: string
+  lastName?: string
+  email?: string
+  avatarUrl?: string
 }
 
 export default function SettingsPage() {
@@ -196,7 +200,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
+    <div className="h-screen flex overflow-hidden" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
       <Sidebar user={user} activeSection={activeSection} onLogout={handleLogout} />
       
       <MobileMenu
@@ -207,8 +211,8 @@ export default function SettingsPage() {
         onClose={() => setMobileMenuOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col">
-        <header className="shadow-sm border-b" 
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="flex-shrink-0 shadow-sm border-b" 
                  style={{ 
                    backgroundColor: darkMode ? '#1f2937' : '#ffffff',
                    borderColor: darkMode ? '#374151' : '#e5e7eb'
@@ -243,7 +247,7 @@ export default function SettingsPage() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {error && (
             <div className="mb-6 border px-4 py-3 rounded-md"
                  style={{
@@ -266,336 +270,543 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* Profile Settings */}
-            <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
-              <div className="px-6 py-4 border-b" 
-                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Profile Settings</h3>
-                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Update your account information</p>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer"
-                       onClick={() => setAvatarModalOpen(true)}
-                  >
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    )}
+          {/* Conditional Layout: Grid for Non-Admin, Linear for Admin */}
+          {!loading && user && (
+            user.role !== ROLES.ADMIN ? (
+              /* Grid Layout for Non-Admin Users */
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Profile Settings */}
+                <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                  <div className="px-6 py-4 border-b" 
+                       style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                    <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Profile Settings</h3>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Update your account information</p>
                   </div>
-                  <div>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Click image to change</p>
+                  
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer"
+                           onClick={() => setAvatarModalOpen(true)}
+                      >
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Click image to change</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleProfileUpdate} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Username
+                        </label>
+                        <input
+                          type="text"
+                          value={profileForm.username}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2" 
+                                 style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                            First Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profileForm.firstName}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              backgroundColor: darkMode ? '#374151' : '#ffffff',
+                              borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                              color: darkMode ? '#ffffff' : '#000000'
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2" 
+                                 style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profileForm.lastName}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              backgroundColor: darkMode ? '#374151' : '#ffffff',
+                              borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                              color: darkMode ? '#ffffff' : '#000000'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.currentPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.newPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.confirmPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        style={{
+                          backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                          color: darkMode ? '#ffffff' : '#1e40af',
+                          border: darkMode ? 'none' : '1px solid #93c5fd'
+                        }}
+                        onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe' } }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe' }}
+                      >
+                        {saving ? 'Updating...' : 'Update Profile'}
+                      </button>
+                    </form>
                   </div>
                 </div>
 
-                <form onSubmit={handleProfileUpdate} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2" 
-                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={profileForm.username}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{
-                        backgroundColor: darkMode ? '#374151' : '#ffffff',
-                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                        color: darkMode ? '#ffffff' : '#000000'
-                      }}
-                    />
+                {/* Account Information */}
+                <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                  <div className="px-6 py-4 border-b" 
+                       style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                    <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Account Information</h3>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Your account details</p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  <div className="p-6 space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2" 
-                             style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                        First Name
+                      <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                        Role
                       </label>
-                      <input
-                        type="text"
-                        value={profileForm.firstName}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      <div className="px-3 py-2 rounded-md" style={{ backgroundColor: darkMode ? '#374151' : '#f3f4f6' }}>
+                        <span className="text-sm capitalize" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                          {user.role === 'content_manager' ? 'Content Manager' : user.role}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                        Account Status
+                      </label>
+                      <div className="px-3 py-2 rounded-md" style={{ backgroundColor: darkMode ? '#065f46' : '#dcfce7' }}>
+                        <span className="text-sm" style={{ color: darkMode ? '#d1fae5' : '#166534' }}>
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Linear Layout for Admin Users */
+              <div className="space-y-6">
+                {/* Profile Settings */}
+                <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                  <div className="px-6 py-4 border-b" 
+                       style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                    <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Profile Settings</h3>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Update your account information</p>
+                  </div>
+                  
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer"
+                           onClick={() => setAvatarModalOpen(true)}
+                      >
+                        {avatarPreview ? (
+                          <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Click image to change</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleProfileUpdate} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Username
+                        </label>
+                        <input
+                          type="text"
+                          value={profileForm.username}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2" 
+                                 style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                            First Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profileForm.firstName}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, firstName: e.target.value }))}
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              backgroundColor: darkMode ? '#374151' : '#ffffff',
+                              borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                              color: darkMode ? '#ffffff' : '#000000'
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2" 
+                                 style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                            Last Name
+                          </label>
+                          <input
+                            type="text"
+                            value={profileForm.lastName}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            style={{
+                              backgroundColor: darkMode ? '#374151' : '#ffffff',
+                              borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                              color: darkMode ? '#ffffff' : '#000000'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.currentPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.newPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2" 
+                               style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          value={profileForm.confirmPassword}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            backgroundColor: darkMode ? '#374151' : '#ffffff',
+                            borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                            color: darkMode ? '#ffffff' : '#000000'
+                          }}
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         style={{
-                          backgroundColor: darkMode ? '#374151' : '#ffffff',
-                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                          color: darkMode ? '#ffffff' : '#000000'
+                          backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                          color: darkMode ? '#ffffff' : '#1e40af',
+                          border: darkMode ? 'none' : '1px solid #93c5fd'
                         }}
+                        onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe' } }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe' }}
+                      >
+                        {saving ? 'Updating...' : 'Update Profile'}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                {/* System Settings - Admin Only */}
+                <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+                  <div className="px-6 py-4 border-b" 
+                       style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                    <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Settings</h3>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Configure system preferences</p>
+                  </div>
+                  
+                  <form onSubmit={() => {}} className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Auto Backup
+                        </label>
+                        <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                          Automatically backup data
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={systemForm.autoBackup}
+                        onChange={(e) => setSystemForm(prev => ({ ...prev, autoBackup: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium mb-2" 
                              style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                        Last Name
+                        Backup Frequency
                       </label>
-                      <input
-                        type="text"
-                        value={profileForm.lastName}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, lastName: e.target.value }))}
+                      <select
+                        value={systemForm.backupFrequency}
+                        onChange={(e) => setSystemForm(prev => ({ ...prev, backupFrequency: e.target.value }))}
                         className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         style={{
                           backgroundColor: darkMode ? '#374151' : '#ffffff',
                           borderColor: darkMode ? '#4b5563' : '#d1d5db',
                           color: darkMode ? '#ffffff' : '#000000'
                         }}
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                          Enable Notifications
+                        </label>
+                        <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                          Show system notifications
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={systemForm.enableNotifications}
+                        onChange={(e) => setSystemForm(prev => ({ ...prev, enableNotifications: e.target.checked }))}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                       />
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2" 
-                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={profileForm.email}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <div>
+                      <label className="block text-sm font-medium mb-2"
+                             style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
+                        Language
+                      </label>
+                      <select
+                        value={systemForm.language}
+                        onChange={(e) => setSystemForm(prev => ({ ...prev, language: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        style={{
+                          backgroundColor: darkMode ? '#374151' : '#ffffff',
+                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                          color: darkMode ? '#ffffff' : '#000000'
+                        }}
+                      >
+                        <option value="en">English</option>
+                        <option value="am">Amharic</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={saving}
+                      className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       style={{
-                        backgroundColor: darkMode ? '#374151' : '#ffffff',
-                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                        color: darkMode ? '#ffffff' : '#000000'
+                        backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                        color: darkMode ? '#ffffff' : '#1e40af',
+                        border: darkMode ? 'none' : '1px solid #93c5fd'
                       }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" 
-                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      Current Password
-                    </label>
-                    <input
-                      type="password"
-                      value={profileForm.currentPassword}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{
-                        backgroundColor: darkMode ? '#374151' : '#ffffff',
-                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                        color: darkMode ? '#ffffff' : '#000000'
+                      onMouseEnter={(e) => {
+                        if (!saving) {
+                          e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+                        }
                       }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" 
-                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      New Password
-                    </label>
-                    <input
-                      type="password"
-                      value={profileForm.newPassword}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{
-                        backgroundColor: darkMode ? '#374151' : '#ffffff',
-                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                        color: darkMode ? '#ffffff' : '#000000'
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
                       }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" 
-                           style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      Confirm New Password
-                    </label>
-                    <input
-                      type="password"
-                      value={profileForm.confirmPassword}
-                      onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      style={{
-                        backgroundColor: darkMode ? '#374151' : '#ffffff',
-                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                        color: darkMode ? '#ffffff' : '#000000'
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{
-                      backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
-                      color: darkMode ? '#ffffff' : '#1e40af',
-                      border: darkMode ? 'none' : '1px solid #93c5fd'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!saving) {
-                        e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
-                    }}
-                  >
-                    {saving ? 'Updating...' : 'Update Profile'}
-                  </button>
-                </form>
+                    >
+                      {saving ? 'Saving...' : 'Save Settings'}
+                    </button>
+                  </form>
+                </div>
               </div>
+            )
+          )}
+
+          {/* System Information - Admin Only */}
+          {!loading && user && user.role === ROLES.ADMIN && (
+          <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-6 py-4 border-b" 
+                 style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Information</h3>
+              <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Current system status and actions</p>
             </div>
-
-            {/* System Settings - Admin Only */}
-            {user?.role === ROLES.ADMIN && (
-            <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
-              <div className="px-6 py-4 border-b" 
-                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Settings</h3>
-                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Configure system preferences</p>
-              </div>
-              
-              <form onSubmit={() => {}} className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      Auto Backup
-                    </label>
-                    <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Automatically backup data
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={systemForm.autoBackup}
-                    onChange={(e) => setSystemForm(prev => ({ ...prev, autoBackup: e.target.checked }))}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                  <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>User Information</h4>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Username: {user.username}
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Role: {user.role}
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Last Login: {new Date().toLocaleString()}
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2" 
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    Backup Frequency
-                  </label>
-                  <select
-                    value={systemForm.backupFrequency}
-                    onChange={(e) => setSystemForm(prev => ({ ...prev, backupFrequency: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                      Enable Notifications
-                    </label>
-                    <p className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Show system notifications
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={systemForm.enableNotifications}
-                    onChange={(e) => setSystemForm(prev => ({ ...prev, enableNotifications: e.target.checked }))}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2"
-                         style={{ color: darkMode ? '#d1d5db' : '#6b7280' }}>
-                    Language
-                  </label>
-                  <select
-                    value={systemForm.language}
-                    onChange={(e) => setSystemForm(prev => ({ ...prev, language: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      backgroundColor: darkMode ? '#374151' : '#ffffff',
-                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                      color: darkMode ? '#ffffff' : '#000000'
-                    }}
-                  >
-                    <option value="en">English</option>
-                    <option value="am">Amharic</option>
-                  </select>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={saving}
-                  className="w-full py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{
-                    backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
-                    color: darkMode ? '#ffffff' : '#1e40af',
-                    border: darkMode ? 'none' : '1px solid #93c5fd'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!saving) {
-                      e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
-                  }}
-                >
-                  {saving ? 'Saving...' : 'Save Settings'}
-                </button>
-              </form>
-            </div>
-            )}
-
-            {/* System Information - Admin Only */}
-            {user?.role === ROLES.ADMIN && (
-            <div className="rounded-lg shadow" style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
-              <div className="px-6 py-4 border-b" 
-                   style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Information</h3>
-                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Current system status and actions</p>
-              </div>
-              
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                    <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>User Information</h4>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Username: {user?.username}
-                    </p>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Role: {user?.role}
-                    </p>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Last Login: {new Date().toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                    <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Status</h4>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Status: Online
-                    </p>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Version: 1.0.0
-                    </p>
-                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      Database: Connected
-                    </p>
-                  </div>
+                <div className="p-4 border rounded-lg" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                  <h4 className="font-medium mb-2" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>System Status</h4>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Status: Online
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Version: 1.0.0
+                  </p>
+                  <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Database: Connected
+                  </p>
                 </div>
               </div>
             </div>
-            )}
           </div>
+          )}
         </main>
       </div>
 
