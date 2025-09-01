@@ -82,7 +82,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
   if (!topic) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <AppBar 
           title="ዝርዝር መረጃ"
           showBack={true}
@@ -96,7 +96,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <AppBar 
         title="ዝርዝር መረጃ"
         showBack={true}
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 12,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   // questionContainer removed - question now included in description container
   questionSection: {

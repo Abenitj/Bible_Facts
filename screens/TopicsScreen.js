@@ -74,7 +74,7 @@ const TopicsScreen = ({ navigation, route }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <AppBar 
         title={religion.name}
         showBack={true}
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   topicsList: {
     paddingVertical: 16,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   listHeader: {
     paddingHorizontal: 20,

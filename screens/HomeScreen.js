@@ -190,7 +190,7 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Welcome Header */}
       <Animated.View 
         style={[
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 80,
     flexGrow: 1,
   },
   welcomeSection: {

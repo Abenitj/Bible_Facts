@@ -40,7 +40,7 @@ function MainApp() {
             iconName = focused ? 'settings' : 'settings-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={24} color={color} />;
         },
         tabBarActiveTintColor: '#3B82F6',
         tabBarInactiveTintColor: '#6B7280',
@@ -48,9 +48,9 @@ function MainApp() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E5E7EB',
-          paddingBottom: Math.max(insets.bottom, 20),
-          paddingTop: 10,
-          height: 60 + Math.max(insets.bottom, 20),
+          paddingBottom: Math.max(insets.bottom, 10),
+          paddingTop: 8,
+          height: 50 + Math.max(insets.bottom, 10),
           position: 'absolute',
           bottom: 0,
           left: 0,
@@ -83,8 +83,9 @@ function MainApp() {
           marginBottom: 2,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '500',
+          marginTop: 2,
         },
         cardStyle: { backgroundColor: '#F9FAFB' },
       })}

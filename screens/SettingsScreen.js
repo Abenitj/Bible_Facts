@@ -80,7 +80,7 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Settings Header */}
       <View style={styles.header}>
         <View style={styles.headerSpacer} />
@@ -88,7 +88,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Appearance Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Appearance</Text>
@@ -98,7 +98,7 @@ const SettingsScreen = ({ navigation }) => {
             subtitle: 'Switch between light and dark themes',
             showSwitch: true,
             switchValue: isDarkMode,
-            onSwitchChange: toggleTheme
+            onSwitchChange: toggleTheme,
           })}
         </View>
 
@@ -108,8 +108,8 @@ const SettingsScreen = ({ navigation }) => {
           {renderSettingItem({
             icon: 'trash-outline',
             title: 'Clear All Settings',
-            subtitle: 'Reset all app settings',
-            onPress: clearAllData
+            subtitle: 'Remove all app data and settings',
+            onPress: clearAllData,
           })}
         </View>
 
@@ -117,48 +117,34 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           {renderSettingItem({
-            icon: 'mail-outline',
+            icon: 'help-circle-outline',
             title: 'Contact Support',
             subtitle: 'Get help with the app',
-            onPress: contactSupport
-          })}
-          {renderSettingItem({
-            icon: 'document-text-outline',
-            title: 'Privacy Policy',
-            subtitle: 'Read our privacy policy',
-            onPress: openPrivacyPolicy
-          })}
-          {renderSettingItem({
-            icon: 'document-outline',
-            title: 'Terms of Service',
-            subtitle: 'Read our terms of service',
-            onPress: openTermsOfService
+            onPress: contactSupport,
           })}
         </View>
 
-        {/* About Section */}
+        {/* Legal Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>Legal</Text>
           {renderSettingItem({
-            icon: 'book-outline',
-            title: 'Melhik',
-            subtitle: 'Version 1.0.0'
+            icon: 'shield-checkmark-outline',
+            title: 'Privacy Policy',
+            subtitle: 'Read our privacy policy',
+            onPress: openPrivacyPolicy,
           })}
           {renderSettingItem({
-            icon: 'bulb-outline',
-            title: 'Discover amazing biblical truths',
-            subtitle: 'Learn fascinating facts from the Bible'
+            icon: 'document-text-outline',
+            title: 'Terms of Service',
+            subtitle: 'Read our terms of service',
+            onPress: openTermsOfService,
           })}
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Made with ❤️ for biblical education
-          </Text>
-          <Text style={styles.footerSubtext}>
-            © 2024 Melhik App
-          </Text>
+          <Text style={styles.footerText}>Melhik Evangelism Tool</Text>
+          <Text style={styles.footerSubtext}>Version 1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -196,7 +182,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingBottom: 100,
+    paddingBottom: 80,
   },
   section: {
     marginTop: 24,

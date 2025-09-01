@@ -12,8 +12,8 @@ const { width, height } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [scaleAnim] = useState(new Animated.Value(0.3));
-  const [slideAnim] = useState(new Animated.Value(50));
+  const [scaleAnim] = useState(new Animated.Value(0.8));
+  const [slideAnim] = useState(new Animated.Value(20));
   const [textFadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const SplashScreen = ({ navigation }) => {
       await new Promise(resolve => {
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }).start(resolve);
       });
@@ -33,14 +33,14 @@ const SplashScreen = ({ navigation }) => {
         Animated.parallel([
           Animated.spring(scaleAnim, {
             toValue: 1,
-            tension: 50,
-            friction: 7,
+            tension: 60,
+            friction: 8,
             useNativeDriver: true,
           }),
           Animated.spring(slideAnim, {
             toValue: 0,
-            tension: 50,
-            friction: 7,
+            tension: 60,
+            friction: 8,
             useNativeDriver: true,
           }),
         ]).start(resolve);
@@ -50,7 +50,7 @@ const SplashScreen = ({ navigation }) => {
       await new Promise(resolve => {
         Animated.timing(textFadeAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 600,
           useNativeDriver: true,
         }).start(resolve);
       });
@@ -58,7 +58,7 @@ const SplashScreen = ({ navigation }) => {
       // Wait a moment, then navigate
       setTimeout(() => {
         navigation.replace('MainApp');
-      }, 1500);
+      }, 1200);
     };
 
     animationSequence();
@@ -66,9 +66,7 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
-      
-
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       {/* Main content */}
       <Animated.View
@@ -83,9 +81,11 @@ const SplashScreen = ({ navigation }) => {
           },
         ]}
       >
-        {/* Bible Icon */}
+        {/* App Icon */}
         <View style={styles.iconContainer}>
-          <Text style={styles.bibleIcon}>📖</Text>
+          <View style={styles.iconBackground}>
+            <Text style={styles.appIcon}>📖</Text>
+          </View>
         </View>
 
         {/* App Name */}
@@ -102,7 +102,7 @@ const SplashScreen = ({ navigation }) => {
         </Animated.View>
       </Animated.View>
 
-      {/* Bible Verse */}
+      {/* Footer */}
       <Animated.View
         style={[
           styles.footer,
@@ -111,10 +111,11 @@ const SplashScreen = ({ navigation }) => {
           },
         ]}
       >
+        <View style={styles.footerLine} />
         <Text style={styles.footerText}>
           "Always be prepared to give an answer to everyone who asks you to give the reason for the hope that you have."
         </Text>
-        <Text style={styles.footerReference}>- 1 Peter 3:15</Text>
+        <Text style={styles.footerReference}>1 Peter 3:15</Text>
       </Animated.View>
     </View>
   );
@@ -123,7 +124,7 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -133,66 +134,74 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
+    marginBottom: 40,
+  },
+  iconBackground: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
-    backgroundColor: 'transparent',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  bibleIcon: {
-    fontSize: 50,
-    color: '#FFFFFF',
+  appIcon: {
+    fontSize: 60,
   },
   titleContainer: {
     alignItems: 'center',
     marginBottom: 40,
   },
   appName: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontSize: 42,
+    fontWeight: '700',
+    color: '#1E293B',
     marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    letterSpacing: -0.5,
   },
   appSubtitle: {
     fontSize: 18,
-    color: '#DBEAFE',
-    fontWeight: '600',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: '#64748B',
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
-
   footer: {
     position: 'absolute',
     bottom: 80,
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 32,
+    width: '100%',
+  },
+  footerLine: {
+    width: 40,
+    height: 3,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 2,
+    marginBottom: 24,
   },
   footerText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#475569',
     textAlign: 'center',
     fontStyle: 'italic',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-    lineHeight: 22,
+    marginBottom: 16,
+    lineHeight: 24,
+    maxWidth: 300,
   },
   footerReference: {
     fontSize: 14,
-    color: '#DBEAFE',
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: '#94A3B8',
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });
 
