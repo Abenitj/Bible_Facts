@@ -15,7 +15,7 @@ import { getColors } from '../src/theme/colors';
 import { clearAllAppData, getStorageInfo } from '../utils/storage';
 import SyncService from '../src/services/SyncService';
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }) => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
   const [syncing, setSyncing] = useState(false);
@@ -28,7 +28,7 @@ const SettingsScreen = () => {
     try {
       Alert.alert(
         'Sync Content',
-        'Do you want to sync content from the CMS? This will download the latest religions, topics, and explanations.',
+        'Do you want to sync content from the CMS? This will download the latest religions, topics, and explanations. You\'ll receive notifications about the sync progress.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -37,9 +37,11 @@ const SettingsScreen = () => {
               try {
                 console.log('Starting manual sync...');
                 const result = await SyncService.performFullSync();
+                
+                // Show success message
                 Alert.alert(
                   'Sync Complete',
-                  `Successfully synced ${result.data.religions?.length || 0} religions and ${result.data.topics?.length || 0} topics.`,
+                  `Successfully synced ${result.data.religions?.length || 0} religions and ${result.data.topics?.length || 0} topics. Check your notifications!`,
                   [{ text: 'OK' }]
                 );
               } catch (error) {
@@ -159,6 +161,83 @@ const SettingsScreen = () => {
             subtitle: 'Switch between light and dark themes',
             onPress: toggleDarkMode,
             showArrow: false
+          })}
+        </View>
+
+        {/* Notifications Section */}
+        <View style={styles.section}>
+          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            Notifications
+          </AmharicText>
+          
+          {renderSettingItem({
+            icon: 'notifications',
+            title: 'Notification Settings',
+            subtitle: 'Configure daily verses, reminders, and alerts',
+            onPress: () => navigation.navigate('NotificationSettings')
+          })}
+          
+          {renderSettingItem({
+            icon: 'phone-portrait',
+            title: 'Push Notification Tester',
+            subtitle: 'Test push notifications (development builds only)',
+            onPress: () => navigation.navigate('PushNotificationTester')
+          })}
+          
+          {renderSettingItem({
+            icon: 'sync',
+            title: 'Test Sync Notifications',
+            subtitle: 'Test sync notifications without CMS server',
+            onPress: async () => {
+              try {
+                Alert.alert(
+                  'Test Sync Notifications',
+                  'This will test the notification system with mock data. Make sure notifications are enabled!',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Test',
+                      onPress: async () => {
+                        try {
+                          // Enable test mode temporarily
+                          SyncService.toggleTestMode();
+                          const result = await SyncService.performFullSync();
+                          // Disable test mode after test
+                          SyncService.toggleTestMode();
+                          Alert.alert(
+                            'Test Complete',
+                            `Test sync completed! Check your notifications. Result: ${result.message}`,
+                            [{ text: 'OK' }]
+                          );
+                        } catch (error) {
+                          Alert.alert(
+                            'Test Failed',
+                            `Test sync failed: ${error.message}`,
+                            [{ text: 'OK' }]
+                          );
+                        }
+                      }
+                    }
+                  ]
+                );
+              } catch (error) {
+                console.error('Error showing test dialog:', error);
+              }
+            }
+          })}
+          
+          {renderSettingItem({
+            icon: 'settings',
+            title: 'Sync Mode',
+            subtitle: SyncService.isTestMode() ? 'Test Mode (Mock Data)' : 'Real CMS Mode',
+            onPress: () => {
+              const newMode = SyncService.toggleTestMode();
+              Alert.alert(
+                'Sync Mode Changed',
+                `Switched to ${newMode ? 'Test Mode' : 'Real CMS Mode'}`,
+                [{ text: 'OK' }]
+              );
+            }
           })}
         </View>
 
