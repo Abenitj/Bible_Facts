@@ -10,7 +10,6 @@ import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import TopicCard from '../components/TopicCard';
 import AmharicText from '../src/components/AmharicText';
-import { getTopicsByReligion } from '../src/database/simpleData';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
 
@@ -20,22 +19,14 @@ const TopicsScreen = ({ navigation, route }) => {
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
+  // No loading needed - topics will come via sync
   useEffect(() => {
     if (religion) {
-      loadTopics();
+      // Set empty topics immediately - no loading state
+      setTopics([]);
+      console.log('Topics screen loaded - no data available yet');
     }
-  }, [religion?.id]);
-
-  const loadTopics = async () => {
-    if (!religion) return;
-    
-    try {
-      const religionTopics = await getTopicsByReligion(religion.id);
-      setTopics(religionTopics);
-    } catch (error) {
-      console.error('Error loading topics:', error);
-    }
-  };
+  }, [religion]);
 
   const navigateToTopic = (topic) => {
     try {

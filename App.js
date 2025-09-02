@@ -1,20 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import 'react-native-gesture-handler';
-
-// Import database
-import { initDatabase } from './src/database/simpleData';
-
-// Import contexts
 import { DarkModeProvider, useDarkMode } from './src/contexts/DarkModeContext';
-
-// Import screens
-import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import TopicsScreen from './screens/TopicsScreen';
 import TopicDetailScreen from './screens/TopicDetailScreen';
@@ -116,59 +107,8 @@ function MainApp() {
   );
 }
 
-// Loading component
-const LoadingScreen = () => {
-  const { isDarkMode } = useDarkMode();
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkMode ? '#1F2937' : '#F9FAFB' }}>
-      <ActivityIndicator size="large" color={isDarkMode ? '#9CA3AF' : '#3B82F6'} />
-      <Text style={{ marginTop: 16, color: isDarkMode ? '#D1D5DB' : '#374151', fontSize: 16 }}>ይዘት እያደረገ ነው...</Text>
-    </View>
-  );
-};
-
 // Root Stack Navigator
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        console.log('Starting app initialization...');
-        // Initialize database
-        await initDatabase();
-        console.log('Database initialized successfully');
-        setIsInitialized(true);
-      } catch (error) {
-        console.error('App initialization failed:', error);
-        // Even if database fails, we should still show the app
-        setIsInitialized(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Add a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      console.log('Initialization timeout, proceeding anyway');
-      setIsLoading(false);
-      setIsInitialized(true);
-    }, 5000);
-
-    initializeApp().finally(() => {
-      clearTimeout(timeout);
-    });
-  }, []);
-
-  if (isLoading) {
-    return (
-      <DarkModeProvider>
-        <LoadingScreen />
-      </DarkModeProvider>
-    );
-  }
-
   return (
     <DarkModeProvider>
       <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
@@ -186,7 +126,7 @@ export default function App() {
           }}
         >
           <Stack.Navigator
-            initialRouteName={isInitialized ? "MainApp" : "Splash"}
+            initialRouteName="MainApp"
             screenOptions={{
               headerShown: false,
               cardStyle: { backgroundColor: '#111827' },
@@ -195,10 +135,6 @@ export default function App() {
               gestureEnabled: true,
             }}
           >
-            <Stack.Screen 
-              name="Splash" 
-              component={SplashScreen}
-            />
             <Stack.Screen 
               name="MainApp" 
               component={MainApp}

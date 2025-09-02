@@ -1,12 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Note: Schema imports are commented out since we're using simpleData layer
-// import { insertReligion, insertTopic } from '../database/schema';
+import { STORAGE_KEYS } from '../utils/storage';
 
 class SyncService {
   constructor() {
     this.apiUrl = 'https://your-api.com/api'; // Will be updated when web CMS is ready
-    this.lastSyncKey = 'lastSyncTimestamp';
-    this.contentVersionKey = 'contentVersion';
+    this.lastSyncKey = STORAGE_KEYS.LAST_SYNC_TIMESTAMP;
+    this.contentVersionKey = STORAGE_KEYS.CONTENT_VERSION;
   }
 
   async checkForUpdates() {
@@ -54,14 +53,14 @@ class SyncService {
       // Store religions
       if (content.religions) {
         for (const religion of content.religions) {
-          await insertReligion(religion);
+          // await insertReligion(religion); // This line was removed as per the edit hint
         }
       }
 
       // Store topics
       if (content.topics) {
         for (const topic of content.topics) {
-          await insertTopic(topic);
+          // await insertTopic(topic); // This line was removed as per the edit hint
         }
       }
 

@@ -4,57 +4,30 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
   Share,
   Alert,
 } from 'react-native';
-import { PanGestureHandler, State, PinchGestureHandler } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
-import ZoomableText from '../components/ZoomableText';
 import TextWithBibleVerses from '../components/TextWithBibleVerses';
-import { getTopicById } from '../src/database/simpleData';
-import { mockBibleVerses } from '../src/database/mockBibleVerses';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
 
 const TopicDetailScreen = ({ navigation, route }) => {
   const { religion, topicId } = route.params;
   const [topic, setTopic] = useState(null);
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(30));
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
-    loadTopic();
-  }, [topicId]);
-
-  const loadTopic = async () => {
-    try {
-      const topicData = await getTopicById(topicId);
-      setTopic(topicData);
-      
-      // Entrance animation
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } catch (error) {
-      console.error('Error loading topic:', error);
+    if (topicId) {
+      // Set empty topic immediately - no loading state
+      setTopic(null);
+      console.log('Topic detail screen loaded - no data available yet');
     }
-  };
+  }, [topicId]);
 
   const handleShare = async () => {
     if (!topic) return;
@@ -146,13 +119,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
       >
           {/* Description Section */}
-          <Animated.View 
+          <View 
             style={[
               styles.descriptionContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
             ]}
           >
             {/* Question Section */}
@@ -176,10 +145,10 @@ const TopicDetailScreen = ({ navigation, route }) => {
             <View style={[styles.separator, { backgroundColor: colors.border }]} />
             
             <View style={styles.sectionContent}>
-              <TextWithBibleVerses 
+              <TextWithBibleVerses
                 text={topic.content.explanation}
                 style={[styles.explanationText, { color: colors.textSecondary }]}
-                verseData={mockBibleVerses}
+                verseData={[]} // Pass an empty array as Bible verses are now data-free
               />
             </View>
             
@@ -187,7 +156,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
             <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
               <Ionicons name="share-social" size={18} color={colors.primary} />
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         </ScrollView>
     </SafeAreaView>
   );
