@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 import ImageSlider from '../components/ImageSlider';
+import ReligionCard from '../components/ReligionCard';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
@@ -86,26 +87,12 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const renderReligionCard = ({ item, index }) => (
-    <TouchableOpacity
-      style={[styles.religionCard, { backgroundColor: colors.cardBackground }]}
+    <ReligionCard
+      religion={item}
       onPress={() => handleReligionPress(item)}
-      activeOpacity={0.8}
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.religionHeader}>
-          <Text style={styles.religionIcon}>{item.icon || '⛪'}</Text>
-          <View style={styles.religionInfo}>
-            <AmharicText variant="subheading" style={[styles.religionTitle, { color: colors.textPrimary }]}>
-              {item.name}
-            </AmharicText>
-            <AmharicText variant="body" style={[styles.religionDescription, { color: colors.textSecondary }]}>
-              {item.description}
-            </AmharicText>
-          </View>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color={colors.primary} />
-    </TouchableOpacity>
+      index={index}
+      colors={colors}
+    />
   );
 
   const renderEmpty = () => (
@@ -222,51 +209,13 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
   },
-  religionCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flex: 1,
-  },
-  religionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  religionIcon: {
-    fontSize: 30,
-    marginRight: 10,
-  },
-  religionInfo: {
-    flex: 1,
-  },
-  religionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  religionDescription: {
-    fontSize: 14,
-    marginTop: 2,
-  },
   religionsSection: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingBottom: 80,
   },
   sectionHeader: {
-    marginBottom: 10,
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 24,
@@ -277,7 +226,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   religionsList: {
-    paddingBottom: 80, // Add padding at the bottom for the sync button
+    paddingBottom: 20,
   },
   syncButton: {
     flexDirection: 'row',

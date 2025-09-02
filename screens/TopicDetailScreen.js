@@ -187,13 +187,10 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
         {/* Share Button */}
         <TouchableOpacity 
-          style={[styles.shareButton, { backgroundColor: colors.primary }]}
+          style={styles.shareButton}
           onPress={handleShare}
         >
-          <Ionicons name="share-social" size={18} color="white" />
-          <AmharicText variant="body" style={styles.shareButtonText}>
-            አጋራ
-          </AmharicText>
+          <Ionicons name="share-social" size={24} color={colors.primary} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -280,21 +277,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   shareButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 24,
-    zIndex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-  },
-  shareButtonText: {
-    marginLeft: 8,
+    alignSelf: 'center',
+    padding: 12,
+    marginTop: 20,
+    marginBottom: 20,
   },
   sectionContent: {
     flex: 1,
