@@ -1,39 +1,121 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  Switch,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
+import { clearAllAppData, getStorageInfo } from '../utils/storage';
+import SyncService from '../src/services/SyncService';
 
-const SettingsScreen = ({ navigation }) => {
+const SettingsScreen = () => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
+  const [syncing, setSyncing] = useState(false);
+  const [storageInfo, setStorageInfo] = useState(null);
 
-  const renderSettingItem = ({ 
-    icon, 
-    title, 
-    subtitle, 
-    onPress, 
-    showSwitch = false, 
-    switchValue = false, 
-    onSwitchChange,
-    showArrow = true 
-  }) => (
+  const handleSync = async () => {
+    if (syncing) return;
+    
+    setSyncing(true);
+    try {
+      Alert.alert(
+        'Sync Content',
+        'Do you want to sync content from the CMS? This will download the latest religions, topics, and explanations.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Sync',
+            onPress: async () => {
+              try {
+                console.log('Starting manual sync...');
+                const result = await SyncService.performFullSync();
+                Alert.alert(
+                  'Sync Complete',
+                  `Successfully synced ${result.data.religions?.length || 0} religions and ${result.data.topics?.length || 0} topics.`,
+                  [{ text: 'OK' }]
+                );
+              } catch (error) {
+                console.error('Manual sync failed:', error);
+                Alert.alert(
+                  'Sync Failed',
+                  'Failed to sync content. Please check your internet connection and try again.',
+                  [{ text: 'OK' }]
+                );
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error showing sync dialog:', error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleClearData = async () => {
+    Alert.alert(
+      'Clear All Data',
+      'This will remove all synced content and reset the app to its initial state. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAllAppData();
+              await SyncService.clearStoredContent();
+              Alert.alert('Success', 'All app data has been cleared.');
+            } catch (error) {
+              console.error('Error clearing data:', error);
+              Alert.alert('Error', 'Failed to clear data. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleStorageInfo = async () => {
+    try {
+      const info = await getStorageInfo();
+      setStorageInfo(info);
+      Alert.alert(
+        'Storage Information',
+        `App Data: ${info.appData}\nSync Data: ${info.syncData}\nUser Preferences: ${info.userPreferences}`,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Error getting storage info:', error);
+      Alert.alert('Error', 'Failed to get storage information.');
+    }
+  };
+
+  const renderSettingItem = ({ icon, title, subtitle, onPress, showArrow = true, isDestructive = false }) => (
     <TouchableOpacity
-      style={[styles.settingItem, { borderBottomColor: colors.border }]}
+      style={[
+        styles.settingItem,
+        { backgroundColor: colors.cardBackground, borderColor: colors.border }
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.settingLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
-          <Ionicons name={icon} size={20} color={colors.primary} />
+      <View style={styles.settingContent}>
+        <View style={[styles.settingIcon, { backgroundColor: isDestructive ? '#ef4444' : colors.primaryLight }]}>
+          <Ionicons 
+            name={icon} 
+            size={20} 
+            color={isDestructive ? 'white' : colors.primary} 
+          />
         </View>
         <View style={styles.settingText}>
           <AmharicText variant="subheading" style={[styles.settingTitle, { color: colors.textPrimary }]}>
@@ -46,25 +128,16 @@ const SettingsScreen = ({ navigation }) => {
           )}
         </View>
       </View>
-      
-      <View style={styles.settingRight}>
-        {showSwitch ? (
-          <Switch
-            value={switchValue}
-            onValueChange={onSwitchChange}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={switchValue ? colors.primaryLight : colors.textTertiary}
-          />
-        ) : showArrow ? (
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
-        ) : null}
-      </View>
+      {showArrow && (
+        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+      )}
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
         <AmharicText variant="heading" style={[styles.headerTitle, { color: colors.textPrimary }]}>
           ቅንብሮች
         </AmharicText>
@@ -73,57 +146,65 @@ const SettingsScreen = ({ navigation }) => {
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 80 }]}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Appearance Section */}
         <View style={styles.section}>
-          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             Appearance
           </AmharicText>
           {renderSettingItem({
-            icon: isDarkMode ? 'moon' : 'sunny',
-            title: 'Dark Mode',
+            icon: isDarkMode ? 'sunny' : 'moon',
+            title: isDarkMode ? 'Light Mode' : 'Dark Mode',
             subtitle: 'Switch between light and dark themes',
-            showSwitch: true,
-            switchValue: isDarkMode,
-            onSwitchChange: toggleDarkMode,
+            onPress: toggleDarkMode,
             showArrow: false
           })}
         </View>
 
-        {/* Support Section */}
+        {/* Data Management Section */}
         <View style={styles.section}>
-          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-            Support
+          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            Data Management
           </AmharicText>
+          
           {renderSettingItem({
-            icon: 'help-circle-outline',
-            title: 'Contact Support',
-            subtitle: 'Get help and report issues',
-            onPress: () => console.log('Contact Support pressed')
+            icon: 'cloud-download',
+            title: 'Sync Content',
+            subtitle: syncing ? 'Syncing...' : 'Download latest content from CMS',
+            onPress: handleSync,
+            showArrow: !syncing
           })}
-        </View>
-
-        {/* Legal Section */}
-        <View style={styles.section}>
-          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-            Legal
-          </AmharicText>
+          
+          {syncing && (
+            <View style={styles.syncingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <AmharicText variant="caption" style={[styles.syncingText, { color: colors.textSecondary }]}>
+                Syncing content...
+              </AmharicText>
+            </View>
+          )}
+          
           {renderSettingItem({
-            icon: 'shield-checkmark-outline',
-            title: 'Privacy Policy',
-            subtitle: 'Learn about data collection and usage',
-            onPress: () => console.log('Privacy Policy pressed')
+            icon: 'information-circle',
+            title: 'Storage Information',
+            subtitle: 'View app data usage and sync status',
+            onPress: handleStorageInfo
+          })}
+          
+          {renderSettingItem({
+            icon: 'trash',
+            title: 'Clear All Data',
+            subtitle: 'Remove all synced content and reset app',
+            onPress: handleClearData,
+            isDestructive: true
           })}
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <AmharicText variant="caption" style={[styles.footerText, { color: colors.textTertiary }]}>
-            Melhik Bible Facts App
-          </AmharicText>
-          <AmharicText variant="caption" style={[styles.footerText, { color: colors.textTertiary }]}>
-            Version 1.0.0
+          <AmharicText variant="caption" style={[styles.footerText, { color: colors.textSecondary }]}>
+            Melhik Evangelism Tool v1.0.0
           </AmharicText>
         </View>
       </ScrollView>
@@ -168,13 +249,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
-  settingLeft: {
+  settingContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  iconContainer: {
+  settingIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -207,6 +290,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 4,
+  },
+  syncingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  syncingText: {
+    marginLeft: 8,
   },
 });
 

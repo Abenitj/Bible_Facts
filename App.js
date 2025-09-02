@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,6 +6,8 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DarkModeProvider, useDarkMode } from './src/contexts/DarkModeContext';
+
+// Screens
 import HomeScreen from './screens/HomeScreen';
 import TopicsScreen from './screens/TopicsScreen';
 import TopicDetailScreen from './screens/TopicDetailScreen';

@@ -1,7 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const THEME_KEY = '@bible_facts_theme';
-const DAILY_FACT_KEY = '@bible_facts_daily';
+// Storage keys for sync functionality
+export const STORAGE_KEYS = {
+  THEME: '@bible_facts_theme',
+  DAILY_FACT: '@bible_facts_daily',
+  LAST_SYNC: '@melhik_last_sync',
+  CONTENT_VERSION: '@melhik_content_version',
+  RELIGIONS: '@melhik_religions',
+  TOPICS: '@melhik_topics',
+  TOPIC_DETAILS: '@melhik_topic_details'
+};
+
+const THEME_KEY = STORAGE_KEYS.THEME;
+const DAILY_FACT_KEY = STORAGE_KEYS.DAILY_FACT;
 
 export const StorageService = {
 
@@ -58,5 +69,39 @@ export const StorageService = {
       console.error('Error checking daily fact update:', error);
       return true;
     }
+  }
+};
+
+// Sync-related storage functions
+export const clearAllAppData = async () => {
+  try {
+    await AsyncStorage.clear();
+    console.log('All app data cleared successfully');
+    return true;
+  } catch (error) {
+    console.error('Error clearing app data:', error);
+    throw error;
+  }
+};
+
+export const getStorageInfo = async () => {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const appData = allKeys.filter(key => key.startsWith('@melhik_')).length;
+    const syncData = allKeys.filter(key => key.startsWith('@melhik_')).length;
+    const userPreferences = allKeys.filter(key => key.startsWith('@bible_facts_')).length;
+    
+    return {
+      appData: `${appData} items`,
+      syncData: `${syncData} items`,
+      userPreferences: `${userPreferences} items`
+    };
+  } catch (error) {
+    console.error('Error getting storage info:', error);
+    return {
+      appData: 'Unknown',
+      syncData: 'Unknown',
+      userPreferences: 'Unknown'
+    };
   }
 };
