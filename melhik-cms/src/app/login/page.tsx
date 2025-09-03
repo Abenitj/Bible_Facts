@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiCall } from '@/lib/api'
 import { useDarkMode } from '@/contexts/DarkModeContext'
+import { useUser } from '@/contexts/UserContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 
 export default function LoginPage() {
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const { darkMode } = useDarkMode()
+  const { login } = useUser()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,17 +32,14 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem('cms_token', data.data.token)
-        localStorage.setItem('cms_user', JSON.stringify(data.data.user))
+        // Use the UserContext login function
+        await login(data.data.token, data.data.user)
         
         // Check if user needs to change password (first-time login)
         if (data.data.requiresPasswordChange) {
           router.push('/change-password')
-        } else {
-          // Redirect to dashboard
-          router.push('/dashboard')
         }
+        // Note: login function already redirects to dashboard
       } else {
         setError(data.error || 'Login failed')
       }

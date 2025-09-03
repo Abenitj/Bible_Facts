@@ -33,8 +33,13 @@ export default function SmtpConfigPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingConfig, setEditingConfig] = useState<SmtpConfig | null>(null)
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
-  const [token, setToken] = useState<string | null>(null)
+  const [user, setUser] = useState<{ 
+    username: string; 
+    role: string; 
+    firstName?: string; 
+    lastName?: string; 
+    avatarUrl?: string 
+  } | null>(null)
   const [activeSection, setActiveSection] = useState('smtp-config')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode } = useDarkMode()
@@ -63,63 +68,54 @@ export default function SmtpConfigPage() {
   }, [error, success])
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('cms_user')
-    const storedToken = localStorage.getItem('cms_token')
+    // Check if we're in the browser
+    if (typeof window === 'undefined') return
 
-    if (storedUser && storedToken) {
-      const userData = JSON.parse(storedUser)
-      setUser(userData)
-      setToken(storedToken)
-    } else {
+    // Check authentication
+    const token = localStorage.getItem('cms_token')
+    if (!token) {
       router.push('/login')
+      return
     }
+
+    // Get user info from token
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      setUser({ username: payload.username, role: payload.role })
+      
+      // Fetch full profile to get avatar, firstName, lastName
+      fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.data
+          // Update user with full profile data
+          setUser(prev => ({
+            ...prev,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            avatarUrl: p.avatarUrl
+          }))
+        }
+      }).catch(() => {})
+    } catch (error) {
+      router.push('/login')
+      return
+    }
+
+    // Load SMTP configurations
+    fetchConfigs()
   }, [router])
 
-  useEffect(() => {
-    if (user && token) {
-      fetchUserPermissionsAndCheckAccess()
-    }
-  }, [user, token])
-
-
-
-  const fetchUserPermissionsAndCheckAccess = async () => {
-    if (!token || !user) return
-
-    try {
-      // Fetch user's granular permissions using the actual user ID
-      const response = await authenticatedApiCall(`/api/users/me/permissions`, 'GET', token)
-      
-      if (response.success) {
-        const userPermissions = response.data.permissions || null
-        
-        // Check if user has permission to access SMTP configuration
-        if (!checkPermission(user.role as any, userPermissions, PERMISSIONS.VIEW_SMTP_CONFIG)) {
-          setError('You do not have permission to access SMTP Configuration. Only administrators can access this section.')
-          setLoading(false)
-          setConfigs([]) // Ensure configs is an array
-          return
-        }
-
-        fetchConfigs()
-      } else {
-        setError('Failed to fetch user permissions')
-        setLoading(false)
-        setConfigs([]) // Ensure configs is an array
-      }
-    } catch (error) {
-      console.error('Error fetching user permissions:', error)
-      setError('Failed to fetch user permissions')
-      setLoading(false)
-      setConfigs([]) // Ensure configs is an array
-    }
-  }
-
-    const fetchConfigs = async () => {
-    if (!token) return
-
+  const fetchConfigs = async () => {
     try {
       setLoading(true)
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+      
       const response = await authenticatedApiCall('/api/smtp-config', 'GET', token)
       
       if (response.success) {
@@ -135,55 +131,43 @@ export default function SmtpConfigPage() {
         
         setConfigs(configsData)
       } else {
-        // If we get an authentication error, redirect to login
-        if (response.error?.includes('Unauthorized') || response.error?.includes('Invalid token')) {
-          localStorage.removeItem('cms_user')
-          localStorage.removeItem('cms_token')
-          router.push('/login')
-          return
-        }
         setError(response.error || 'Failed to fetch SMTP configurations')
-        setConfigs([]) // Set to empty array on error
+        setConfigs([])
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching SMTP configurations:', error)
-      // If we get an authentication error, redirect to login
-      if (error.message?.includes('Unauthorized') || error.message?.includes('Invalid token')) {
-        localStorage.removeItem('cms_user')
-        localStorage.removeItem('cms_token')
-        router.push('/login')
-        return
-      }
       setError('Failed to fetch SMTP configurations')
-      setConfigs([]) // Set to empty array on error
+      setConfigs([])
     } finally {
       setLoading(false)
     }
   }
 
   const handleCreateConfig = async (configData: any) => {
-    if (!token) return
-
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+      
       const response = await authenticatedApiCall('/api/smtp-config', 'POST', token, configData)
       
       if (response.success) {
         setSuccess('SMTP configuration created successfully')
         setShowCreateForm(false)
-        await fetchConfigs()
+        fetchConfigs()
       } else {
         setError(response.error || 'Failed to create SMTP configuration')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating SMTP configuration:', error)
       setError('Failed to create SMTP configuration')
     }
   }
 
   const handleUpdateConfig = async (configId: number, configData: any) => {
-    if (!token) return
-
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+      
       const response = await authenticatedApiCall(`/api/smtp-config/${configId}`, 'PUT', token, configData)
       
       if (response.success) {
@@ -193,7 +177,7 @@ export default function SmtpConfigPage() {
       } else {
         setError(response.error || 'Failed to update SMTP configuration')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating SMTP configuration:', error)
       setError('Failed to update SMTP configuration')
     }
@@ -205,9 +189,12 @@ export default function SmtpConfigPage() {
   }
 
   const confirmDeleteConfig = async () => {
-    if (!token || !deletingConfig) return
+    if (!deletingConfig) return
 
     try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+      
       const response = await authenticatedApiCall(`/api/smtp-config/${deletingConfig.id}`, 'DELETE', token)
       
       if (response.success) {
@@ -218,7 +205,7 @@ export default function SmtpConfigPage() {
       } else {
         setError(response.error || 'Failed to delete SMTP configuration')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting SMTP configuration:', error)
       setError('Failed to delete SMTP configuration')
     }
@@ -230,10 +217,13 @@ export default function SmtpConfigPage() {
   }
 
   const confirmTestConfig = async () => {
-    if (!token || !testingConfig || !testEmail) return
+    if (!testingConfig || !testEmail) return
 
     try {
       setTestLoading(true)
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+      
       const response = await authenticatedApiCall('/api/smtp-config/test', 'POST', token, {
         configId: testingConfig.id,
         testEmail
@@ -247,7 +237,7 @@ export default function SmtpConfigPage() {
       } else {
         setError(response.error || 'SMTP configuration test failed')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error testing SMTP configuration:', error)
       setError('Failed to test SMTP configuration')
     } finally {
@@ -264,12 +254,14 @@ export default function SmtpConfigPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
+        {/* Sidebar */}
         <Sidebar 
           user={user} 
           activeSection={activeSection} 
           onLogout={handleLogout} 
         />
 
+        {/* Main Content */}
         <div className="flex-1 flex items-center justify-center overflow-hidden">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -280,12 +272,9 @@ export default function SmtpConfigPage() {
     )
   }
 
-  if (!user) {
-    return <div>Loading...</div>
-  }
-
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
+      {/* Sidebar */}
       <Sidebar 
         user={user} 
         activeSection={activeSection} 
@@ -300,7 +289,9 @@ export default function SmtpConfigPage() {
         onClose={() => setMobileMenuOpen(false)}
       />
 
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
+        {/* Header */}
         <header className="shadow-sm border-b" 
                  style={{ 
                    backgroundColor: darkMode ? '#1f2937' : '#ffffff',
@@ -313,6 +304,7 @@ export default function SmtpConfigPage() {
                 <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Manage email server configurations</p>
               </div>
               <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* Mobile Menu Button */}
                 <button
                   onClick={() => setMobileMenuOpen(true)}
                   className="sm:hidden p-2 rounded-md transition-colors duration-200"
@@ -331,6 +323,7 @@ export default function SmtpConfigPage() {
           </div>
         </header>
 
+        {/* Content */}
         <main className="flex-1 p-4 sm:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           {/* Add Configuration Button - Right Side */}
           <div className="flex justify-end mb-6">
@@ -413,7 +406,7 @@ export default function SmtpConfigPage() {
       {(showCreateForm || editingConfig) && (
         <SmtpConfigForm
           config={editingConfig}
-          onSubmit={editingConfig ? handleUpdateConfig : handleCreateConfig}
+          onSubmit={editingConfig ? handleUpdateConfig : handleUpdateConfig}
           onClose={() => {
             setShowCreateForm(false)
             setEditingConfig(null)
@@ -551,7 +544,7 @@ export default function SmtpConfigPage() {
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              </svg>
               </button>
             </div>
           )}

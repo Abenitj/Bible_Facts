@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { verifyToken, hasPermission, checkPermission, PERMISSIONS } from '@/lib/auth'
+import { verifyToken } from '@/lib/auth'
 import { generateTemporaryPassword, sendWelcomeEmail } from '@/lib/email'
 
 const prisma = new PrismaClient()
@@ -17,22 +17,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // Get current user's permissions
-    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
-    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
-    let userPermissions: string[] = []
-    
-    if (userData && userData.permissions) {
-      try {
-        userPermissions = JSON.parse(userData.permissions)
-      } catch (error) {
-        console.error('Error parsing user permissions:', error)
-        userPermissions = []
-      }
-    }
-
     // Check if user has permission to view users
-    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.VIEW_USERS)) {
+    // Only admins can view all users
+    if (payload.role !== 'admin') {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -75,6 +62,7 @@ export async function GET(request: NextRequest) {
           role: true,
           status: true,
           permissions: true,
+          avatarUrl: true,
           lastLoginAt: true,
           createdAt: true,
           createdBy: true,
@@ -134,22 +122,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // Get current user's permissions
-    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
-    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
-    let userPermissions: string[] = []
-    
-    if (userData && userData.permissions) {
-      try {
-        userPermissions = JSON.parse(userData.permissions)
-      } catch (error) {
-        console.error('Error parsing user permissions:', error)
-        userPermissions = []
-      }
-    }
-
     // Check if user has permission to create users
-    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.CREATE_USERS)) {
+    // Only admins can create users
+    if (payload.role !== 'admin') {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

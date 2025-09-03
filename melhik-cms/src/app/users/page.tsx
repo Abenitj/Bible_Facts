@@ -19,6 +19,7 @@ interface User {
   email: string | null
   role: string
   status: string
+  avatarUrl?: string
   permissions?: string | null
   lastLoginAt: string | null
   createdAt: string

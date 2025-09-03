@@ -1,41 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { DarkModeProvider } from "@/contexts/DarkModeContext";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { DarkModeProvider } from '@/contexts/DarkModeContext'
+import { UserProvider } from '@/contexts/UserContext'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Melhik CMS - Content Management System",
-  description: "A comprehensive content management system for religious and educational content",
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.ico',
-  },
-};
+  title: 'Melhik CMS',
+  description: 'Content Management System for Melhik',
+  // Remove favicon references to prevent 500 errors
+  // icon: '/favicon.ico',
+  // apple: '/favicon.ico',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={inter.className}>
         <DarkModeProvider>
-          {children}
+          <UserProvider>
+            {children}
+          </UserProvider>
         </DarkModeProvider>
       </body>
     </html>
-  );
+  )
 }

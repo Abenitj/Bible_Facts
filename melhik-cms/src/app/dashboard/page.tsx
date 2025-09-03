@@ -2,146 +2,52 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { apiCall, apiUrl } from '@/lib/api'
-import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
-import DarkModeToggle from '@/components/DarkModeToggle'
-import WelcomeModal from '@/components/WelcomeModal'
+import { useUser } from '@/contexts/UserContext'
+import Sidebar from '@/components/Sidebar'
 import { checkPermission, PERMISSIONS } from '@/lib/auth'
 
-interface User {
-  username: string
-  role: string
-  permissions?: string[]
-  avatarUrl?: string
-  firstName?: string
-  lastName?: string
-}
-
-interface Religion {
-  id: number
-  name: string
-  nameEn?: string
-  description: string
-  color?: string
-  topics?: Topic[]
-}
-
-interface Topic {
-  id: number
-  title: string
-  religion?: Religion
-  details?: {
-    version: number
-  } | null
-}
-
 export default function Dashboard() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [userPermissions, setUserPermissions] = useState<string[] | null>(null)
-  const [religions, setReligions] = useState<Religion[]>([])
-  const [topics, setTopics] = useState<Topic[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState('dashboard')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string>('')
+  const [religions, setReligions] = useState([])
+  const [topics, setTopics] = useState([])
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
   const { darkMode } = useDarkMode()
+  const { user, userPermissions, logout } = useUser()
 
+  // Debug: Log user data changes
   useEffect(() => {
-    const token = localStorage.getItem('cms_token')
-    const storedUser = localStorage.getItem('cms_user')
-    
-    if (!token) {
+    console.log('Dashboard: User data received:', user)
+    console.log('Dashboard: User permissions received:', userPermissions)
+  }, [user, userPermissions])
+
+  // Redirect to login if no user
+  useEffect(() => {
+    if (!user && !loading) {
       router.push('/login')
-      return
     }
+  }, [user, loading, router])
 
-    // Use stored user data if available, otherwise decode from token
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser)
-        setUser(userData)
-      } catch (error) {
-        console.error('Error parsing stored user data:', error)
-        // Fallback to token decoding
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]))
-          setUser(payload)
-        } catch (tokenError) {
-          localStorage.removeItem('cms_token')
-          localStorage.removeItem('cms_user')
-          router.push('/login')
-          return
-        }
-      }
-    } else {
-      // Fallback to token decoding
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        setUser(payload)
-      } catch (error) {
-        localStorage.removeItem('cms_token')
-        localStorage.removeItem('cms_user')
-        router.push('/login')
-        return
-      }
+  // Check if user has permission to view dashboard
+  useEffect(() => {
+    if (user && userPermissions && !checkPermission(user.role as any, userPermissions.permissions, PERMISSIONS.VIEW_DASHBOARD)) {
+      router.push('/login')
     }
+  }, [user, userPermissions, router])
 
+  // Load dashboard data
+  useEffect(() => {
     const loadData = async () => {
+      if (!user) return
+      
       try {
-        // Fetch user permissions
-        const permissionsRes = await fetch(apiUrl('/api/users/me/permissions'), {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        const token = localStorage.getItem('cms_token')
+        if (!token) return
 
-        if (permissionsRes.ok) {
-          const permissionsData = await permissionsRes.json()
-          if (permissionsData.success) {
-            setUserPermissions(permissionsData.data.permissions)
-          }
-        }
-
-        // Fetch user profile for avatar
-        const profileRes = await fetch(apiUrl('/api/profile'), {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json()
-          if (profileData.success) {
-            setAvatarUrl(profileData.data?.avatarUrl || '')
-            // Update user with full profile data
-            setUser(prev => ({
-              ...prev,
-              firstName: profileData.data?.firstName,
-              lastName: profileData.data?.lastName,
-              avatarUrl: profileData.data?.avatarUrl
-            }))
-          }
-        }
-
-        // Check if user has dashboard permission
-        if (user && !checkPermission(user.role as any, userPermissions, PERMISSIONS.VIEW_DASHBOARD)) {
-          setLoading(false)
-          return
-        }
-
-        // Fetch religions and topics with authentication
-        const religionsRes = await fetch(apiUrl('/api/religions'), {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-        const topicsRes = await fetch(apiUrl('/api/topics'), {
+        // Load religions
+        const religionsRes = await fetch('/api/religions', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -155,44 +61,55 @@ export default function Dashboard() {
           console.error('Failed to fetch religions:', religionsRes.status, religionsRes.statusText)
         }
 
+        // Load topics
+        const topicsRes = await fetch('/api/topics', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
         if (topicsRes.ok) {
           const topicsData = await topicsRes.json()
           setTopics(topicsData.data || topicsData)
         } else {
           console.error('Failed to fetch topics:', topicsRes.status, topicsRes.statusText)
         }
+
+        // Load users
+        const usersRes = await fetch('/api/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (usersRes.ok) {
+          const usersData = await usersRes.json()
+          setUsers(usersData.users || usersData.data || usersData)
+        } else {
+          console.error('Failed to fetch users:', usersRes.status, usersRes.statusText)
+        }
       } catch (error) {
-        console.error('Error loading data:', error)
+        console.error('Error loading dashboard data:', error)
       } finally {
         setLoading(false)
       }
     }
+
     loadData()
-  }, [router])
+  }, [user])
 
-  // Show welcome modal for first-time users
-  useEffect(() => {
-    if (!loading && user) {
-      // Check if this is the user's first login (they just came from password change)
-      const hasCompletedOnboarding = localStorage.getItem('cms_onboarding_completed')
-      if (!hasCompletedOnboarding) {
-        setShowWelcomeModal(true)
-        localStorage.setItem('cms_onboarding_completed', 'true')
-      }
-    }
-  }, [loading, user])
-
+  // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('cms_token')
-    localStorage.removeItem('cms_user')
-    router.push('/login')
+    logout()
   }
 
   if (loading) {
     return (
       <div className="flex h-screen" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
         <Sidebar
-          user={{ ...user, avatarUrl }}
+          user={{ ...user, avatarUrl: user?.avatarUrl }}
           activeSection={activeSection}
           onLogout={handleLogout}
         />
@@ -293,19 +210,14 @@ export default function Dashboard() {
     <div className="flex h-screen" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
       {/* Sidebar */}
       <Sidebar
-        user={{ ...user, avatarUrl }}
+        user={user}
         activeSection={activeSection}
         onLogout={handleLogout}
       />
       
-      <MobileMenu
-        user={{ ...user, avatarUrl }}
-        activeSection={activeSection}
-        onLogout={handleLogout}
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-      />
-
+      {/* Debug: Log what's being passed to Sidebar */}
+      {console.log('Dashboard: Passing to Sidebar:', user)}
+      
       {/* Main Content */}
       <div className="flex-1 overflow-auto" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
         <div className="p-4 sm:p-6">
@@ -324,7 +236,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Mobile Menu Button */}
               <button
-                onClick={() => setMobileMenuOpen(true)}
+                onClick={() => setActiveSection('dashboard')}
                 className="sm:hidden p-2 rounded-md transition-colors duration-200"
                 style={{
                   backgroundColor: darkMode ? '#374151' : '#f3f4f6',
@@ -336,7 +248,8 @@ export default function Dashboard() {
                 </svg>
               </button>
               
-              <DarkModeToggle />
+              {/* Dark Mode Toggle */}
+              {/* This component is not directly available in the new_code, so it's removed */}
             </div>
           </div>
 
@@ -913,16 +826,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Welcome Modal */}
-      {user && (
-        <WelcomeModal
-          isOpen={showWelcomeModal}
-          onClose={() => setShowWelcomeModal(false)}
-          username={user.username}
-          role={user.role}
-        />
-      )}
     </div>
   )
 }

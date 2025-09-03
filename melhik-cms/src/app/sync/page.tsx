@@ -9,6 +9,9 @@ import DarkModeToggle from '@/components/DarkModeToggle'
 interface User {
   username: string
   role: string
+  firstName?: string
+  lastName?: string
+  avatarUrl?: string
 }
 
 interface SyncStats {
@@ -49,6 +52,12 @@ export default function SyncPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { darkMode } = useDarkMode()
 
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('cms_token')
+    router.push('/login')
+  }
+
   useEffect(() => {
     const token = localStorage.getItem('cms_token')
     if (!token) {
@@ -59,6 +68,25 @@ export default function SyncPage() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       setUser(payload)
+      
+      // Fetch full profile to get avatar, firstName, lastName
+      fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.data
+          // Update user with full profile data
+          setUser(prev => ({
+            ...prev,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            avatarUrl: p.avatarUrl
+          }))
+        }
+      }).catch(() => {})
     } catch (error) {
       localStorage.removeItem('cms_token')
       router.push('/login')
@@ -101,16 +129,12 @@ export default function SyncPage() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('cms_token')
-    router.push('/login')
-  }
-
   const showNotification = (title: string, message: string, type: 'success' | 'error' | 'info') => {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
         body: message,
-        icon: '/favicon.ico'
+        // Remove favicon reference to prevent 500 errors
+        // icon: '/favicon.ico'
       })
     }
   }

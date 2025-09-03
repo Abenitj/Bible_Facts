@@ -51,11 +51,17 @@ export default function TopicsPage() {
   const [deletingTopic, setDeletingTopic] = useState<Topic | null>(null)
   const [activeSection, setActiveSection] = useState('topics')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
+  const [user, setUser] = useState<{ 
+    username: string; 
+    role: string; 
+    firstName?: string; 
+    lastName?: string; 
+    avatarUrl?: string 
+  } | null>(null)
   const router = useRouter()
   const { darkMode } = useDarkMode()
 
-    useEffect(() => {
+  useEffect(() => {
     // Check authentication
     const token = localStorage.getItem('cms_token')
     if (!token) {
@@ -67,6 +73,25 @@ export default function TopicsPage() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       setUser({ username: payload.username, role: payload.role })
+      
+      // Fetch full profile to get avatar, firstName, lastName
+      fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.data
+          // Update user with full profile data
+          setUser(prev => ({
+            ...prev,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            avatarUrl: p.avatarUrl
+          }))
+        }
+      }).catch(() => {})
     } catch (error) {
       router.push('/login')
       return
@@ -219,11 +244,6 @@ export default function TopicsPage() {
     setShowForm(false)
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('cms_token')
-    router.push('/login')
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
@@ -231,7 +251,7 @@ export default function TopicsPage() {
         <Sidebar 
           user={user} 
           activeSection={activeSection} 
-          onLogout={handleLogout} 
+          onLogout={() => router.push('/login')} 
         />
 
         {/* Main Content */}
@@ -251,13 +271,13 @@ export default function TopicsPage() {
       <Sidebar 
         user={user} 
         activeSection={activeSection} 
-        onLogout={handleLogout} 
+        onLogout={() => router.push('/login')} 
       />
       
       <MobileMenu
         user={user}
         activeSection={activeSection}
-        onLogout={handleLogout}
+        onLogout={() => router.push('/login')}
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
@@ -565,7 +585,7 @@ export default function TopicsPage() {
                     <div className="flex items-center space-x-4">
                       <div
                         className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: topic.religion.color }}
+                        style={{ backgroundColor: topic.religion?.color || '#6b7280' }}
                       ></div>
                       <div>
                         <h4 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>{topic.title}</h4>
@@ -577,10 +597,10 @@ export default function TopicsPage() {
                         )}
                         <div className="flex items-center space-x-4 mt-2">
                           <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
-                            Religion: {topic.religion.name}
+                            Religion: {topic.religion?.name || 'Unknown'}
                           </span>
                           <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
-                            {topic.details ? `Content: v${topic.details.version}` : 'No content'}
+                            {topic.details && topic.details.version ? `Content: v${topic.details.version}` : 'No content'}
                           </span>
                           <span className="text-xs" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                             Created {new Date(topic.createdAt).toLocaleDateString()}
@@ -593,11 +613,11 @@ export default function TopicsPage() {
                       <button
                         onClick={() => router.push('/content')}
                         className={`p-2 transition-colors ${
-                          !topic.details 
+                          !topic.details || !topic.details.version
                             ? 'text-purple-600 hover:text-purple-800' 
                             : 'text-purple-600 hover:text-purple-800'
                         }`}
-                        title={topic.details ? `Edit content for "${topic.title}"` : `Add content to "${topic.title}"`}
+                        title={topic.details && topic.details.version ? `Edit content for "${topic.title}"` : `Add content to "${topic.title}"`}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -615,16 +635,16 @@ export default function TopicsPage() {
                       <button
                         onClick={() => handleDelete(topic)}
                         className={`p-2 transition-colors ${
-                          topic.details !== null 
+                          topic.details && topic.details.version 
                             ? 'text-gray-400 cursor-not-allowed' 
                             : 'text-red-600 hover:text-red-800'
                         }`}
                         title={
-                          topic.details !== null 
+                          topic.details && topic.details.version 
                             ? `Cannot delete "${topic.title}" - it has content (v${topic.details.version}). Delete the content first from Content Editor.`
                             : `Delete "${topic.title}"`
                         }
-                        disabled={topic.details !== null}
+                        disabled={topic.details && topic.details.version}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

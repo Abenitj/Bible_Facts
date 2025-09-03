@@ -11,6 +11,7 @@ interface User {
   email?: string
   role: string
   status: string
+  avatarUrl?: string
   lastLoginAt?: string
   createdAt: string
   updatedAt: string
@@ -45,6 +46,7 @@ export default function UserCard({
 }: UserCardProps) {
   const { darkMode } = useDarkMode()
   const [showActions, setShowActions] = useState(false)
+  const [imageModalOpen, setImageModalOpen] = useState(false)
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -83,10 +85,23 @@ export default function UserCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-sm">
-                {user.username.charAt(0).toUpperCase()}
-              </span>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden border-2 cursor-pointer" 
+                 style={{ borderColor: darkMode ? '#4b5563' : '#e5e7eb' }}
+                 onClick={() => user.avatarUrl && setImageModalOpen(true)}
+                 title="Click to view profile image">
+              {user.avatarUrl ? (
+                <img 
+                  src={user.avatarUrl} 
+                  alt={`${user.firstName || user.username}'s Profile`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-blue-600 flex items-center justify-center">
+                  <span className="text-white font-medium text-sm">
+                    {user.username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             
             <div className="flex-1">
@@ -264,6 +279,51 @@ export default function UserCard({
           </span>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {imageModalOpen && user.avatarUrl && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50" style={{ backdropFilter: 'blur(2px)' }} onClick={() => setImageModalOpen(false)}>
+          <div className="relative max-w-7xl max-h-[98vh] p-8" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Close Button - Professional, no background */}
+            <button
+              onClick={() => setImageModalOpen(false)}
+              className="absolute top-6 right-6 z-10 p-3 rounded-full text-white hover:bg-white/10 transition-all duration-200"
+              title="Close"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Image with overlay - Much larger size */}
+            <div className="relative">
+              <img 
+                src={user.avatarUrl} 
+                alt={`${user.firstName || user.username}'s Profile`}
+                className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
+              />
+              
+              {/* User Info Overlay - Bottom of Image */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6 rounded-b-xl">
+                <div className="text-white">
+                  <h4 className="text-xl font-semibold mb-2">
+                    {user.firstName && user.lastName 
+                      ? `${user.firstName} ${user.lastName}`
+                      : user.username
+                    }
+                  </h4>
+                  <p className="text-lg opacity-90">
+                    {user.role === 'content_manager' ? 'Content Manager' : 
+                     user.role === 'admin' ? 'Administrator' : 
+                     user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

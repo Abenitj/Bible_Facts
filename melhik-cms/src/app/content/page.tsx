@@ -49,7 +49,13 @@ export default function ContentEditorPage() {
   const [success, setSuccess] = useState('')
   const [activeSection, setActiveSection] = useState('content')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
+  const [user, setUser] = useState<{ 
+    username: string; 
+    role: string; 
+    firstName?: string; 
+    lastName?: string; 
+    avatarUrl?: string 
+  } | null>(null)
   const router = useRouter()
   const { darkMode } = useDarkMode()
 
@@ -75,6 +81,25 @@ export default function ContentEditorPage() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       setUser({ username: payload.username, role: payload.role })
+      
+      // Fetch full profile to get avatar, firstName, lastName
+      fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.data
+          // Update user with full profile data
+          setUser(prev => ({
+            ...prev,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            avatarUrl: p.avatarUrl
+          }))
+        }
+      }).catch(() => {})
     } catch (error) {
       localStorage.removeItem('cms_token')
       router.push('/login')

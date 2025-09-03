@@ -42,7 +42,13 @@ export default function ReligionsPage() {
   const [deletingReligion, setDeletingReligion] = useState<Religion | null>(null)
   const [activeSection, setActiveSection] = useState('religions')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
+  const [user, setUser] = useState<{ 
+    username: string; 
+    role: string; 
+    firstName?: string; 
+    lastName?: string; 
+    avatarUrl?: string 
+  } | null>(null)
   const router = useRouter()
   const { darkMode } = useDarkMode()
 
@@ -58,6 +64,25 @@ export default function ReligionsPage() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       setUser({ username: payload.username, role: payload.role })
+      
+      // Fetch full profile to get avatar, firstName, lastName
+      fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          const p = data.data
+          // Update user with full profile data
+          setUser(prev => ({
+            ...prev,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            avatarUrl: p.avatarUrl
+          }))
+        }
+      }).catch(() => {})
     } catch (error) {
       router.push('/login')
       return
@@ -203,11 +228,6 @@ export default function ReligionsPage() {
     setShowForm(false)
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('cms_token')
-    router.push('/login')
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
@@ -215,7 +235,7 @@ export default function ReligionsPage() {
         <Sidebar 
           user={user} 
           activeSection={activeSection} 
-          onLogout={handleLogout} 
+          onLogout={() => {}} 
         />
 
         {/* Main Content */}
@@ -235,13 +255,13 @@ export default function ReligionsPage() {
       <Sidebar 
         user={user} 
         activeSection={activeSection} 
-        onLogout={handleLogout} 
+        onLogout={() => {}} 
       />
       
       <MobileMenu
         user={user}
         activeSection={activeSection}
-        onLogout={handleLogout}
+        onLogout={() => {}}
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
@@ -564,7 +584,7 @@ export default function ReligionsPage() {
                           <p className="text-sm mt-1" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>{religion.description}</p>
                         )}
                         <p className="text-xs mt-2" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
-                          {religion.topics.length} topics • Created {new Date(religion.createdAt).toLocaleDateString()}
+                          {religion.topics?.length || 0} topics • Created {new Date(religion.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -582,16 +602,16 @@ export default function ReligionsPage() {
                       <button
                         onClick={() => handleDelete(religion)}
                         className={`p-2 transition-colors ${
-                          religion.topics.length > 0 
+                          (religion.topics?.length || 0) > 0 
                             ? 'text-gray-400 cursor-not-allowed' 
                             : 'text-red-600 hover:text-red-800'
                         }`}
                         title={
-                          religion.topics.length > 0 
-                            ? `Cannot delete "${religion.name}" - it has ${religion.topics.length} topic(s). Delete all topics first.`
+                          (religion.topics?.length || 0) > 0 
+                            ? `Cannot delete "${religion.name}" - it has ${religion.topics?.length || 0} topic(s). Delete all topics first.`
                             : `Delete "${religion.name}"`
                         }
-                        disabled={religion.topics.length > 0}
+                        disabled={(religion.topics?.length || 0) > 0}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
