@@ -20,6 +20,12 @@ interface SyncStats {
   topicDetails: number
   totalSize: string
   lastUpdated: string
+  recentChanges?: {
+    religions: number
+    topics: number
+    details: number
+    total: number
+  }
 }
 
 interface SyncStatus {
@@ -112,12 +118,34 @@ export default function SyncPage() {
         const downloadData = await downloadResponse.json()
         const statusData = await statusResponse.json()
         
+        // Get recent changes (last 24 hours)
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        const recentReligions = downloadData.data.religions.filter((religion: any) => 
+          new Date(religion.updatedAt) >= yesterday
+        ).length;
+        
+        const recentTopics = downloadData.data.topics.filter((topic: any) => 
+          new Date(topic.updatedAt) >= yesterday
+        ).length;
+        
+        const recentDetails = downloadData.data.topicDetails.filter((detail: any) => 
+          new Date(detail.updatedAt) >= yesterday
+        ).length;
+        
         const stats: SyncStats = {
           religions: downloadData.data.religions.length,
           topics: downloadData.data.topics.length,
           topicDetails: downloadData.data.topicDetails.length,
           totalSize: `${Math.round(JSON.stringify(downloadData.data).length / 1024)}KB`,
-          lastUpdated: downloadData.data.lastUpdated
+          lastUpdated: downloadData.data.lastUpdated,
+          recentChanges: {
+            religions: recentReligions,
+            topics: recentTopics,
+            details: recentDetails,
+            total: recentReligions + recentTopics + recentDetails
+          }
         }
         setSyncStats(stats)
       }
@@ -170,10 +198,16 @@ export default function SyncPage() {
         statusMessage: 'Syncing content with mobile apps...'
       }))
       
+      const token = localStorage.getItem('cms_token')
+      if (!token) {
+        throw new Error('No authentication token found')
+      }
+
       const response = await fetch('/api/sync/trigger', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       })
       
@@ -190,11 +224,14 @@ export default function SyncPage() {
         
         await new Promise(resolve => setTimeout(resolve, 1000))
         
+        const syncData = data.data
+        setSuccess(`${syncData.message} Triggered by: ${syncData.triggeredBy}`)
+        
         // Step 4: Final status update
         setSyncStatus(prev => ({
           ...prev,
           isRunning: false,
-          lastSync: data.data.timestamp,
+          lastSync: syncData.timestamp,
           syncCount: prev.syncCount + 1,
           currentStatus: 'idle',
           progress: 0,
@@ -426,6 +463,47 @@ export default function SyncPage() {
             </div>
           </div>
 
+          {/* Manual Sync Workflow Info */}
+          <div className="rounded-lg transition-all duration-300 mb-6" 
+               style={{ backgroundColor: darkMode ? '#1f2937' : '#ffffff' }}>
+            <div className="px-4 sm:px-6 py-4 border-b" 
+                 style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+              <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Manual Sync Workflow</h3>
+              <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>How content synchronization works</p>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">1</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Content Creation</p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>When you create or update religions, topics, or content, changes are saved to the database immediately but are not yet available on mobile apps.</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400">2</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Manual Sync Trigger</p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Click the "Trigger Sync" button below to make all pending changes available to mobile apps. Only admins or users with sync permissions can trigger sync.</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                    <span className="text-xs font-medium text-green-600 dark:text-green-400">3</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Mobile App Update</p>
+                    <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Mobile apps will receive the updated content the next time users sync or refresh their data.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
             {/* Sync Statistics */}
             <div className="rounded-lg transition-all duration-300" 
@@ -465,6 +543,30 @@ export default function SyncPage() {
                           {new Date(syncStats.lastUpdated).toLocaleDateString()}
                         </span>
                       </div>
+                      
+                      {/* Recent Changes Section */}
+                      {syncStats.recentChanges && (
+                        <div className="mt-4 pt-4 border-t" style={{ borderColor: darkMode ? '#4b5563' : '#e5e7eb' }}>
+                          <h4 className="text-sm font-medium mb-3" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Recent Changes (24h)</h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center p-2 rounded" 
+                                 style={{ backgroundColor: darkMode ? '#4b5563' : '#f1f5f9' }}>
+                              <span className="text-xs" style={{ color: darkMode ? '#d1d5db' : '#64748b' }}>Religions</span>
+                              <span className="text-xs font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>+{syncStats.recentChanges.religions}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 rounded" 
+                                 style={{ backgroundColor: darkMode ? '#4b5563' : '#f1f5f9' }}>
+                              <span className="text-xs" style={{ color: darkMode ? '#d1d5db' : '#64748b' }}>Topics</span>
+                              <span className="text-xs font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>+{syncStats.recentChanges.topics}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 rounded" 
+                                 style={{ backgroundColor: darkMode ? '#4b5563' : '#f1f5f9' }}>
+                              <span className="text-xs" style={{ color: darkMode ? '#d1d5db' : '#64748b' }}>Content Items</span>
+                              <span className="text-xs font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>+{syncStats.recentChanges.details}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
