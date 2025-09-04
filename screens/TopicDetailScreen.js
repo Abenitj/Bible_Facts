@@ -227,57 +227,63 @@ const TopicDetailScreen = ({ navigation, route }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Question Section */}
-        <View style={[styles.questionSection, { backgroundColor: colors.cardBackground }]}>
-          <AmharicText variant="subheading" style={[styles.questionTitle, { color: colors.textPrimary }]}>
-            ጥያቄ
-          </AmharicText>
-          <AmharicText variant="body" style={[styles.questionText, { color: colors.textPrimary }]}>
-            {topic.description}
-          </AmharicText>
-        </View>
-
-        {/* Bookmark Button */}
-        <View style={[styles.bookmarkSection, { backgroundColor: colors.cardBackground }]}>
-          <TouchableOpacity 
-            style={[styles.bookmarkButton, { 
-              backgroundColor: isBookmarked(topic.id) ? colors.primary : colors.background,
-              borderColor: colors.primary 
-            }]}
-            onPress={() => toggleBookmark({
-              id: topic.id,
-              title: topic.title,
-              description: topic.description,
-              religionId: religion.id,
-              religionName: religion.name
-            })}
-          >
-            <Ionicons 
-              name={isBookmarked(topic.id) ? "bookmark" : "bookmark-outline"} 
-              size={20} 
-              color={isBookmarked(topic.id) ? "white" : colors.primary} 
-            />
-            <AmharicText 
-              variant="body" 
-              style={[styles.bookmarkText, { 
-                color: isBookmarked(topic.id) ? "white" : colors.primary 
+        {/* Header Section with Topic Title and Religion Badge */}
+        <View style={[styles.headerSection, { backgroundColor: colors.cardBackground }]}>
+          <View style={styles.headerTop}>
+            <View style={[styles.religionBadge, { borderColor: religion.color }]}>
+              <AmharicText variant="caption" style={[styles.religionBadgeText, { color: religion.color }]}>
+                {religion.name}
+              </AmharicText>
+            </View>
+            <TouchableOpacity 
+              style={[styles.headerBookmarkButton, { 
+                backgroundColor: isBookmarked(topic.id) ? colors.primary : 'transparent'
               }]}
+              onPress={() => toggleBookmark({
+                id: topic.id,
+                title: topic.title,
+                description: topic.description,
+                religionId: religion.id,
+                religionName: religion.name
+              })}
             >
-              {isBookmarked(topic.id) ? "Bookmarked" : "Bookmark"}
-            </AmharicText>
-          </TouchableOpacity>
-        </View>
-
-        {/* Separator */}
-        <View style={[styles.separator, { backgroundColor: colors.border }]} />
-
-        {/* Main Explanation Section */}
-        <View style={[styles.descriptionSection, { backgroundColor: colors.cardBackground }]}>
-          <AmharicText variant="subheading" style={[styles.descriptionTitle, { color: colors.textPrimary }]}>
-            ዝርዝር ማብራሪያ
+              <Ionicons 
+                name={isBookmarked(topic.id) ? "bookmark" : "bookmark-outline"} 
+                size={20} 
+                color={isBookmarked(topic.id) ? "white" : colors.primary} 
+              />
+            </TouchableOpacity>
+          </View>
+          
+          <AmharicText variant="heading" style={[styles.topicTitle, { color: colors.textPrimary }]}>
+            {topic.title}
           </AmharicText>
           
-          <View style={styles.sectionContent}>
+          <View style={[styles.questionCard, { backgroundColor: colors.background }]}>
+            <View style={styles.questionHeader}>
+              <Ionicons name="help-circle" size={20} color={colors.primary} />
+              <AmharicText variant="subheading" style={[styles.questionLabel, { color: colors.primary }]}>
+                ጥያቄ
+              </AmharicText>
+            </View>
+            <AmharicText variant="body" style={[styles.questionText, { color: colors.textSecondary }]}>
+              {topic.description}
+            </AmharicText>
+          </View>
+        </View>
+
+        {/* Main Explanation Section */}
+        <View style={[styles.explanationSection, { backgroundColor: colors.cardBackground }]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleContainer}>
+              <Ionicons name="document-text" size={24} color={colors.primary} />
+              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                ዝርዝር ማብራሪያ
+              </AmharicText>
+            </View>
+          </View>
+          
+          <View style={[styles.explanationCard, { backgroundColor: colors.background }]}>
             <TextWithBibleVerses
               text={topicDetail.explanation}
               style={[styles.explanationText, { color: colors.textSecondary }]}
@@ -290,15 +296,22 @@ const TopicDetailScreen = ({ navigation, route }) => {
         {topicDetail.bibleVerses && topicDetail.bibleVerses.length > 0 && (
           <View style={[styles.versesSection, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="book-outline" size={24} color={colors.primary} />
-              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                ቅዱስ ጥቅሶች
-              </AmharicText>
+              <View style={styles.sectionTitleContainer}>
+                <Ionicons name="book" size={24} color="#3B82F6" />
+                <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  ቅዱስ ጥቅሶች
+                </AmharicText>
+              </View>
             </View>
             
             <View style={styles.versesList}>
               {topicDetail.bibleVerses.map((verse, index) => (
-                <View key={index} style={[styles.verseItem, { borderLeftColor: colors.primary }]}>
+                <View key={index} style={[styles.verseCard, { backgroundColor: colors.background }]}>
+                  <View style={[styles.verseNumber, { backgroundColor: '#3B82F6' }]}>
+                    <AmharicText variant="caption" style={styles.verseNumberText}>
+                      {index + 1}
+                    </AmharicText>
+                  </View>
                   <AmharicText variant="body" style={[styles.verseText, { color: colors.textSecondary }]}>
                     {verse}
                   </AmharicText>
@@ -312,16 +325,20 @@ const TopicDetailScreen = ({ navigation, route }) => {
         {topicDetail.keyPoints && topicDetail.keyPoints.length > 0 && (
           <View style={[styles.keyPointsSection, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="checkmark-circle-outline" size={24} color={colors.primary} />
-              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                ዋና ዋና ነጥቦች
-              </AmharicText>
+              <View style={styles.sectionTitleContainer}>
+                <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+                <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  ዋና ዋና ነጥቦች
+                </AmharicText>
+              </View>
             </View>
             
             <View style={styles.keyPointsList}>
               {topicDetail.keyPoints.map((point, index) => (
-                <View key={index} style={styles.keyPointItem}>
-                  <View style={[styles.keyPointBullet, { backgroundColor: colors.primary }]} />
+                <View key={index} style={[styles.keyPointCard, { backgroundColor: colors.background }]}>
+                  <View style={[styles.keyPointIcon, { backgroundColor: '#10B981' }]}>
+                    <Ionicons name="checkmark" size={16} color="white" />
+                  </View>
                   <AmharicText variant="body" style={[styles.keyPointText, { color: colors.textSecondary }]}>
                     {point}
                   </AmharicText>
@@ -335,25 +352,31 @@ const TopicDetailScreen = ({ navigation, route }) => {
         {topicDetail.references && topicDetail.references.length > 0 && (
           <View style={[styles.referencesSection, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="library-outline" size={24} color={colors.primary} />
-              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                ማጣቀሻዎች
-              </AmharicText>
+              <View style={styles.sectionTitleContainer}>
+                <Ionicons name="library" size={24} color="#8B5CF6" />
+                <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                  ማጣቀሻዎች
+                </AmharicText>
+              </View>
             </View>
             
             <View style={styles.referencesList}>
               {topicDetail.references.map((reference, index) => (
-                <View key={index} style={[styles.referenceItem, { borderColor: colors.border }]}>
-                  <AmharicText variant="body" style={[styles.referenceVerse, { color: colors.primary }]}>
-                    {reference.verse}
-                  </AmharicText>
+                <View key={index} style={[styles.referenceCard, { backgroundColor: colors.background }]}>
+                  <View style={styles.referenceHeader}>
+                    <AmharicText variant="body" style={[styles.referenceVerse, { color: '#8B5CF6' }]}>
+                      {reference.verse}
+                    </AmharicText>
+                  </View>
                   <AmharicText variant="body" style={[styles.referenceText, { color: colors.textSecondary }]}>
                     {reference.text}
                   </AmharicText>
                   {reference.explanation && (
-                    <AmharicText variant="body" style={[styles.referenceExplanation, { color: colors.textTertiary }]}>
-                      {reference.explanation}
-                    </AmharicText>
+                    <View style={[styles.referenceExplanationContainer, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+                      <AmharicText variant="body" style={[styles.referenceExplanation, { color: colors.textTertiary }]}>
+                        {reference.explanation}
+                      </AmharicText>
+                    </View>
                   )}
                 </View>
               ))}
@@ -361,13 +384,15 @@ const TopicDetailScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Share Button */}
-        <TouchableOpacity 
-          style={styles.shareButton}
-          onPress={handleShare}
-        >
-          <Ionicons name="share-social" size={24} color={colors.primary} />
-        </TouchableOpacity>
+        {/* Floating Action Buttons */}
+        <View style={styles.floatingButtons}>
+          <TouchableOpacity 
+            style={[styles.floatingButton, { backgroundColor: colors.primary }]}
+            onPress={handleShare}
+          >
+            <Ionicons name="share-social" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -381,111 +406,258 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 2,
+    paddingHorizontal: 20,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 2,
-    paddingVertical: 16,
-    paddingBottom: 80,
+    paddingHorizontal: 0,
+    paddingVertical: 20,
+    paddingBottom: 100,
   },
-  questionSection: {
+  
+  // Header Section Styles
+  headerSection: {
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    width: '98%',
+    alignSelf: 'center',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
   },
-  questionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+  religionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
   },
-  bookmarkSection: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
+  religionBadgeText: {
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  headerBookmarkButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  bookmarkButton: {
+  topicTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    lineHeight: 32,
+  },
+  questionCard: {
+    padding: 12,
+    borderRadius: 12,
+    width: '100%',
+  },
+  questionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    borderWidth: 2,
-    minWidth: 140,
-    justifyContent: 'center',
+    marginBottom: 8,
   },
-  bookmarkText: {
+  questionLabel: {
     marginLeft: 8,
     fontWeight: '600',
+    fontSize: 16,
   },
   questionText: {
     fontSize: 16,
     lineHeight: 24,
   },
-  descriptionSection: {
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-  },
-  descriptionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+
+  // Section Styles
+  explanationSection: {
     marginBottom: 16,
+    padding: 8,
+    borderRadius: 0,
+    width: '100%',
+    alignSelf: 'stretch',
   },
-  separator: {
-    height: 1,
-    marginVertical: 12,
+  versesSection: {
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    width: '98%',
+    alignSelf: 'center',
   },
-  questionShareButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-    zIndex: 1,
+  keyPointsSection: {
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    width: '98%',
+    alignSelf: 'center',
   },
-  descriptionContainer: {
-    padding: 16,
-    marginBottom: 20,
-    position: 'relative',
+  referencesSection: {
+    marginBottom: 24,
+    padding: 20,
+    borderRadius: 16,
+    width: '98%',
+    alignSelf: 'center',
   },
+
+  // Section Header Styles
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    padding: 12,
+    borderRadius: 8,
   },
-  sectionIcon: {
-    fontSize: 24,
-    marginRight: 16,
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    flex: 1,
+    marginLeft: 12,
   },
-  shareButton: {
-    alignSelf: 'center',
-    padding: 12,
-    marginTop: 20,
-    marginBottom: 20,
+  sectionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 24,
+    alignItems: 'center',
   },
-  sectionContent: {
-    flex: 1,
-    paddingBottom: 80,
+  sectionBadgeText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+
+  // Content Card Styles
+  explanationCard: {
+    padding: 8,
+    borderRadius: 0,
+    width: '100%',
   },
   explanationText: {
     fontSize: 16,
     lineHeight: 26,
   },
+
+  // Verses Styles
+  versesList: {
+    marginTop: 4,
+  },
+  verseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    width: '100%',
+  },
+  verseNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  verseNumberText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+  verseText: {
+    fontSize: 16,
+    lineHeight: 24,
+    flex: 1,
+    fontStyle: 'italic',
+  },
+
+  // Key Points Styles
+  keyPointsList: {
+    marginTop: 4,
+  },
+  keyPointCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    width: '100%',
+  },
+  keyPointIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  keyPointText: {
+    fontSize: 16,
+    lineHeight: 24,
+    flex: 1,
+  },
+
+  // References Styles
+  referencesList: {
+    marginTop: 4,
+  },
+  referenceCard: {
+    padding: 12,
+    marginBottom: 16,
+    borderRadius: 12,
+    width: '100%',
+  },
+  referenceHeader: {
+    paddingLeft: 12,
+    marginBottom: 12,
+  },
+  referenceVerse: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  referenceText: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  referenceExplanationContainer: {
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  referenceExplanation: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'normal',
+  },
+
+  // Floating Buttons
+  floatingButtons: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'row',
+  },
+  floatingButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Empty States
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -502,90 +674,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-  },
-  // New styles for enhanced content sections
-  versesSection: {
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
-  },
-  keyPointsSection: {
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#10B981',
-  },
-  referencesSection: {
-    marginBottom: 20,
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#8B5CF6',
-  },
-  versesList: {
-    marginTop: 12,
-  },
-  verseItem: {
-    padding: 12,
-    marginBottom: 8,
-    backgroundColor: 'rgba(59, 130, 246, 0.05)',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-  },
-  verseText: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontStyle: 'italic',
-  },
-  keyPointsList: {
-    marginTop: 12,
-  },
-  keyPointItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    paddingRight: 8,
-  },
-  keyPointBullet: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 8,
-    marginRight: 12,
-  },
-  keyPointText: {
-    fontSize: 16,
-    lineHeight: 24,
-    flex: 1,
-  },
-  referencesList: {
-    marginTop: 12,
-  },
-  referenceItem: {
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    backgroundColor: 'rgba(139, 92, 246, 0.05)',
-  },
-  referenceVerse: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  referenceText: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  referenceExplanation: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontStyle: 'normal',
   },
 });
 
