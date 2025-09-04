@@ -200,9 +200,9 @@ const HomeScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Search Bar */}
-        <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
-          <View style={[styles.searchBar, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+        {/* Professional Search Field */}
+        <View style={styles.searchContainer}>
+          <View style={[styles.searchBar, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
             <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
             <TextInput
               style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -226,15 +226,15 @@ const HomeScreen = ({ navigation }) => {
           const stats = getReadingStats();
           if (stats.totalRead > 0) {
             return (
-              <View style={[styles.progressContainer, { backgroundColor: colors.cardBackground }]}>
+              <View style={[styles.progressContainer, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
                 <View style={styles.progressHeader}>
-                  <Ionicons name="book" size={20} color={colors.primary} />
+                  <Ionicons name="book" size={24} color={colors.primary} />
                   <AmharicText variant="subheading" style={[styles.progressTitle, { color: colors.textPrimary }]}>
-                    Reading Progress
+                    የንባብ ሂደት
                   </AmharicText>
                 </View>
                 <AmharicText variant="body" style={[styles.progressText, { color: colors.textSecondary }]}>
-                  You've read {stats.totalRead} topic{stats.totalRead !== 1 ? 's' : ''}
+                  {stats.totalRead} ርዕሰ መልእክት{stats.totalRead !== 1 ? 'ዎች' : ''} ተነብተዋል
                 </AmharicText>
               </View>
             );
@@ -247,11 +247,11 @@ const HomeScreen = ({ navigation }) => {
           const recentBookmarks = getRecentBookmarks(3);
           if (recentBookmarks.length > 0) {
             return (
-              <View style={[styles.bookmarksContainer, { backgroundColor: colors.cardBackground }]}>
+              <View style={[styles.bookmarksContainer, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
                 <View style={styles.bookmarksHeader}>
-                  <Ionicons name="bookmark" size={20} color="#FFD700" />
+                  <Ionicons name="bookmark" size={24} color="#F59E0B" />
                   <AmharicText variant="subheading" style={[styles.bookmarksTitle, { color: colors.textPrimary }]}>
-                    Recent Bookmarks
+                    የቅርብ ጊዜ የተመዘገቡ
                   </AmharicText>
                 </View>
                 {recentBookmarks.map((bookmark, index) => (
@@ -357,18 +357,9 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   searchIcon: {
     marginRight: 12,
@@ -385,16 +376,8 @@ const styles = StyleSheet.create({
   progressContainer: {
     marginHorizontal: 16,
     marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 20,
+    borderRadius: 16,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -402,8 +385,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressTitle: {
-    marginLeft: 8,
-    fontWeight: '600',
+    marginLeft: 12,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   progressText: {
     fontSize: 14,
@@ -411,25 +395,18 @@ const styles = StyleSheet.create({
   bookmarksContainer: {
     marginHorizontal: 16,
     marginVertical: 8,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
   },
   bookmarksHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
     paddingBottom: 8,
   },
   bookmarksTitle: {
-    marginLeft: 8,
-    fontWeight: '600',
+    marginLeft: 12,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   bookmarkItem: {
     flexDirection: 'row',

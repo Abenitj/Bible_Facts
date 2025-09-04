@@ -8,6 +8,7 @@ import {
   Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AmharicText from '../src/components/AmharicText';
 
 const { width } = Dimensions.get('window');
 
@@ -77,9 +78,7 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
     >
       <TouchableOpacity
         style={[styles.card, { 
-          backgroundColor: finalColors.card,
-          borderBottomColor: finalColors.border,
-          borderLeftColor: finalColors.primary,
+          backgroundColor: 'rgba(55, 65, 81, 0.3)',
         }]}
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -87,12 +86,38 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
         activeOpacity={0.9}
       >
         <View style={styles.content}>
-          <Text style={[styles.title, { color: finalColors.textPrimary }]}>{religion.name}</Text>
-          <Text style={[styles.description, { color: finalColors.textSecondary }]}>{religion.description}</Text>
-        </View>
-        
-        <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
-          <Ionicons name="chevron-forward" size={20} color={finalColors.primary} />
+          <View style={styles.headerRow}>
+            <View style={styles.titleContainer}>
+              <Ionicons name="book" size={20} color="#10B981" style={styles.titleIcon} />
+              <AmharicText variant="subheading" style={[styles.title, { color: finalColors.textPrimary }]}>
+                {religion.name}
+              </AmharicText>
+            </View>
+            <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
+              <Ionicons name="chevron-forward" size={16} color={finalColors.primary} />
+            </View>
+          </View>
+          
+          <AmharicText variant="body" style={[styles.description, { color: finalColors.textSecondary }]}>
+            {religion.description}
+          </AmharicText>
+          
+          <View style={styles.footerRow}>
+            <View style={styles.statusContainer}>
+              <View style={styles.statusItem}>
+                <Ionicons name="library" size={16} color="#3B82F6" />
+                <AmharicText variant="caption" style={[styles.statusText, { color: '#3B82F6' }]}>
+                  ርዕሰ መልእክቶች ይመልከቱ
+                </AmharicText>
+              </View>
+            </View>
+            
+            <View style={styles.actionHint}>
+              <AmharicText variant="caption" style={[styles.hintText, { color: finalColors.textSecondary }]}>
+                ለመመልከት ይንኩ
+              </AmharicText>
+            </View>
+          </View>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -101,43 +126,75 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 6,
+    marginVertical: 4,
     marginHorizontal: 16,
   },
   card: {
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderLeftWidth: 4,
-    borderBottomWidth: 1,
-    borderRadius: 12,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    padding: 20,
+    borderRadius: 16,
   },
   content: {
     flex: 1,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  titleIcon: {
+    marginRight: 8,
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    flex: 1,
+    lineHeight: 24,
   },
   description: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  actionHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  hintText: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   arrowContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'flex-end',
   },
 });
 
