@@ -88,7 +88,7 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
         <View style={styles.content}>
           <View style={styles.headerRow}>
             <View style={styles.titleContainer}>
-              <Ionicons name="book" size={20} color="#10B981" style={styles.titleIcon} />
+              <Ionicons name="book" size={20} color="#6EE7B7" style={styles.titleIcon} />
               <AmharicText variant="subheading" style={[styles.title, { color: finalColors.textPrimary }]}>
                 {religion.name}
               </AmharicText>
@@ -105,8 +105,8 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
           <View style={styles.footerRow}>
             <View style={styles.statusContainer}>
               <View style={styles.statusItem}>
-                <Ionicons name="library" size={16} color="#3B82F6" />
-                <AmharicText variant="caption" style={[styles.statusText, { color: '#3B82F6' }]}>
+                <Ionicons name="library" size={16} color="#93C5FD" />
+                <AmharicText variant="caption" style={[styles.statusText, { color: '#93C5FD' }]}>
                   ርዕሰ መልእክቶች ይመልከቱ
                 </AmharicText>
               </View>
