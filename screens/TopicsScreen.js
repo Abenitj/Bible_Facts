@@ -5,11 +5,13 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import TopicCard from '../components/TopicCard';
+import ErrorModal from '../components/ErrorModal';
 import AmharicText from '../src/components/AmharicText';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
@@ -19,7 +21,9 @@ const TopicsScreen = ({ navigation, route }) => {
   const { religion } = route.params || {};
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
@@ -50,6 +54,41 @@ const TopicsScreen = ({ navigation, route }) => {
       setTopics([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    if (refreshing) return;
+    
+    setRefreshing(true);
+    
+    try {
+      console.log('Starting sync from topics screen...');
+      const result = await SyncService.performFullSync();
+      console.log('Sync result:', result);
+      
+      if (result.success) {
+        console.log('Sync completed successfully:', result.message);
+        // Reload topics after successful sync
+        await loadTopics();
+        console.log('Topics synced and reloaded');
+      } else {
+        console.log('Sync failed:', result.message);
+        // Show error modal for real sync failures
+        setErrorMessage(result.message || 'Sync failed. Please try again.');
+        setShowErrorModal(true);
+        // Still try to load existing data even if sync fails
+        await loadTopics();
+      }
+    } catch (error) {
+      console.error('Error syncing:', error);
+      // Show error modal for unexpected errors
+      setErrorMessage('An unexpected error occurred. Please try again.');
+      setShowErrorModal(true);
+      // Still try to load existing data even if sync fails
+      await loadTopics();
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -113,34 +152,16 @@ const TopicsScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ErrorModal
+        visible={showErrorModal}
+        title="Sync Error"
+        message={errorMessage}
+        onClose={() => setShowErrorModal(false)}
+      />
       <AppBar 
         title={religion.name}
         showBack={true}
         onBackPress={() => navigation.goBack()}
-        onSyncPress={async () => {
-          if (syncing) return;
-          
-          setSyncing(true);
-          try {
-            console.log('Starting sync from topics screen...');
-            const result = await SyncService.performFullSync();
-            
-            if (result.success) {
-              console.log('Sync completed successfully:', result.message);
-              await loadTopics(); // Reload topics after sync
-              console.log('Topics synced and reloaded');
-            } else {
-              console.log('Sync failed:', result.message);
-              await loadTopics(); // Still try to load existing data
-            }
-          } catch (error) {
-            console.error('Sync failed:', error);
-            await loadTopics(); // Still try to load existing data
-          } finally {
-            setSyncing(false);
-          }
-        }}
-        isSyncing={syncing}
         colors={colors}
       />
 
@@ -152,6 +173,9 @@ const TopicsScreen = ({ navigation, route }) => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={[styles.topicsList, { paddingBottom: 80 }]}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       ) : (
         <View style={styles.emptyContainer}>

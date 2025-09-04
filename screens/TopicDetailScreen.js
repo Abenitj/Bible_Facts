@@ -7,12 +7,14 @@ import {
   Share,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
 import TextWithBibleVerses from '../components/TextWithBibleVerses';
+import ErrorModal from '../components/ErrorModal';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
@@ -22,7 +24,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [topic, setTopic] = useState(null);
   const [topicDetail, setTopicDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
@@ -57,6 +61,41 @@ const TopicDetailScreen = ({ navigation, route }) => {
       console.error('Error loading topic data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    if (refreshing) return;
+    
+    setRefreshing(true);
+    
+    try {
+      console.log('Starting sync from topic detail screen...');
+      const result = await SyncService.performFullSync();
+      console.log('Sync result:', result);
+      
+      if (result.success) {
+        console.log('Sync completed successfully:', result.message);
+        // Reload topic data after successful sync
+        await loadTopicData();
+        console.log('Topic data synced and reloaded');
+      } else {
+        console.log('Sync failed:', result.message);
+        // Show error modal for real sync failures
+        setErrorMessage(result.message || 'Sync failed. Please try again.');
+        setShowErrorModal(true);
+        // Still try to load existing data even if sync fails
+        await loadTopicData();
+      }
+    } catch (error) {
+      console.error('Error syncing:', error);
+      // Show error modal for unexpected errors
+      setErrorMessage('An unexpected error occurred. Please try again.');
+      setShowErrorModal(true);
+      // Still try to load existing data even if sync fails
+      await loadTopicData();
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -146,34 +185,16 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ErrorModal
+        visible={showErrorModal}
+        title="Sync Error"
+        message={errorMessage}
+        onClose={() => setShowErrorModal(false)}
+      />
       <AppBar 
         title="ዝርዝር መረጃ"
         showBack={true}
         onBackPress={() => navigation.goBack()}
-        onSyncPress={async () => {
-          if (syncing) return;
-          
-          setSyncing(true);
-          try {
-            console.log('Starting sync from topic detail screen...');
-            const result = await SyncService.performFullSync();
-            
-            if (result.success) {
-              console.log('Sync completed successfully:', result.message);
-              await loadTopicData(); // Reload topic data after sync
-              console.log('Topic data synced and reloaded');
-            } else {
-              console.log('Sync failed:', result.message);
-              await loadTopicData(); // Still try to load existing data
-            }
-          } catch (error) {
-            console.error('Sync failed:', error);
-            await loadTopicData(); // Still try to load existing data
-          } finally {
-            setSyncing(false);
-          }
-        }}
-        isSyncing={syncing}
         colors={colors}
       />
 
@@ -181,6 +202,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Question Section */}
         <View style={[styles.questionSection, { backgroundColor: colors.cardBackground }]}>

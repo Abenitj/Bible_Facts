@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -136,8 +137,6 @@ const SettingsScreen = ({ navigation }) => {
       />
       <AppBar 
         title="ቅንብሮች"
-        onSyncPress={handleSync}
-        isSyncing={syncing}
         colors={colors}
       />
 
@@ -145,6 +144,9 @@ const SettingsScreen = ({ navigation }) => {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={syncing} onRefresh={handleSync} />
+        }
       >
         {/* Appearance Section */}
         <View style={styles.section}>
