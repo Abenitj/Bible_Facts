@@ -40,6 +40,19 @@ interface ContentFormData {
   }>
 }
 
+interface VersionHistory {
+  version: number
+  explanation: string
+  bibleVerses: string[]
+  keyPoints: string[]
+  references: Array<{
+    verse: string
+    text: string
+    explanation: string
+  }>
+  createdAt: string
+}
+
 export default function ContentEditorPage() {
   const [topics, setTopics] = useState<Topic[]>([])
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null)
@@ -49,6 +62,8 @@ export default function ContentEditorPage() {
   const [success, setSuccess] = useState('')
   const [activeSection, setActiveSection] = useState('content')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [versionHistory, setVersionHistory] = useState<VersionHistory | null>(null)
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [user, setUser] = useState<{ 
     username: string; 
     role: string; 
@@ -131,24 +146,57 @@ export default function ContentEditorPage() {
     }
   }
 
-  const handleTopicSelect = (topic: Topic) => {
+  const handleTopicSelect = async (topic: Topic) => {
+    // Clear previous data first
+    setSelectedTopic(null)
+    clearForm()
+    
+    // Set the new topic
     setSelectedTopic(topic)
+    
     if (topic.details) {
-      // Parse existing content
-      setFormData({
+      // Load current content
+      const currentContent = {
         explanation: topic.details.explanation,
         bibleVerses: topic.details.bibleVerses ? JSON.parse(topic.details.bibleVerses) : [''],
         keyPoints: topic.details.keyPoints ? JSON.parse(topic.details.keyPoints) : [''],
         references: topic.details.references ? JSON.parse(topic.details.references) : [{ verse: '', text: '', explanation: '' }]
-      })
+      }
+      
+      setFormData(currentContent)
+      
+      // Always show current content as reference when editing existing content
+      if (topic.details.version >= 1) {
+        await loadVersionHistory(topic.id, topic.details.version)
+      }
     } else {
-      // New content
-      setFormData({
-        explanation: '',
-        bibleVerses: [''],
-        keyPoints: [''],
-        references: [{ verse: '', text: '', explanation: '' }]
-      })
+      // New content - form is already cleared above
+    }
+  }
+
+  const loadVersionHistory = async (topicId: number, version: number) => {
+    try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+
+      // Since we don't have a version history API, we'll use the current topic details
+      // and show them as the "previous version" for reference
+      const currentTopic = topics.find(t => t.id === topicId)
+      if (!currentTopic || !currentTopic.details) return
+
+      // Use the current content as the "previous version" reference
+      const historyData: VersionHistory = {
+        version: version,
+        explanation: currentTopic.details.explanation,
+        bibleVerses: currentTopic.details.bibleVerses ? JSON.parse(currentTopic.details.bibleVerses) : [''],
+        keyPoints: currentTopic.details.keyPoints ? JSON.parse(currentTopic.details.keyPoints) : [''],
+        references: currentTopic.details.references ? JSON.parse(currentTopic.details.references) : [{ verse: '', text: '', explanation: '' }],
+        createdAt: new Date().toISOString()
+      }
+      
+      setVersionHistory(historyData)
+    } catch (error) {
+      console.error('Error loading version history:', error)
     }
   }
 
@@ -254,6 +302,19 @@ export default function ContentEditorPage() {
         i === index ? { ...ref, [field]: value } : ref
       )
     }))
+  }
+
+  const clearForm = () => {
+    setFormData({
+      explanation: '',
+      bibleVerses: [''],
+      keyPoints: [''],
+      references: [{ verse: '', text: '', explanation: '' }]
+    })
+    setVersionHistory(null)
+    setShowVersionHistory(false)
+    setError('')
+    setSuccess('')
   }
 
   const handleLogout = () => {
@@ -437,15 +498,107 @@ export default function ContentEditorPage() {
                           {selectedTopic.religion.name} • {selectedTopic.details ? `Version ${selectedTopic.details.version}` : 'New Content'}
                         </p>
                       </div>
-                      <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {saving ? 'Saving...' : 'Save Content'}
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        {versionHistory && (
+                          <button
+                            onClick={() => setShowVersionHistory(!showVersionHistory)}
+                            className="px-3 py-1 text-sm rounded-md transition-colors"
+                            style={{
+                              backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                              color: darkMode ? '#d1d5db' : '#374151',
+                              border: darkMode ? '1px solid #4b5563' : '1px solid #d1d5db'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = darkMode ? '#4b5563' : '#e5e7eb'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = darkMode ? '#374151' : '#f3f4f6'
+                            }}
+                          >
+                            {showVersionHistory ? 'Hide' : 'Show'} Current v{versionHistory.version}
+                          </button>
+                        )}
+                        <button
+                          onClick={handleSave}
+                          disabled={saving}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {saving ? 'Saving...' : 'Save Content'}
+                        </button>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Version History Display */}
+                  {showVersionHistory && versionHistory && (
+                    <div className="px-6 py-4 border-b" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                      <div className="rounded-lg p-4" style={{ backgroundColor: darkMode ? '#1f2937' : '#f9fafb' }}>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                            Current Version {versionHistory.version} (Reference)
+                          </h4>
+                          <span className="text-xs px-2 py-1 rounded-full" style={{ 
+                            backgroundColor: darkMode ? '#374151' : '#e5e7eb',
+                            color: darkMode ? '#9ca3af' : '#6b7280'
+                          }}>
+                            {new Date(versionHistory.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-3 text-sm">
+                          <div>
+                            <span className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Explanation:</span>
+                            <p className="mt-1 p-2 rounded" style={{ 
+                              backgroundColor: darkMode ? '#374151' : '#ffffff',
+                              color: darkMode ? '#9ca3af' : '#6b7280'
+                            }}>
+                              {versionHistory.explanation}
+                            </p>
+                          </div>
+                          
+                          {versionHistory.bibleVerses.length > 0 && (
+                            <div>
+                              <span className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Bible Verses:</span>
+                              <ul className="mt-1 list-disc list-inside" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                                {versionHistory.bibleVerses.map((verse, index) => (
+                                  <li key={index}>{verse}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {versionHistory.keyPoints.length > 0 && (
+                            <div>
+                              <span className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Key Points:</span>
+                              <ul className="mt-1 list-disc list-inside" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                                {versionHistory.keyPoints.map((point, index) => (
+                                  <li key={index}>{point}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {versionHistory.references.length > 0 && (
+                            <div>
+                              <span className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>References:</span>
+                              <div className="mt-1 space-y-2">
+                                {versionHistory.references.map((ref, index) => (
+                                  <div key={index} className="p-2 rounded border" style={{ 
+                                    backgroundColor: darkMode ? '#374151' : '#ffffff',
+                                    borderColor: darkMode ? '#4b5563' : '#e5e7eb'
+                                  }}>
+                                    <div className="font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>{ref.verse}</div>
+                                    <div className="text-xs mt-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{ref.text}</div>
+                                    <div className="text-xs mt-1" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{ref.explanation}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="p-6 space-y-6">
                     {/* Main Explanation */}

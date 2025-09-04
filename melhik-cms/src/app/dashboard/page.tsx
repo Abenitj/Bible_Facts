@@ -42,7 +42,7 @@ export default function Dashboard() {
 
   // Check if user has permission to view dashboard
   useEffect(() => {
-    if (user && userPermissions && !checkPermission(user.role as any, userPermissions.permissions, PERMISSIONS.VIEW_DASHBOARD)) {
+    if (user && userPermissions && !checkPermission(user.role as any, userPermissions.permissions || null, PERMISSIONS.VIEW_DASHBOARD)) {
       router.push('/login')
     }
   }, [user, userPermissions, router])
@@ -91,7 +91,7 @@ export default function Dashboard() {
         }
 
         // Load users (only if user has permission)
-        if (checkPermission(user.role as any, userPermissions?.permissions || [], PERMISSIONS.VIEW_USERS)) {
+        if (checkPermission(user.role as any, userPermissions?.permissions || null, PERMISSIONS.VIEW_USERS)) {
           const usersRes = await fetch('/api/users', {
             headers: {
               'Authorization': `Bearer ${token}`,

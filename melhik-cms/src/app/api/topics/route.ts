@@ -31,7 +31,13 @@ export async function GET(request: NextRequest) {
         details: {
           select: {
             id: true,
-            version: true
+            version: true,
+            explanation: true,
+            bibleVerses: true,
+            keyPoints: true,
+            references: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
       },

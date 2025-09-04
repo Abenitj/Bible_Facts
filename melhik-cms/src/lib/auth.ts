@@ -124,12 +124,12 @@ export function hasUserPermission(userPermissions: string[] | null, requiredPerm
 }
 
 // Check permissions with fallback to role-based permissions
-export function checkPermission(userRole: UserRole, userPermissions: string[] | null, requiredPermission: string): boolean {
-  // If user has explicit granular permissions (not null and not empty), use only those
-  if (userPermissions !== null && userPermissions.length > 0) {
+export function checkPermission(userRole: UserRole, userPermissions: string[] | null | undefined, requiredPermission: string): boolean {
+  // If user has explicit granular permissions (not null, not undefined, and not empty), use only those
+  if (userPermissions !== null && userPermissions !== undefined && userPermissions.length > 0) {
     return hasUserPermission(userPermissions, requiredPermission)
   }
-  // If no granular permissions are set (null or empty), fallback to role-based permissions
+  // If no granular permissions are set (null, undefined, or empty), fallback to role-based permissions
   return hasPermission(userRole, requiredPermission)
 }
 
