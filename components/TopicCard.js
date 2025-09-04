@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const TopicCard = ({ topic, onPress, index = 0, colors = {} }) => {
+const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false }) => {
   // Default colors if none provided
   const defaultColors = {
     card: '#FFFFFF',
@@ -87,7 +87,14 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {} }) => {
         activeOpacity={0.9}
       >
         <View style={styles.content}>
-          <Text style={[styles.title, { color: finalColors.textPrimary }]}>{topic.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={[styles.title, { color: finalColors.textPrimary }]}>{topic.title}</Text>
+            {isRead && (
+              <View style={[styles.readIndicator, { backgroundColor: finalColors.primary }]}>
+                <Ionicons name="checkmark" size={12} color="white" />
+              </View>
+            )}
+          </View>
           <Text style={[styles.description, { color: finalColors.textSecondary }]}>{topic.description}</Text>
         </View>
         
@@ -122,10 +129,23 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 4,
+    flex: 1,
+  },
+  readIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   description: {
     fontSize: 14,

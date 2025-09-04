@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DarkModeProvider, useDarkMode } from './src/contexts/DarkModeContext';
 import { TextSizeProvider } from './src/contexts/TextSizeContext';
+import { ReadingProgressProvider } from './src/contexts/ReadingProgressContext';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -116,7 +117,8 @@ export default function App() {
   return (
     <DarkModeProvider>
       <TextSizeProvider>
-        <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
+        <ReadingProgressProvider>
+          <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
         <NavigationContainer
           theme={{
             dark: true,
@@ -162,7 +164,8 @@ export default function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-        </SafeAreaProvider>
+          </SafeAreaProvider>
+        </ReadingProgressProvider>
       </TextSizeProvider>
     </DarkModeProvider>
   );

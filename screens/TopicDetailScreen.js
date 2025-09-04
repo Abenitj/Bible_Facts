@@ -17,6 +17,7 @@ import TextWithBibleVerses from '../components/TextWithBibleVerses';
 import ErrorModal from '../components/ErrorModal';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
 import { getColors } from '../src/theme/colors';
 
 const TopicDetailScreen = ({ navigation, route }) => {
@@ -28,6 +29,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
+  const { markTopicAsRead, isTopicRead } = useReadingProgress();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
@@ -51,6 +53,10 @@ const TopicDetailScreen = ({ navigation, route }) => {
         if (foundDetail) {
           setTopicDetail(foundDetail);
           console.log(`Loaded topic detail for: ${foundTopic.title}`);
+          
+          // Mark topic as read
+          markTopicAsRead(topicId, religion.id);
+          console.log(`Marked topic ${topicId} as read`);
         } else {
           console.log('No topic detail found');
         }

@@ -15,6 +15,7 @@ import ErrorModal from '../components/ErrorModal';
 import AmharicText from '../src/components/AmharicText';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
 import { getColors } from '../src/theme/colors';
 
 const TopicsScreen = ({ navigation, route }) => {
@@ -25,6 +26,7 @@ const TopicsScreen = ({ navigation, route }) => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
+  const { isTopicRead, getReadingStats } = useReadingProgress();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
@@ -145,6 +147,7 @@ const TopicsScreen = ({ navigation, route }) => {
       onPress={() => navigateToTopic(item)}
       index={index}
       colors={colors}
+      isRead={isTopicRead(item.id)}
     />
   );
 

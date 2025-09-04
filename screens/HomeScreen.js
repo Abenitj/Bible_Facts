@@ -19,6 +19,7 @@ import AppBar from '../components/AppBar';
 import ErrorModal from '../components/ErrorModal';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
 import { getColors } from '../src/theme/colors';
 
 const HomeScreen = ({ navigation }) => {
@@ -31,6 +32,7 @@ const HomeScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const { isDarkMode } = useDarkMode();
+  const { getReadingStats } = useReadingProgress();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
@@ -217,6 +219,27 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Reading Progress Summary */}
+        {!isSearching && (() => {
+          const stats = getReadingStats();
+          if (stats.totalRead > 0) {
+            return (
+              <View style={[styles.progressContainer, { backgroundColor: colors.cardBackground }]}>
+                <View style={styles.progressHeader}>
+                  <Ionicons name="book" size={20} color={colors.primary} />
+                  <AmharicText variant="subheading" style={[styles.progressTitle, { color: colors.textPrimary }]}>
+                    Reading Progress
+                  </AmharicText>
+                </View>
+                <AmharicText variant="body" style={[styles.progressText, { color: colors.textSecondary }]}>
+                  You've read {stats.totalRead} topic{stats.totalRead !== 1 ? 's' : ''}
+                </AmharicText>
+              </View>
+            );
+          }
+          return null;
+        })()}
+
         {/* Image Slider */}
         <ImageSlider />
 
@@ -308,6 +331,32 @@ const styles = StyleSheet.create({
   clearButton: {
     marginLeft: 8,
     padding: 4,
+  },
+  progressContainer: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressTitle: {
+    marginLeft: 8,
+    fontWeight: '600',
+  },
+  progressText: {
+    fontSize: 14,
   },
   emptyStateSection: {
     paddingHorizontal: 16,
