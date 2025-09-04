@@ -16,7 +16,6 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
   // Default colors if none provided
   const defaultColors = {
     card: '#FFFFFF',
-    border: '#E5E7EB',
     primary: '#3B82F6',
     primaryLight: '#DBEAFE',
     textPrimary: '#1F2937',
@@ -78,7 +77,7 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
     >
       <TouchableOpacity
         style={[styles.card, { 
-          backgroundColor: 'rgba(55, 65, 81, 0.3)',
+          backgroundColor: finalColors.isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)'
         }]}
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -88,8 +87,8 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
         <View style={styles.content}>
           <View style={styles.headerRow}>
             <View style={styles.titleContainer}>
-              <Ionicons name="book" size={20} color="#6EE7B7" style={styles.titleIcon} />
-              <AmharicText variant="subheading" style={[styles.title, { color: finalColors.textPrimary }]}>
+              <Ionicons name="book" size={20} color={finalColors.isDarkMode ? "#6EE7B7" : "#059669"} style={styles.titleIcon} />
+              <AmharicText variant="subheading" style={[styles.title, { color: finalColors.isDarkMode ? finalColors.textPrimary : '#111827', fontWeight: '700' }]}>
                 {religion.name}
               </AmharicText>
             </View>
@@ -98,22 +97,22 @@ const ReligionCard = ({ religion, onPress, index = 0, colors = {} }) => {
             </View>
           </View>
           
-          <AmharicText variant="body" style={[styles.description, { color: finalColors.textSecondary }]}>
+          <AmharicText variant="body" style={[styles.description, { color: finalColors.isDarkMode ? finalColors.textSecondary : '#374151', fontWeight: '500' }]}>
             {religion.description}
           </AmharicText>
           
           <View style={styles.footerRow}>
             <View style={styles.statusContainer}>
               <View style={styles.statusItem}>
-                <Ionicons name="library" size={16} color="#93C5FD" />
-                <AmharicText variant="caption" style={[styles.statusText, { color: '#93C5FD' }]}>
+                <Ionicons name="library" size={16} color={finalColors.isDarkMode ? "#93C5FD" : "#2563EB"} />
+                <AmharicText variant="caption" style={[styles.statusText, { color: finalColors.isDarkMode ? '#93C5FD' : '#2563EB', fontWeight: '600' }]}>
                   ርዕሰ መልእክቶች ይመልከቱ
                 </AmharicText>
               </View>
             </View>
             
             <View style={styles.actionHint}>
-              <AmharicText variant="caption" style={[styles.hintText, { color: finalColors.textSecondary }]}>
+              <AmharicText variant="caption" style={[styles.hintText, { color: finalColors.isDarkMode ? finalColors.textSecondary : '#374151', fontWeight: '500' }]}>
                 ለመመልከት ይንኩ
               </AmharicText>
             </View>
@@ -132,6 +131,8 @@ const styles = StyleSheet.create({
   card: {
     padding: 20,
     borderRadius: 16,
+    borderWidth: 0.5,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   content: {
     flex: 1,

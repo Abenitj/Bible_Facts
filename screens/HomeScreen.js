@@ -145,7 +145,7 @@ const HomeScreen = ({ navigation }) => {
       religion={item}
       onPress={() => handleReligionPress(item)}
       index={index}
-      colors={colors}
+      colors={{...colors, isDarkMode}}
     />
   );
 
@@ -202,12 +202,16 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* Professional Search Field */}
         <View style={styles.searchContainer}>
-          <View style={[styles.searchBar, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
-            <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+          <View style={[styles.searchBar, { 
+            backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
+            borderWidth: 0.5,
+            borderColor: 'rgba(0, 0, 0, 0.1)'
+          }]}>
+            <Ionicons name="search" size={20} color={isDarkMode ? colors.textSecondary : '#374151'} style={styles.searchIcon} />
             <TextInput
-              style={[styles.searchInput, { color: colors.textPrimary }]}
+              style={[styles.searchInput, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '600' }]}
               placeholder="Search religions and topics..."
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={isDarkMode ? colors.textSecondary : '#6B7280'}
               value={searchQuery}
               onChangeText={handleSearch}
               returnKeyType="search"
@@ -215,7 +219,7 @@ const HomeScreen = ({ navigation }) => {
             />
             {isSearching && (
               <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+                <Ionicons name="close-circle" size={20} color={isDarkMode ? colors.textSecondary : '#374151'} />
               </TouchableOpacity>
             )}
           </View>
@@ -226,14 +230,18 @@ const HomeScreen = ({ navigation }) => {
           const stats = getReadingStats();
           if (stats.totalRead > 0) {
             return (
-              <View style={[styles.progressContainer, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
+              <View style={[styles.progressContainer, { 
+                backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
+                borderWidth: 0.5,
+                borderColor: 'rgba(0, 0, 0, 0.1)'
+              }]}>
                 <View style={styles.progressHeader}>
                   <Ionicons name="book" size={24} color={colors.primary} />
-                  <AmharicText variant="subheading" style={[styles.progressTitle, { color: colors.textPrimary }]}>
+                  <AmharicText variant="subheading" style={[styles.progressTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '700' }]}>
                     የንባብ ሂደት
                   </AmharicText>
                 </View>
-                <AmharicText variant="body" style={[styles.progressText, { color: colors.textSecondary }]}>
+                <AmharicText variant="body" style={[styles.progressText, { color: isDarkMode ? colors.textSecondary : '#374151', fontWeight: '500' }]}>
                   {stats.totalRead} ርዕሰ መልእክት{stats.totalRead !== 1 ? 'ዎች' : ''} ተነብተዋል
                 </AmharicText>
               </View>
@@ -247,17 +255,19 @@ const HomeScreen = ({ navigation }) => {
           const recentBookmarks = getRecentBookmarks(3);
           if (recentBookmarks.length > 0) {
             return (
-              <View style={[styles.bookmarksContainer, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
+              <View style={[styles.bookmarksContainer, { 
+                backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)'
+              }]}>
                 <View style={styles.bookmarksHeader}>
                   <Ionicons name="bookmark" size={24} color="#F59E0B" />
-                  <AmharicText variant="subheading" style={[styles.bookmarksTitle, { color: colors.textPrimary }]}>
+                  <AmharicText variant="subheading" style={[styles.bookmarksTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '700' }]}>
                     የቅርብ ጊዜ የተመዘገቡ
                   </AmharicText>
                 </View>
                 {recentBookmarks.map((bookmark, index) => (
                   <TouchableOpacity
                     key={bookmark.id}
-                    style={[styles.bookmarkItem, { borderBottomColor: colors.border }]}
+                    style={styles.bookmarkItem}
                     onPress={() => {
                       // Find the religion and navigate to the topic
                       const religion = religions.find(r => r.id === bookmark.religionId);
@@ -274,14 +284,14 @@ const HomeScreen = ({ navigation }) => {
                     }}
                   >
                     <View style={styles.bookmarkContent}>
-                      <AmharicText variant="body" style={[styles.bookmarkTitle, { color: colors.textPrimary }]}>
+                      <AmharicText variant="body" style={[styles.bookmarkTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '600' }]}>
                         {bookmark.title}
                       </AmharicText>
-                      <AmharicText variant="caption" style={[styles.bookmarkReligion, { color: colors.textSecondary }]}>
+                      <AmharicText variant="caption" style={[styles.bookmarkReligion, { color: isDarkMode ? colors.textSecondary : '#374151', fontWeight: '500' }]}>
                         {bookmark.religionName}
                       </AmharicText>
                     </View>
-                    <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+                    <Ionicons name="chevron-forward" size={16} color={isDarkMode ? colors.textSecondary : '#374151'} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -297,10 +307,10 @@ const HomeScreen = ({ navigation }) => {
         {filteredReligions.length > 0 ? (
           <View style={styles.religionsSection}>
             <View style={styles.sectionHeader}>
-              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '700' }]}>
                 ሃይማኖቶች
               </AmharicText>
-              <AmharicText variant="caption" style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+              <AmharicText variant="caption" style={[styles.sectionSubtitle, { color: isDarkMode ? colors.textSecondary : '#374151', fontWeight: '500' }]}>
                 Select a religion to explore topics and biblical answers
               </AmharicText>
             </View>
@@ -396,6 +406,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bookmarksHeader: {
     flexDirection: 'row',
@@ -413,7 +431,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
   },
   bookmarkContent: {
     flex: 1,
