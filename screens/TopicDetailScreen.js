@@ -18,6 +18,7 @@ import ErrorModal from '../components/ErrorModal';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
+import { useBookmarks } from '../src/contexts/BookmarksContext';
 import { getColors } from '../src/theme/colors';
 
 const TopicDetailScreen = ({ navigation, route }) => {
@@ -30,6 +31,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
   const { markTopicAsRead, isTopicRead } = useReadingProgress();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
@@ -216,6 +218,37 @@ const TopicDetailScreen = ({ navigation, route }) => {
           </AmharicText>
         </View>
 
+        {/* Bookmark Button */}
+        <View style={[styles.bookmarkSection, { backgroundColor: colors.cardBackground }]}>
+          <TouchableOpacity 
+            style={[styles.bookmarkButton, { 
+              backgroundColor: isBookmarked(topic.id) ? colors.primary : colors.background,
+              borderColor: colors.primary 
+            }]}
+            onPress={() => toggleBookmark({
+              id: topic.id,
+              title: topic.title,
+              description: topic.description,
+              religionId: religion.id,
+              religionName: religion.name
+            })}
+          >
+            <Ionicons 
+              name={isBookmarked(topic.id) ? "bookmark" : "bookmark-outline"} 
+              size={20} 
+              color={isBookmarked(topic.id) ? "white" : colors.primary} 
+            />
+            <AmharicText 
+              variant="body" 
+              style={[styles.bookmarkText, { 
+                color: isBookmarked(topic.id) ? "white" : colors.primary 
+              }]}
+            >
+              {isBookmarked(topic.id) ? "Bookmarked" : "Bookmark"}
+            </AmharicText>
+          </TouchableOpacity>
+        </View>
+
         {/* Separator */}
         <View style={[styles.separator, { backgroundColor: colors.border }]} />
 
@@ -274,6 +307,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  bookmarkSection: {
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  bookmarkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    borderWidth: 2,
+    minWidth: 140,
+    justifyContent: 'center',
+  },
+  bookmarkText: {
+    marginLeft: 8,
+    fontWeight: '600',
   },
   questionText: {
     fontSize: 16,

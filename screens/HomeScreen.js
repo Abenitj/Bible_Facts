@@ -20,6 +20,7 @@ import ErrorModal from '../components/ErrorModal';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
+import { useBookmarks } from '../src/contexts/BookmarksContext';
 import { getColors } from '../src/theme/colors';
 
 const HomeScreen = ({ navigation }) => {
@@ -33,6 +34,7 @@ const HomeScreen = ({ navigation }) => {
   const [isSearching, setIsSearching] = useState(false);
   const { isDarkMode } = useDarkMode();
   const { getReadingStats } = useReadingProgress();
+  const { getRecentBookmarks, getBookmarksCount } = useBookmarks();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
@@ -240,6 +242,54 @@ const HomeScreen = ({ navigation }) => {
           return null;
         })()}
 
+        {/* Recent Bookmarks */}
+        {!isSearching && (() => {
+          const recentBookmarks = getRecentBookmarks(3);
+          if (recentBookmarks.length > 0) {
+            return (
+              <View style={[styles.bookmarksContainer, { backgroundColor: colors.cardBackground }]}>
+                <View style={styles.bookmarksHeader}>
+                  <Ionicons name="bookmark" size={20} color="#FFD700" />
+                  <AmharicText variant="subheading" style={[styles.bookmarksTitle, { color: colors.textPrimary }]}>
+                    Recent Bookmarks
+                  </AmharicText>
+                </View>
+                {recentBookmarks.map((bookmark, index) => (
+                  <TouchableOpacity
+                    key={bookmark.id}
+                    style={[styles.bookmarkItem, { borderBottomColor: colors.border }]}
+                    onPress={() => {
+                      // Find the religion and navigate to the topic
+                      const religion = religions.find(r => r.id === bookmark.religionId);
+                      if (religion) {
+                        navigation.navigate('Topics', { religion });
+                        // Then navigate to the specific topic
+                        setTimeout(() => {
+                          navigation.navigate('TopicDetail', { 
+                            religion, 
+                            topicId: bookmark.id 
+                          });
+                        }, 100);
+                      }
+                    }}
+                  >
+                    <View style={styles.bookmarkContent}>
+                      <AmharicText variant="body" style={[styles.bookmarkTitle, { color: colors.textPrimary }]}>
+                        {bookmark.title}
+                      </AmharicText>
+                      <AmharicText variant="caption" style={[styles.bookmarkReligion, { color: colors.textSecondary }]}>
+                        {bookmark.religionName}
+                      </AmharicText>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            );
+          }
+          return null;
+        })()}
+
         {/* Image Slider */}
         <ImageSlider />
 
@@ -357,6 +407,47 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
+  },
+  bookmarksContainer: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bookmarksHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingBottom: 8,
+  },
+  bookmarksTitle: {
+    marginLeft: 8,
+    fontWeight: '600',
+  },
+  bookmarkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  bookmarkContent: {
+    flex: 1,
+  },
+  bookmarkTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  bookmarkReligion: {
+    fontSize: 12,
   },
   emptyStateSection: {
     paddingHorizontal: 16,

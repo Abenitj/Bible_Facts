@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
-const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false }) => {
+const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isBookmarked = false }) => {
   // Default colors if none provided
   const defaultColors = {
     card: '#FFFFFF',
@@ -89,11 +89,18 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false }) =
         <View style={styles.content}>
           <View style={styles.titleRow}>
             <Text style={[styles.title, { color: finalColors.textPrimary }]}>{topic.title}</Text>
-            {isRead && (
-              <View style={[styles.readIndicator, { backgroundColor: finalColors.primary }]}>
-                <Ionicons name="checkmark" size={12} color="white" />
-              </View>
-            )}
+            <View style={styles.indicators}>
+              {isBookmarked && (
+                <View style={[styles.bookmarkIndicator, { backgroundColor: '#FFD700' }]}>
+                  <Ionicons name="bookmark" size={10} color="white" />
+                </View>
+              )}
+              {isRead && (
+                <View style={[styles.readIndicator, { backgroundColor: finalColors.primary }]}>
+                  <Ionicons name="checkmark" size={12} color="white" />
+                </View>
+              )}
+            </View>
           </View>
           <Text style={[styles.description, { color: finalColors.textSecondary }]}>{topic.description}</Text>
         </View>
@@ -139,13 +146,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1,
   },
+  indicators: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  bookmarkIndicator: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 4,
+  },
   readIndicator: {
     width: 20,
     height: 20,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
   },
   description: {
     fontSize: 14,

@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { DarkModeProvider, useDarkMode } from './src/contexts/DarkModeContext';
 import { TextSizeProvider } from './src/contexts/TextSizeContext';
 import { ReadingProgressProvider } from './src/contexts/ReadingProgressContext';
+import { BookmarksProvider } from './src/contexts/BookmarksContext';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -118,7 +119,8 @@ export default function App() {
     <DarkModeProvider>
       <TextSizeProvider>
         <ReadingProgressProvider>
-          <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
+          <BookmarksProvider>
+            <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
         <NavigationContainer
           theme={{
             dark: true,
@@ -164,7 +166,8 @@ export default function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-          </SafeAreaProvider>
+            </SafeAreaProvider>
+          </BookmarksProvider>
         </ReadingProgressProvider>
       </TextSizeProvider>
     </DarkModeProvider>
