@@ -128,6 +128,7 @@ const HomeScreen = ({ navigation }) => {
       <AppBar 
         title="Melhik"
         onSyncPress={onRefresh}
+        isSyncing={refreshing}
         colors={colors}
       />
       <ScrollView 

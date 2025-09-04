@@ -20,8 +20,12 @@ const SettingsScreen = ({ navigation }) => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
   const [storageInfo, setStorageInfo] = useState(null);
+  const [syncing, setSyncing] = useState(false);
 
   const handleSync = async () => {
+    if (syncing) return;
+    
+    setSyncing(true);
     try {
       console.log('Starting sync from settings...');
       const result = await SyncService.performFullSync();
@@ -30,6 +34,8 @@ const SettingsScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Sync failed:', error);
       Alert.alert('Sync Failed', 'Failed to sync content. Please try again.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -111,6 +117,7 @@ const SettingsScreen = ({ navigation }) => {
       <AppBar 
         title="ቅንብሮች"
         onSyncPress={handleSync}
+        isSyncing={syncing}
         colors={colors}
       />
 

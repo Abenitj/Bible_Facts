@@ -22,6 +22,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [topic, setTopic] = useState(null);
   const [topicDetail, setTopicDetail] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
@@ -150,6 +151,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
         showBack={true}
         onBackPress={() => navigation.goBack()}
         onSyncPress={async () => {
+          if (syncing) return;
+          
+          setSyncing(true);
           try {
             console.log('Starting sync from topic detail screen...');
             await SyncService.performFullSync();
@@ -157,8 +161,11 @@ const TopicDetailScreen = ({ navigation, route }) => {
             console.log('Topic data synced and reloaded');
           } catch (error) {
             console.error('Sync failed:', error);
+          } finally {
+            setSyncing(false);
           }
         }}
+        isSyncing={syncing}
         colors={colors}
       />
 

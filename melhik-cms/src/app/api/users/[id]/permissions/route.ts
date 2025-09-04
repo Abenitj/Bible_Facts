@@ -22,14 +22,14 @@ export async function PUT(
     // Get current user's permissions
     const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
     const currentUserData = Array.isArray(currentUser) ? currentUser[0] : currentUser
-    let userPermissions: string[] = []
+    let userPermissions: string[] | null = null
     
     if (currentUserData && currentUserData.permissions) {
       try {
         userPermissions = JSON.parse(currentUserData.permissions)
       } catch (error) {
         console.error('Error parsing user permissions:', error)
-        userPermissions = []
+        userPermissions = null
       }
     }
 
@@ -164,14 +164,14 @@ export async function GET(
     // Get current user's permissions
     const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
     const currentUserData = Array.isArray(currentUser) ? currentUser[0] : currentUser
-    let userPermissions: string[] = []
+    let userPermissions: string[] | null = null
     
     if (currentUserData && currentUserData.permissions) {
       try {
         userPermissions = JSON.parse(currentUserData.permissions)
       } catch (error) {
         console.error('Error parsing user permissions:', error)
-        userPermissions = []
+        userPermissions = null
       }
     }
 

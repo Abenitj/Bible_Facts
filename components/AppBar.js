@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
@@ -16,7 +17,8 @@ const AppBar = ({
   showBack = false, 
   colors = null,
   rightComponent,
-  onSyncPress
+  onSyncPress,
+  isSyncing = false
 }) => {
   const { isDarkMode } = useDarkMode();
   const themeColors = colors || getColors(isDarkMode);
@@ -56,6 +58,13 @@ const AppBar = ({
       padding: 8,
       borderRadius: 20,
       backgroundColor: themeColors.primary + '20',
+      minWidth: 40,
+      minHeight: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    syncButtonActive: {
+      backgroundColor: themeColors.primary + '40',
     },
     titleContainer: {
       flex: 1,
@@ -99,10 +108,21 @@ const AppBar = ({
             </TouchableOpacity>
           ) : onSyncPress ? (
             <TouchableOpacity 
-              style={styles.syncButton}
+              style={[
+                styles.syncButton,
+                isSyncing && styles.syncButtonActive
+              ]}
               onPress={onSyncPress}
+              disabled={isSyncing}
             >
-              <Ionicons name="sync" size={24} color={themeColors.primary} />
+              {isSyncing ? (
+                <ActivityIndicator 
+                  size="small" 
+                  color={themeColors.primary} 
+                />
+              ) : (
+                <Ionicons name="sync" size={24} color={themeColors.primary} />
+              )}
             </TouchableOpacity>
           ) : null}
         </View>

@@ -19,6 +19,7 @@ const TopicsScreen = ({ navigation, route }) => {
   const { religion } = route.params || {};
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
@@ -117,6 +118,9 @@ const TopicsScreen = ({ navigation, route }) => {
         showBack={true}
         onBackPress={() => navigation.goBack()}
         onSyncPress={async () => {
+          if (syncing) return;
+          
+          setSyncing(true);
           try {
             console.log('Starting sync from topics screen...');
             await SyncService.performFullSync();
@@ -124,8 +128,11 @@ const TopicsScreen = ({ navigation, route }) => {
             console.log('Topics synced and reloaded');
           } catch (error) {
             console.error('Sync failed:', error);
+          } finally {
+            setSyncing(false);
           }
         }}
+        isSyncing={syncing}
         colors={colors}
       />
 
