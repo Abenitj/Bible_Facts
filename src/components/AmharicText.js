@@ -1,22 +1,36 @@
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
+import { useTextSize } from '../contexts/TextSizeContext';
+import { getScaledFontSize } from '../utils/textSize';
 
 const AmharicText = ({ children, style, variant = 'body', ...props }) => {
+  const { getTextSizeMultiplier } = useTextSize();
+  const textSizeMultiplier = getTextSizeMultiplier();
+
   const getFontStyle = () => {
-    switch (variant) {
-      case 'heading':
-        return styles.heading;
-      case 'subheading':
-        return styles.subheading;
-      case 'body':
-        return styles.body;
-      case 'caption':
-        return styles.caption;
-      case 'button':
-        return styles.button;
-      default:
-        return styles.body;
-    }
+    const baseStyle = (() => {
+      switch (variant) {
+        case 'heading':
+          return styles.heading;
+        case 'subheading':
+          return styles.subheading;
+        case 'body':
+          return styles.body;
+        case 'caption':
+          return styles.caption;
+        case 'button':
+          return styles.button;
+        default:
+          return styles.body;
+      }
+    })();
+
+    // Apply text size scaling
+    return {
+      ...baseStyle,
+      fontSize: getScaledFontSize(baseStyle.fontSize, textSizeMultiplier),
+      lineHeight: getScaledFontSize(baseStyle.lineHeight, textSizeMultiplier),
+    };
   };
 
   return (

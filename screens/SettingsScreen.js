@@ -14,17 +14,23 @@ import AmharicText from '../src/components/AmharicText';
 import AppBar from '../components/AppBar';
 import ErrorModal from '../components/ErrorModal';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { useTextSize } from '../src/contexts/TextSizeContext';
 import { getColors } from '../src/theme/colors';
 import { getStorageInfo } from '../utils/storage';
 import SyncService from '../src/services/SyncService';
 
 const SettingsScreen = ({ navigation }) => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const { textSize, updateTextSize, getTextSizeLabel } = useTextSize();
   const colors = getColors(isDarkMode);
   const [storageInfo, setStorageInfo] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const handleTextSizeChange = (newSize) => {
+    updateTextSize(newSize);
+  };
 
   const handleSync = async () => {
     if (syncing) return;
@@ -136,6 +142,26 @@ const SettingsScreen = ({ navigation }) => {
             subtitle: 'Switch between light and dark themes',
             onPress: toggleDarkMode,
             showArrow: false
+          })}
+          
+          {renderSettingItem({
+            icon: 'text',
+            title: 'Text Size',
+            subtitle: `Current: ${getTextSizeLabel()}`,
+            onPress: () => {
+              Alert.alert(
+                'Text Size',
+                'Choose your preferred text size:',
+                [
+                  { text: 'Small', onPress: () => handleTextSizeChange('small') },
+                  { text: 'Medium', onPress: () => handleTextSizeChange('medium') },
+                  { text: 'Large', onPress: () => handleTextSizeChange('large') },
+                  { text: 'Extra Large', onPress: () => handleTextSizeChange('extra-large') },
+                  { text: 'Cancel', style: 'cancel' }
+                ]
+              );
+            },
+            showArrow: true
           })}
         </View>
 

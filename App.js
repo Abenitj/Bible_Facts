@@ -6,6 +6,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DarkModeProvider, useDarkMode } from './src/contexts/DarkModeContext';
+import { TextSizeProvider } from './src/contexts/TextSizeContext';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -114,7 +115,8 @@ export default function App() {
 
   return (
     <DarkModeProvider>
-      <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
+      <TextSizeProvider>
+        <SafeAreaProvider style={{ backgroundColor: '#111827' }}>
         <NavigationContainer
           theme={{
             dark: true,
@@ -160,7 +162,8 @@ export default function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-      </SafeAreaProvider>
+        </SafeAreaProvider>
+      </TextSizeProvider>
     </DarkModeProvider>
   );
 }
