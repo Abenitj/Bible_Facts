@@ -8,6 +8,7 @@ import {
   Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AmharicText from '../src/components/AmharicText';
 
 const { width } = Dimensions.get('window');
 
@@ -87,26 +88,58 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
         activeOpacity={0.9}
       >
         <View style={styles.content}>
-          <View style={styles.titleRow}>
-            <Text style={[styles.title, { color: finalColors.textPrimary }]}>{topic.title}</Text>
-            <View style={styles.indicators}>
-              {isBookmarked && (
-                <View style={[styles.bookmarkIndicator, { backgroundColor: '#FFD700' }]}>
-                  <Ionicons name="bookmark" size={10} color="white" />
+          <View style={styles.headerRow}>
+            <View style={styles.titleContainer}>
+              <AmharicText variant="subheading" style={[styles.title, { color: finalColors.textPrimary }]}>
+                {topic.title}
+              </AmharicText>
+              <View style={styles.indicators}>
+                {isBookmarked && (
+                  <View style={[styles.bookmarkIndicator, { backgroundColor: '#F59E0B' }]}>
+                    <Ionicons name="bookmark" size={12} color="white" />
+                  </View>
+                )}
+                {isRead && (
+                  <View style={[styles.readIndicator, { backgroundColor: '#10B981' }]}>
+                    <Ionicons name="checkmark" size={14} color="white" />
+                  </View>
+                )}
+              </View>
+            </View>
+            <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
+              <Ionicons name="chevron-forward" size={18} color={finalColors.primary} />
+            </View>
+          </View>
+          
+          <AmharicText variant="body" style={[styles.description, { color: finalColors.textSecondary }]}>
+            {topic.description}
+          </AmharicText>
+          
+          <View style={styles.footerRow}>
+            <View style={styles.statusContainer}>
+              {isRead ? (
+                <View style={styles.statusItem}>
+                  <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                  <AmharicText variant="caption" style={[styles.statusText, { color: '#10B981' }]}>
+                    ተነብቷል
+                  </AmharicText>
                 </View>
-              )}
-              {isRead && (
-                <View style={[styles.readIndicator, { backgroundColor: finalColors.primary }]}>
-                  <Ionicons name="checkmark" size={12} color="white" />
+              ) : (
+                <View style={styles.statusItem}>
+                  <Ionicons name="time-outline" size={14} color={finalColors.textSecondary} />
+                  <AmharicText variant="caption" style={[styles.statusText, { color: finalColors.textSecondary }]}>
+                    አልተነበበም
+                  </AmharicText>
                 </View>
               )}
             </View>
+            
+            <View style={styles.actionHint}>
+              <AmharicText variant="caption" style={[styles.hintText, { color: finalColors.textSecondary }]}>
+                ለማንበብ ይንኩ
+              </AmharicText>
+            </View>
           </View>
-          <Text style={[styles.description, { color: finalColors.textSecondary }]}>{topic.description}</Text>
-        </View>
-        
-        <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
-          <Ionicons name="chevron-forward" size={20} color={finalColors.primary} />
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -115,36 +148,40 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 6,
+    marginVertical: 4,
   },
   card: {
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderLeftWidth: 4,
-    borderBottomWidth: 1,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 16,
     shadowColor: '#000000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
   content: {
     flex: 1,
   },
-  titleRow: {
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  titleContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginRight: 12,
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
     flex: 1,
+    lineHeight: 24,
   },
   indicators: {
     flexDirection: 'row',
@@ -152,28 +189,55 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   bookmarkIndicator: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 4,
-  },
-  readIndicator: {
     width: 20,
     height: 20,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 6,
+  },
+  readIndicator: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   description: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    marginLeft: 4,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  actionHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  hintText: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   arrowContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -28,7 +28,7 @@ const TopicsScreen = ({ navigation, route }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
   const { isTopicRead, getReadingStats } = useReadingProgress();
-  const { isBookmarked } = useBookmarks();
+  const { isBookmarked, getBookmarksCount } = useBookmarks();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
@@ -154,6 +154,13 @@ const TopicsScreen = ({ navigation, route }) => {
     />
   );
 
+  // Calculate reading statistics
+  const readingStats = getReadingStats();
+  const totalTopics = topics.length;
+  const readTopics = topics.filter(topic => isTopicRead(topic.id)).length;
+  const bookmarkedTopics = topics.filter(topic => isBookmarked(topic.id)).length;
+  const progressPercentage = totalTopics > 0 ? Math.round((readTopics / totalTopics) * 100) : 0;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ErrorModal
@@ -166,6 +173,62 @@ const TopicsScreen = ({ navigation, route }) => {
         title={religion.name}
         colors={colors}
       />
+
+      {/* Professional Header Section with Statistics */}
+      <View style={[styles.headerSection, { backgroundColor: colors.card }]}>
+        <View style={styles.headerTop}>
+          <View style={[styles.religionBadge, { borderColor: religion.color }]}>
+            <AmharicText variant="caption" style={[styles.religionBadgeText, { color: religion.color }]}>
+              {religion.name}
+            </AmharicText>
+          </View>
+          <View style={styles.headerStats}>
+            <View style={styles.statItem}>
+              <Ionicons name="book-outline" size={16} color={colors.textSecondary} />
+              <AmharicText variant="caption" style={[styles.statText, { color: colors.textSecondary }]}>
+                {totalTopics}
+              </AmharicText>
+            </View>
+            <View style={styles.statItem}>
+              <Ionicons name="checkmark-circle-outline" size={16} color="#10B981" />
+              <AmharicText variant="caption" style={[styles.statText, { color: '#10B981' }]}>
+                {readTopics}
+              </AmharicText>
+            </View>
+            <View style={styles.statItem}>
+              <Ionicons name="bookmark-outline" size={16} color="#F59E0B" />
+              <AmharicText variant="caption" style={[styles.statText, { color: '#F59E0B' }]}>
+                {bookmarkedTopics}
+              </AmharicText>
+            </View>
+          </View>
+        </View>
+        
+        {/* Progress Bar */}
+        {totalTopics > 0 && (
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <AmharicText variant="body" style={[styles.progressLabel, { color: colors.textSecondary }]}>
+                የንባብ ሂደት
+              </AmharicText>
+              <AmharicText variant="caption" style={[styles.progressPercentage, { color: colors.primary }]}>
+                {progressPercentage}%
+              </AmharicText>
+            </View>
+            <View style={[styles.progressBar, { backgroundColor: colors.background }]}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { 
+                    backgroundColor: colors.primary,
+                    width: `${progressPercentage}%`
+                  }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
+      </View>
 
       {/* Topics List */}
       {topics.length > 0 ? (
@@ -198,6 +261,90 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  
+  // Professional Header Section Styles
+  headerSection: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  religionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+  },
+  religionBadgeText: {
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  headerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
+  },
+  statText: {
+    marginLeft: 4,
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  
+  // Progress Section Styles
+  progressSection: {
+    marginTop: 4,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  progressPercentage: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  
+  // List Styles
+  topicsList: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  
+  // Empty States
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -216,10 +363,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
-  topicsList: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
+  
+  // Loading States
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
