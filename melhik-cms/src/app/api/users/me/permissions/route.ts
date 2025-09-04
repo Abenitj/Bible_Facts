@@ -1,44 +1,33 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
+import { ROLE_PERMISSIONS, ROLES } from '@/lib/auth';
 
 // GET /api/users/me/permissions - Get current user permissions
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // For now, return default permissions for admin users
-    // In a real app, you would check the user's JWT token and get their actual permissions
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Get user's role-based permissions
+    const rolePermissions = ROLE_PERMISSIONS[payload.role as keyof typeof ROLE_PERMISSIONS] || [];
+    
+    // Map permissions to the format expected by the frontend
     const permissions = {
-      canManageUsers: true,
-      canManageContent: true,
-      canManageSystem: true,
-      canViewAnalytics: true,
-      canTriggerSync: true,
-      role: 'admin',
-      // Add the specific permission constants that the APIs are checking for
-      permissions: [
-        'view_religions',
-        'create_religions', 
-        'edit_religions',
-        'delete_religions',
-        'view_topics',
-        'create_topics',
-        'edit_topics', 
-        'delete_topics',
-        'view_users',
-        'create_users',
-        'edit_users',
-        'delete_users',
-        'view_system_settings',
-        'manage_system_settings',
-        'view_dashboard',
-        'view_sync',
-        'manage_sync',
-        'view_smtp_config',
-        'create_smtp_config',
-        'edit_smtp_config',
-        'delete_smtp_config',
-        'test_smtp_config',
-        'view_content',
-        'edit_content'
-      ]
+      canManageUsers: rolePermissions.includes('view_users') || rolePermissions.includes('create_users'),
+      canManageContent: rolePermissions.includes('create_religions') || rolePermissions.includes('create_topics'),
+      canManageSystem: rolePermissions.includes('view_system_settings') || rolePermissions.includes('manage_system_settings'),
+      canViewAnalytics: rolePermissions.includes('view_dashboard'),
+      canTriggerSync: rolePermissions.includes('view_sync') || rolePermissions.includes('manage_sync'),
+      role: payload.role,
+      permissions: rolePermissions
     };
 
     return NextResponse.json({

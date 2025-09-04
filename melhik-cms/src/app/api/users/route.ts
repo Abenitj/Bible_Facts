@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { verifyToken } from '@/lib/auth'
+import { verifyToken, checkPermission, PERMISSIONS } from '@/lib/auth'
 import { generateTemporaryPassword, sendWelcomeEmail } from '@/lib/email'
 
 const prisma = new PrismaClient()
@@ -17,9 +17,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { permissions: true }
+    })
+    
+    let userPermissions: string[] | null = null
+    if (currentUser?.permissions) {
+      try {
+        userPermissions = JSON.parse(currentUser.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = null
+      }
+    }
+
     // Check if user has permission to view users
-    // Only admins can view all users
-    if (payload.role !== 'admin') {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.VIEW_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
@@ -122,9 +137,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
+    // Get current user's permissions
+    const currentUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { permissions: true }
+    })
+    
+    let userPermissions: string[] | null = null
+    if (currentUser?.permissions) {
+      try {
+        userPermissions = JSON.parse(currentUser.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = null
+      }
+    }
+
     // Check if user has permission to create users
-    // Only admins can create users
-    if (payload.role !== 'admin') {
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.CREATE_USERS)) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

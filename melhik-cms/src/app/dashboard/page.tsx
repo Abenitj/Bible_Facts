@@ -76,19 +76,21 @@ export default function Dashboard() {
           console.error('Failed to fetch topics:', topicsRes.status, topicsRes.statusText)
         }
 
-        // Load users
-        const usersRes = await fetch('/api/users', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        // Load users (only if user has permission)
+        if (checkPermission(user.role as any, userPermissions?.permissions || [], PERMISSIONS.VIEW_USERS)) {
+          const usersRes = await fetch('/api/users', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
 
-        if (usersRes.ok) {
-          const usersData = await usersRes.json()
-          setUsers(usersData.users || usersData.data || usersData)
-        } else {
-          console.error('Failed to fetch users:', usersRes.status, usersRes.statusText)
+          if (usersRes.ok) {
+            const usersData = await usersRes.json()
+            setUsers(usersData.users || usersData.data || usersData)
+          } else {
+            console.error('Failed to fetch users:', usersRes.status, usersRes.statusText)
+          }
         }
       } catch (error) {
         console.error('Error loading dashboard data:', error)
