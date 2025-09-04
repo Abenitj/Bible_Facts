@@ -20,8 +20,30 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const darkMode = localStorage.getItem('darkMode');
+                  if (darkMode === 'true') {
+                    document.documentElement.classList.add('dark');
+                    document.body.style.backgroundColor = '#111827';
+                  } else {
+                    document.body.style.backgroundColor = '#f9fafb';
+                  }
+                } catch (e) {
+                  // Fallback to light mode if localStorage is not available
+                  document.body.style.backgroundColor = '#f9fafb';
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className} suppressHydrationWarning>
         <DarkModeProvider>
           <UserProvider>
             {children}

@@ -11,13 +11,17 @@ const DarkModeContext = createContext<DarkModeContextType | undefined>(undefined
 
 export function DarkModeProvider({ children }: { children: ReactNode }) {
   const [darkMode, setDarkMode] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  // Initialize dark mode from localStorage
+  // Initialize dark mode from localStorage after component mounts
   useEffect(() => {
+    setMounted(true)
     const savedDarkMode = localStorage.getItem('darkMode')
     if (savedDarkMode === 'true') {
       setDarkMode(true)
-      document.documentElement.setAttribute('data-theme', 'dark')
+      // Don't modify DOM here as the inline script already handled it
+    } else {
+      setDarkMode(false)
     }
   }, [])
 
@@ -27,12 +31,23 @@ export function DarkModeProvider({ children }: { children: ReactNode }) {
     setDarkMode(newDarkMode)
     
     if (newDarkMode) {
-      document.documentElement.setAttribute('data-theme', 'dark')
+      document.documentElement.classList.add('dark')
+      document.body.style.backgroundColor = '#111827'
       localStorage.setItem('darkMode', 'true')
     } else {
-      document.documentElement.removeAttribute('data-theme')
+      document.documentElement.classList.remove('dark')
+      document.body.style.backgroundColor = '#f9fafb'
       localStorage.setItem('darkMode', 'false')
     }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <DarkModeContext.Provider value={{ darkMode: false, toggleDarkMode: () => {} }}>
+        {children}
+      </DarkModeContext.Provider>
+    )
   }
 
   return (
