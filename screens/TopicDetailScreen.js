@@ -149,6 +149,16 @@ const TopicDetailScreen = ({ navigation, route }) => {
         title="ዝርዝር መረጃ"
         showBack={true}
         onBackPress={() => navigation.goBack()}
+        onSyncPress={async () => {
+          try {
+            console.log('Starting sync from topic detail screen...');
+            await SyncService.performFullSync();
+            await loadTopicData(); // Reload topic data after sync
+            console.log('Topic data synced and reloaded');
+          } catch (error) {
+            console.error('Sync failed:', error);
+          }
+        }}
         colors={colors}
       />
 

@@ -6,15 +6,12 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DarkModeProvider, useDarkMode } from './src/contexts/DarkModeContext';
-import notificationService from './src/services/NotificationService';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
 import TopicsScreen from './screens/TopicsScreen';
 import TopicDetailScreen from './screens/TopicDetailScreen';
 import SettingsScreen from './screens/SettingsScreen';
-import NotificationSettings from './src/components/NotificationSettings';
-import PushNotificationTester from './src/components/PushNotificationTester';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -114,28 +111,6 @@ function MainApp() {
 
 // Root Stack Navigator
 export default function App() {
-  // Initialize notification service
-  React.useEffect(() => {
-    const initNotifications = async () => {
-      try {
-        const success = await notificationService.initialize();
-        if (success) {
-          console.log('Notifications initialized successfully');
-        } else {
-          console.log('Notifications not available (permissions denied or not supported)');
-        }
-      } catch (error) {
-        console.error('Failed to initialize notifications:', error);
-      }
-    };
-    
-    initNotifications();
-    
-    // Cleanup on unmount
-    return () => {
-      notificationService.cleanup();
-    };
-  }, []);
 
   return (
     <DarkModeProvider>
@@ -180,22 +155,6 @@ export default function App() {
               component={TopicDetailScreen}
               options={{
                 title: 'ዝርዝር መረጃ',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen 
-              name="NotificationSettings" 
-              component={NotificationSettings}
-              options={{
-                title: 'Notification Settings',
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen 
-              name="PushNotificationTester" 
-              component={PushNotificationTester}
-              options={{
-                title: 'Push Notification Tester',
                 headerShown: false,
               }}
             />

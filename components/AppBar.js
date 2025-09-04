@@ -15,7 +15,8 @@ const AppBar = ({
   onBackPress, 
   showBack = false, 
   colors = null,
-  rightComponent 
+  rightComponent,
+  onSyncPress
 }) => {
   const { isDarkMode } = useDarkMode();
   const themeColors = colors || getColors(isDarkMode);
@@ -46,6 +47,15 @@ const AppBar = ({
     leftSection: {
       width: 56, // Fixed width for balance
       alignItems: 'flex-start',
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+    },
+    syncButton: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: themeColors.primary + '20',
     },
     titleContainer: {
       flex: 1,
@@ -80,7 +90,21 @@ const AppBar = ({
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.leftSection}>
-          {/* Left section kept for balance */}
+          {showBack ? (
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={onBackPress}
+            >
+              <Ionicons name="arrow-back" size={24} color={themeColors.textPrimary} />
+            </TouchableOpacity>
+          ) : onSyncPress ? (
+            <TouchableOpacity 
+              style={styles.syncButton}
+              onPress={onSyncPress}
+            >
+              <Ionicons name="sync" size={24} color={themeColors.primary} />
+            </TouchableOpacity>
+          ) : null}
         </View>
         
         <View style={styles.titleContainer}>

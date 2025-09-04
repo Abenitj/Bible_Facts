@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
+import AppBar from '../components/AppBar';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
 import { clearAllAppData, getStorageInfo } from '../utils/storage';
@@ -18,48 +19,17 @@ import SyncService from '../src/services/SyncService';
 const SettingsScreen = ({ navigation }) => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
-  const [syncing, setSyncing] = useState(false);
   const [storageInfo, setStorageInfo] = useState(null);
 
   const handleSync = async () => {
-    if (syncing) return;
-    
-    setSyncing(true);
     try {
-      Alert.alert(
-        'Sync Content',
-        'Do you want to sync content from the CMS? This will download the latest religions, topics, and explanations. You\'ll receive notifications about the sync progress.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Sync',
-            onPress: async () => {
-              try {
-                console.log('Starting manual sync...');
-                const result = await SyncService.performFullSync();
-                
-                // Show success message
-                Alert.alert(
-                  'Sync Complete',
-                  `Successfully synced ${result.data.religions?.length || 0} religions and ${result.data.topics?.length || 0} topics. Check your notifications!`,
-                  [{ text: 'OK' }]
-                );
-              } catch (error) {
-                console.error('Manual sync failed:', error);
-                Alert.alert(
-                  'Sync Failed',
-                  'Failed to sync content. Please check your internet connection and try again.',
-                  [{ text: 'OK' }]
-                );
-              }
-            }
-          }
-        ]
-      );
+      console.log('Starting sync from settings...');
+      const result = await SyncService.performFullSync();
+      console.log('Sync completed:', result.message);
+      Alert.alert('Sync Complete', 'Content has been synced successfully!');
     } catch (error) {
-      console.error('Error showing sync dialog:', error);
-    } finally {
-      setSyncing(false);
+      console.error('Sync failed:', error);
+      Alert.alert('Sync Failed', 'Failed to sync content. Please try again.');
     }
   };
 
@@ -138,12 +108,11 @@ const SettingsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
-        <AmharicText variant="heading" style={[styles.headerTitle, { color: colors.textPrimary }]}>
-          ቅንብሮች
-        </AmharicText>
-      </View>
+      <AppBar 
+        title="ቅንብሮች"
+        onSyncPress={handleSync}
+        colors={colors}
+      />
 
       <ScrollView 
         style={styles.scrollView}
@@ -164,82 +133,6 @@ const SettingsScreen = ({ navigation }) => {
           })}
         </View>
 
-        {/* Notifications Section */}
-        <View style={styles.section}>
-          <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-            Notifications
-          </AmharicText>
-          
-          {renderSettingItem({
-            icon: 'notifications',
-            title: 'Notification Settings',
-            subtitle: 'Configure daily verses, reminders, and alerts',
-            onPress: () => navigation.navigate('NotificationSettings')
-          })}
-          
-          {renderSettingItem({
-            icon: 'phone-portrait',
-            title: 'Push Notification Tester',
-            subtitle: 'Test push notifications (development builds only)',
-            onPress: () => navigation.navigate('PushNotificationTester')
-          })}
-          
-          {renderSettingItem({
-            icon: 'sync',
-            title: 'Test Sync Notifications',
-            subtitle: 'Test sync notifications without CMS server',
-            onPress: async () => {
-              try {
-                Alert.alert(
-                  'Test Sync Notifications',
-                  'This will test the notification system with mock data. Make sure notifications are enabled!',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Test',
-                      onPress: async () => {
-                        try {
-                          // Enable test mode temporarily
-                          SyncService.toggleTestMode();
-                          const result = await SyncService.performFullSync();
-                          // Disable test mode after test
-                          SyncService.toggleTestMode();
-                          Alert.alert(
-                            'Test Complete',
-                            `Test sync completed! Check your notifications. Result: ${result.message}`,
-                            [{ text: 'OK' }]
-                          );
-                        } catch (error) {
-                          Alert.alert(
-                            'Test Failed',
-                            `Test sync failed: ${error.message}`,
-                            [{ text: 'OK' }]
-                          );
-                        }
-                      }
-                    }
-                  ]
-                );
-              } catch (error) {
-                console.error('Error showing test dialog:', error);
-              }
-            }
-          })}
-          
-          {renderSettingItem({
-            icon: 'settings',
-            title: 'Sync Mode',
-            subtitle: SyncService.isTestMode() ? 'Test Mode (Mock Data)' : 'Real CMS Mode',
-            onPress: () => {
-              const newMode = SyncService.toggleTestMode();
-              Alert.alert(
-                'Sync Mode Changed',
-                `Switched to ${newMode ? 'Test Mode' : 'Real CMS Mode'}`,
-                [{ text: 'OK' }]
-              );
-            }
-          })}
-        </View>
 
         {/* Data Management Section */}
         <View style={styles.section}>
@@ -247,22 +140,6 @@ const SettingsScreen = ({ navigation }) => {
             Data Management
           </AmharicText>
           
-          {renderSettingItem({
-            icon: 'cloud-download',
-            title: 'Sync Content',
-            subtitle: syncing ? 'Syncing...' : 'Download latest content from CMS',
-            onPress: handleSync,
-            showArrow: !syncing
-          })}
-          
-          {syncing && (
-            <View style={styles.syncingContainer}>
-              <ActivityIndicator size="small" color={colors.primary} />
-              <AmharicText variant="caption" style={[styles.syncingText, { color: colors.textSecondary }]}>
-                Syncing content...
-              </AmharicText>
-            </View>
-          )}
           
           {renderSettingItem({
             icon: 'information-circle',
@@ -369,15 +246,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 4,
-  },
-  syncingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  syncingText: {
-    marginLeft: 8,
   },
 });
 

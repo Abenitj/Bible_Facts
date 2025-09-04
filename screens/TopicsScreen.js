@@ -116,6 +116,16 @@ const TopicsScreen = ({ navigation, route }) => {
         title={religion.name}
         showBack={true}
         onBackPress={() => navigation.goBack()}
+        onSyncPress={async () => {
+          try {
+            console.log('Starting sync from topics screen...');
+            await SyncService.performFullSync();
+            await loadTopics(); // Reload topics after sync
+            console.log('Topics synced and reloaded');
+          } catch (error) {
+            console.error('Sync failed:', error);
+          }
+        }}
         colors={colors}
       />
 

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 import ImageSlider from '../components/ImageSlider';
 import ReligionCard from '../components/ReligionCard';
+import AppBar from '../components/AppBar';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
@@ -53,24 +54,19 @@ const HomeScreen = ({ navigation }) => {
     
     setRefreshing(true);
     try {
-      console.log('Starting refresh...');
+      console.log('Starting sync...');
       
-      // Check for updates first
-      const updates = await SyncService.checkForUpdates();
-      console.log('Updates check result:', updates);
+      // Perform full sync to get latest data
+      const result = await SyncService.performFullSync();
+      console.log('Sync completed:', result.message);
       
-      if (updates.hasUpdates) {
-        console.log('Updates available, downloading...');
-        // Download new content
-        await SyncService.downloadContent();
-        // Reload data
-        await loadReligions();
-        console.log('Refresh completed with new data');
-      } else {
-        console.log('No updates available');
-      }
+      // Reload data after sync
+      await loadReligions();
+      console.log('Data reloaded after sync');
     } catch (error) {
-      console.error('Error refreshing:', error);
+      console.error('Error syncing:', error);
+      // Still try to load existing data even if sync fails
+      await loadReligions();
     } finally {
       setRefreshing(false);
     }
@@ -129,6 +125,11 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <AppBar 
+        title="Melhik"
+        onSyncPress={onRefresh}
+        colors={colors}
+      />
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
