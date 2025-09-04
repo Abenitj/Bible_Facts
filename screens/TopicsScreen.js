@@ -157,7 +157,7 @@ const TopicsScreen = ({ navigation, route }) => {
       topic={item}
       onPress={() => navigateToTopic(item)}
       index={index}
-      colors={colors}
+      colors={{...colors, isDarkMode}}
       isRead={isTopicRead(item.id)}
       isBookmarked={isBookmarked(item.id)}
     />

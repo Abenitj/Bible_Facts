@@ -13,6 +13,10 @@ import AmharicText from '../src/components/AmharicText';
 const { width } = Dimensions.get('window');
 
 const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isBookmarked = false }) => {
+  // Debug: Log the colors being received
+  console.log('TopicCard colors:', colors);
+  console.log('TopicCard isDarkMode:', colors.isDarkMode);
+  
   // Default colors if none provided
   const defaultColors = {
     card: '#FFFFFF',
@@ -20,7 +24,8 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
     primary: '#3B82F6',
     primaryLight: '#DBEAFE',
     textPrimary: '#1F2937',
-    textSecondary: '#6B7280'
+    textSecondary: '#6B7280',
+    isDarkMode: false
   };
   
   const finalColors = Object.keys(colors).length > 0 ? colors : defaultColors;
@@ -91,8 +96,9 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
           <View style={styles.headerRow}>
             <View style={styles.titleContainer}>
               <AmharicText variant="subheading" style={[styles.title, { 
-                color: finalColors.isDarkMode ? finalColors.textPrimary : '#111827',
-                fontWeight: '700'
+                color: finalColors.isDarkMode ? '#FFFFFF' : '#111827',
+                fontWeight: '700',
+                fontSize: 16
               }]}>
                 {topic.title}
               </AmharicText>
@@ -114,14 +120,14 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
               </View>
             </View>
             <View style={[styles.arrowContainer, { 
-              backgroundColor: finalColors.isDarkMode ? finalColors.primaryLight : '#DBEAFE'
+              backgroundColor: colors.isDarkMode ? '#1E40AF' : '#DBEAFE'
             }]}>
-              <Ionicons name="chevron-forward" size={16} color={finalColors.isDarkMode ? finalColors.primary : '#2563EB'} />
+              <Ionicons name="chevron-forward" size={16} color={colors.isDarkMode ? '#FFFFFF' : '#2563EB'} />
             </View>
           </View>
           
           <AmharicText variant="body" style={[styles.description, { 
-            color: finalColors.isDarkMode ? finalColors.textSecondary : '#374151',
+            color: finalColors.isDarkMode ? '#D1D5DB' : '#374151',
             fontWeight: '500'
           }]}>
             {topic.description}
@@ -141,9 +147,9 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
                 </View>
               ) : (
                 <View style={styles.statusItem}>
-                  <Ionicons name="time-outline" size={14} color={finalColors.isDarkMode ? finalColors.textSecondary : '#6B7280'} />
+                  <Ionicons name="time-outline" size={14} color={finalColors.isDarkMode ? '#9CA3AF' : '#6B7280'} />
                   <AmharicText variant="caption" style={[styles.statusText, { 
-                    color: finalColors.isDarkMode ? finalColors.textSecondary : '#6B7280',
+                    color: finalColors.isDarkMode ? '#9CA3AF' : '#6B7280',
                     fontWeight: '500'
                   }]}>
                     አልተነበበም
@@ -154,7 +160,7 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
             
             <View style={styles.actionHint}>
               <AmharicText variant="caption" style={[styles.hintText, { 
-                color: finalColors.isDarkMode ? finalColors.textSecondary : '#6B7280',
+                color: finalColors.isDarkMode ? '#9CA3AF' : '#6B7280',
                 fontWeight: '500'
               }]}>
                 ለማንበብ ይንኩ
