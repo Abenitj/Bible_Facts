@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Text,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,10 +23,13 @@ import { getColors } from '../src/theme/colors';
 
 const HomeScreen = ({ navigation }) => {
   const [religions, setReligions] = useState([]);
+  const [filteredReligions, setFilteredReligions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
@@ -39,17 +43,46 @@ const HomeScreen = ({ navigation }) => {
       const storedContent = await SyncService.getStoredContent();
       if (storedContent.religions && storedContent.religions.length > 0) {
         setReligions(storedContent.religions);
+        setFilteredReligions(storedContent.religions);
         console.log(`Loaded ${storedContent.religions.length} religions from storage`);
       } else {
         console.log('No stored religions found');
         setReligions([]);
+        setFilteredReligions([]);
       }
     } catch (error) {
       console.error('Error loading religions:', error);
       setReligions([]);
+      setFilteredReligions([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setIsSearching(query.length > 0);
+    
+    if (query.trim() === '') {
+      setFilteredReligions(religions);
+      return;
+    }
+    
+    const filtered = religions.filter(religion => {
+      const nameMatch = religion.name.toLowerCase().includes(query.toLowerCase());
+      const nameEnMatch = religion.nameEn && religion.nameEn.toLowerCase().includes(query.toLowerCase());
+      const descriptionMatch = religion.description && religion.description.toLowerCase().includes(query.toLowerCase());
+      
+      return nameMatch || nameEnMatch || descriptionMatch;
+    });
+    
+    setFilteredReligions(filtered);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setIsSearching(false);
+    setFilteredReligions(religions);
   };
 
   const onRefresh = async () => {
@@ -68,6 +101,10 @@ const HomeScreen = ({ navigation }) => {
         console.log('Sync completed successfully:', result.message);
         // Reload data after successful sync
         await loadReligions();
+        // Re-apply search filter if user is searching
+        if (isSearching) {
+          handleSearch(searchQuery);
+        }
         console.log('Data reloaded after sync');
       } else {
         console.log('Sync failed:', result.message);
@@ -159,11 +196,32 @@ const HomeScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Search Bar */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.searchBar, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+            <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.textPrimary }]}
+              placeholder="Search religions and topics..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={handleSearch}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+            {isSearching && (
+              <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         {/* Image Slider */}
         <ImageSlider />
 
         {/* Religions List or Empty State */}
-        {religions.length > 0 ? (
+        {filteredReligions.length > 0 ? (
           <View style={styles.religionsSection}>
             <View style={styles.sectionHeader}>
               <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -175,7 +233,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
             
             <FlatList
-              data={religions}
+              data={filteredReligions}
               renderItem={renderReligionCard}
               keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
@@ -185,7 +243,26 @@ const HomeScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.emptyStateSection}>
-            {renderEmpty()}
+            {isSearching ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="search-outline" size={64} color={colors.textSecondary} />
+                <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                  No Results Found
+                </AmharicText>
+                <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
+                  Try searching with different keywords or clear your search to see all religions.
+                </AmharicText>
+                <TouchableOpacity 
+                  style={[styles.syncButton, { backgroundColor: colors.primary }]}
+                  onPress={clearSearch}
+                >
+                  <Ionicons name="refresh" size={20} color="white" />
+                  <Text style={styles.syncButtonText}>Clear Search</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              renderEmpty()
+            )}
           </View>
         )}
       </ScrollView>
@@ -199,6 +276,38 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
+  },
+  clearButton: {
+    marginLeft: 8,
+    padding: 4,
   },
   emptyStateSection: {
     paddingHorizontal: 16,
