@@ -155,7 +155,10 @@ export async function PUT(
     // Update religion
     const religion = await prisma.religion.update({
       where: { id },
-      data: religionData
+      data: {
+        ...religionData,
+        syncStatus: 'pending' // Mark as pending when updated
+      }
     })
 
     return NextResponse.json({

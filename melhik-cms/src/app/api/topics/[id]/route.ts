@@ -159,7 +159,10 @@ export async function PUT(
     // Update topic
     const topic = await prisma.topic.update({
       where: { id },
-      data: topicData,
+      data: {
+        ...topicData,
+        syncStatus: 'pending' // Mark as pending when updated
+      },
       include: {
         religion: {
           select: {

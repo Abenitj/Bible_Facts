@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createTopicDetailSchema, updateTopicDetailSchema } from '@/lib/validation'
+import { verifyToken } from '@/lib/auth'
 
 // POST /api/topics/[id]/content - Create topic content
 export async function POST(
@@ -8,6 +9,17 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const { id: idParam } = await params
     const topicId = parseInt(idParam)
 
@@ -104,6 +116,17 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const { id: idParam } = await params
     const topicId = parseInt(idParam)
 
@@ -162,7 +185,8 @@ export async function PUT(
         bibleVerses: contentData.bibleVerses ? JSON.stringify(contentData.bibleVerses) : existingContent.bibleVerses,
         keyPoints: contentData.keyPoints ? JSON.stringify(contentData.keyPoints) : existingContent.keyPoints,
         references: contentData.references ? JSON.stringify(contentData.references) : existingContent.references,
-        version: contentData.version || existingContent.version + 1
+        version: contentData.version || existingContent.version + 1,
+        syncStatus: 'pending' // Mark as pending when updated
       },
       include: {
         topic: {
@@ -200,6 +224,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const { id: idParam } = await params
     const topicId = parseInt(idParam)
 

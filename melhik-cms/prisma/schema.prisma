@@ -15,6 +15,7 @@ model Religion {
   color       String   @default("#8B4513")
   imageUrl    String?  // URL to religion image
   imageAlt    String?  // Alt text for accessibility
+  syncStatus  String   @default("pending") // "pending", "synced"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   topics      Topic[]
@@ -30,6 +31,7 @@ model Topic {
   description String?
   imageUrl    String?      // URL to topic image
   imageAlt    String?      // Alt text for accessibility
+  syncStatus  String       @default("pending") // "pending", "synced"
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   details     TopicDetail?
@@ -46,6 +48,7 @@ model TopicDetail {
   keyPoints   String?
   references  String?
   version     Int      @default(1)
+  syncStatus  String   @default("pending") // "pending", "synced"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)

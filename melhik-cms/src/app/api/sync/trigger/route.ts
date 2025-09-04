@@ -46,6 +46,22 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
+    // Mark all pending content as synced
+    const [religionUpdate, topicUpdate, detailUpdate] = await Promise.all([
+      prisma.religion.updateMany({
+        where: { syncStatus: 'pending' },
+        data: { syncStatus: 'synced' }
+      }),
+      prisma.topic.updateMany({
+        where: { syncStatus: 'pending' },
+        data: { syncStatus: 'synced' }
+      }),
+      prisma.topicDetail.updateMany({
+        where: { syncStatus: 'pending' },
+        data: { syncStatus: 'synced' }
+      })
+    ])
+
     // Get current sync statistics
     const [religionCount, topicCount, topicDetailCount] = await Promise.all([
       prisma.religion.count(),
@@ -98,6 +114,12 @@ export async function POST(request: NextRequest) {
         topicDetails: topicDetailCount,
         totalItems: religionCount + topicCount + topicDetailCount
       },
+      syncedItems: {
+        religions: religionUpdate.count,
+        topics: topicUpdate.count,
+        details: detailUpdate.count,
+        total: religionUpdate.count + topicUpdate.count + detailUpdate.count
+      },
       recentChanges: {
         religions: recentReligions,
         topics: recentTopics,
@@ -105,7 +127,7 @@ export async function POST(request: NextRequest) {
         total: recentReligions + recentTopics + recentDetails
       },
       status: 'completed',
-      message: 'Manual sync triggered successfully. Mobile apps will receive updates on next sync.',
+      message: `Manual sync completed successfully. ${religionUpdate.count + topicUpdate.count + detailUpdate.count} items are now available to mobile apps.`,
       triggeredBy: payload.username,
       mobileAppsNotified: 0, // Would be updated in real implementation
       dataSize: `${Math.round((religionCount + topicCount + topicDetailCount) * 0.5)}KB`

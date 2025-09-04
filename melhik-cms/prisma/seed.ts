@@ -47,7 +47,8 @@ async function main() {
       name: 'Christianity',
       nameEn: 'Christianity',
       description: 'A monotheistic religion based on the life and teachings of Jesus Christ',
-      color: '#3B82F6'
+      color: '#3B82F6',
+      syncStatus: 'synced' // Mark existing content as synced
     }
   })
 
@@ -56,7 +57,8 @@ async function main() {
       name: 'Islam',
       nameEn: 'Islam',
       description: 'A monotheistic religion based on the teachings of the Prophet Muhammad',
-      color: '#059669'
+      color: '#059669',
+      syncStatus: 'synced'
     }
   })
 
@@ -68,7 +70,8 @@ async function main() {
       religionId: christianity.id,
       title: 'The Trinity',
       titleEn: 'The Trinity',
-      description: 'The Christian doctrine of God as three persons in one'
+      description: 'The Christian doctrine of God as three persons in one',
+      syncStatus: 'synced'
     }
   })
 
@@ -77,7 +80,8 @@ async function main() {
       religionId: islam.id,
       title: 'The Five Pillars',
       titleEn: 'The Five Pillars',
-      description: 'The five basic acts of worship in Islam'
+      description: 'The five basic acts of worship in Islam',
+      syncStatus: 'synced'
     }
   })
 

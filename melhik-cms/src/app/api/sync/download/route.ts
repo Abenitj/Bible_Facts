@@ -10,20 +10,23 @@ export async function GET(request: Request) {
 
     console.log(`Sync request: lastSync=${lastSync}, appVersion=${appVersion}`)
 
-    // Get only new/updated data since last sync
+    // Get only new/updated data since last sync that has been synced
     const religions = await prisma.religion.findMany({
       where: {
-        updatedAt: { gt: new Date(parseInt(lastSync)) }
+        updatedAt: { gt: new Date(parseInt(lastSync)) },
+        syncStatus: 'synced' // Only get synced content
       },
       include: {
         topics: {
           where: {
-            updatedAt: { gt: new Date(parseInt(lastSync)) }
+            updatedAt: { gt: new Date(parseInt(lastSync)) },
+            syncStatus: 'synced' // Only get synced topics
           },
           include: {
             details: {
               where: {
-                updatedAt: { gt: new Date(parseInt(lastSync)) }
+                updatedAt: { gt: new Date(parseInt(lastSync)) },
+                syncStatus: 'synced' // Only get synced details
               }
             }
           }
@@ -34,13 +37,23 @@ export async function GET(request: Request) {
       }
     })
 
-    // If no lastSync or first time, get all data
+    // If no lastSync or first time, get all synced data
     if (lastSync === '0') {
       const allReligions = await prisma.religion.findMany({
+        where: {
+          syncStatus: 'synced' // Only get synced content
+        },
         include: {
           topics: {
+            where: {
+              syncStatus: 'synced' // Only get synced topics
+            },
             include: {
-              details: true
+              details: {
+                where: {
+                  syncStatus: 'synced' // Only get synced details
+                }
+              }
             }
           }
         },
