@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { ROLE_PERMISSIONS, ROLES } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/users/me/permissions - Get current user permissions
 export async function GET(request: NextRequest) {
@@ -14,6 +15,20 @@ export async function GET(request: NextRequest) {
     const payload = verifyToken(token);
     if (!payload) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Check if user is active
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { status: true }
+    });
+
+    if (!user || user.status !== 'active') {
+      return NextResponse.json({ 
+        error: 'Account inactive', 
+        message: 'Your account has been deactivated. Please contact an administrator.',
+        status: 'inactive'
+      }, { status: 403 });
     }
 
     // Get user's role-based permissions

@@ -10,7 +10,7 @@ interface User {
   lastName?: string
   email?: string
   role: 'admin' | 'content_manager'
-  status: string
+  status: 'active' | 'inactive'
   avatarUrl?: string
   isFirstLogin: boolean
   requiresPasswordChange: boolean
@@ -38,6 +38,8 @@ interface UserContextType {
   refreshUserData: () => Promise<void>
   refreshPermissions: () => Promise<void>
   updateUser: (updates: Partial<User>) => void
+  checkUserStatus: (force?: boolean) => Promise<void>
+  checkStatusOnApiError: (response: Response) => Promise<boolean>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -59,6 +61,7 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
   const [userPermissions, setUserPermissions] = useState<UserPermissions | null>(null)
   const [loading, setLoading] = useState(false) // Changed to false initially
   const [error, setError] = useState<string | null>(null)
+  const [lastStatusCheck, setLastStatusCheck] = useState<number>(0)
   const router = useRouter()
 
   // Load user data from localStorage on mount - SYNCHRONOUSLY
@@ -288,6 +291,34 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
     }
   }, [user])
 
+  // Smart status checking - only when needed
+  useEffect(() => {
+    if (!user) return
+
+    // Check status immediately on login (force check)
+    checkUserStatus(true)
+
+    // Check status when user returns to the tab (window focus)
+    const handleWindowFocus = () => {
+      checkUserStatus(true) // Force check when user returns
+    }
+
+    // Check status when user navigates (visibility change)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkUserStatus(true) // Force check when tab becomes visible
+      }
+    }
+
+    window.addEventListener('focus', handleWindowFocus)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [user])
+
   // Refresh permissions
   const refreshPermissions = async () => {
     if (!user) return
@@ -311,6 +342,72 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
     }
   }
 
+  // Check user status and handle inactive users (with debouncing)
+  const checkUserStatus = async (force: boolean = false) => {
+    if (!user) return
+    
+    // Debounce: only check if more than 5 seconds have passed since last check
+    const now = Date.now()
+    if (!force && (now - lastStatusCheck) < 5000) {
+      return
+    }
+    
+    setLastStatusCheck(now)
+    
+    try {
+      const token = localStorage.getItem('cms_token')
+      if (!token) return
+
+      const response = await fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.status === 403) {
+        const errorData = await response.json()
+        if (errorData.status === 'inactive') {
+          // User is inactive, log them out and redirect to login
+          logout()
+          // Store the inactive message for the login page
+          localStorage.setItem('inactive_message', errorData.message || 'Your account has been deactivated. Please contact an administrator.')
+          return
+        }
+      }
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          // Update user data with latest status
+          const updatedUser = { ...user, ...data.data }
+          setUser(updatedUser)
+          localStorage.setItem('cms_user', JSON.stringify(updatedUser))
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user status:', error)
+    }
+  }
+
+  // Check status on API errors (401/403) - can be called from anywhere
+  const checkStatusOnApiError = async (response: Response) => {
+    if (response.status === 401 || response.status === 403) {
+      try {
+        const errorData = await response.json()
+        if (errorData.status === 'inactive') {
+          logout()
+          localStorage.setItem('inactive_message', errorData.message || 'Your account has been deactivated. Please contact an administrator.')
+          return true // Indicates user was logged out
+        }
+      } catch (error) {
+        // If we can't parse the error, still check status
+        await checkUserStatus()
+      }
+    }
+    return false
+  }
+
   const value: UserContextType = {
     user,
     userPermissions,
@@ -320,7 +417,9 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
     logout,
     refreshUserData,
     refreshPermissions,
-    updateUser
+    updateUser,
+    checkUserStatus,
+    checkStatusOnApiError
   }
 
   return (

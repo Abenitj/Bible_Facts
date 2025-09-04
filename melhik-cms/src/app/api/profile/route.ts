@@ -12,10 +12,19 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, username: true, firstName: true, lastName: true, email: true, role: true, avatarUrl: true }
+      select: { id: true, username: true, firstName: true, lastName: true, email: true, role: true, status: true, avatarUrl: true }
     })
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    // Check if user is active
+    if (user.status !== 'active') {
+      return NextResponse.json({ 
+        error: 'Account inactive', 
+        message: 'Your account has been deactivated. Please contact an administrator.',
+        status: 'inactive'
+      }, { status: 403 })
+    }
 
     return NextResponse.json({ success: true, data: user })
   } catch (error) {
@@ -112,7 +121,7 @@ export async function PUT(request: NextRequest) {
     const updated = await prisma.user.update({
       where: { id: payload.userId },
       data: updates,
-      select: { id: true, username: true, firstName: true, lastName: true, email: true, role: true, avatarUrl: true }
+      select: { id: true, username: true, firstName: true, lastName: true, email: true, role: true, status: true, avatarUrl: true }
     })
 
     return NextResponse.json({ success: true, data: updated })

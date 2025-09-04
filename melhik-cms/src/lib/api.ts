@@ -63,7 +63,8 @@ export const authenticatedApiCall = async (
     return {
       success: response.ok,
       data: data,
-      error: data.error || null
+      error: data.error || null,
+      response: response // Include response for status checking
     }
   } catch (error) {
     console.error('API call failed:', error);
@@ -73,5 +74,33 @@ export const authenticatedApiCall = async (
       error: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`
     }
   }
+}
+
+// Enhanced API call with automatic status checking
+export const smartApiCall = async (
+  endpoint: string,
+  options: RequestInit = {},
+  checkStatusOnError?: (response: Response) => Promise<boolean>
+): Promise<Response> => {
+  const response = await apiCall(endpoint, options)
+  
+  // Check for inactive user on 401/403 errors
+  if (checkStatusOnError && (response.status === 401 || response.status === 403)) {
+    const wasLoggedOut = await checkStatusOnError(response)
+    if (wasLoggedOut) {
+      // User was logged out due to inactive status
+      // Return a special response to indicate this
+      return new Response(JSON.stringify({
+        error: 'Account inactive',
+        message: 'Your account has been deactivated. Please contact an administrator.',
+        status: 'inactive'
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+  }
+  
+  return response
 }
 
