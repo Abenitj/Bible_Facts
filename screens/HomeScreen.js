@@ -250,55 +250,6 @@ const HomeScreen = ({ navigation }) => {
           return null;
         })()}
 
-        {/* Recent Bookmarks */}
-        {!isSearching && (() => {
-          const recentBookmarks = getRecentBookmarks(3);
-          if (recentBookmarks.length > 0) {
-            return (
-              <View style={[styles.bookmarksContainer, { 
-                backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)'
-              }]}>
-                <View style={styles.bookmarksHeader}>
-                  <Ionicons name="bookmark" size={24} color="#F59E0B" />
-                  <AmharicText variant="subheading" style={[styles.bookmarksTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '700' }]}>
-                    የቅርብ ጊዜ የተመዘገቡ
-                  </AmharicText>
-                </View>
-                {recentBookmarks.map((bookmark, index) => (
-                  <TouchableOpacity
-                    key={bookmark.id}
-                    style={styles.bookmarkItem}
-                    onPress={() => {
-                      // Find the religion and navigate to the topic
-                      const religion = religions.find(r => r.id === bookmark.religionId);
-                      if (religion) {
-                        navigation.navigate('Topics', { religion });
-                        // Then navigate to the specific topic
-                        setTimeout(() => {
-                          navigation.navigate('TopicDetail', { 
-                            religion, 
-                            topicId: bookmark.id 
-                          });
-                        }, 100);
-                      }
-                    }}
-                  >
-                    <View style={styles.bookmarkContent}>
-                      <AmharicText variant="body" style={[styles.bookmarkTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '600' }]}>
-                        {bookmark.title}
-                      </AmharicText>
-                      <AmharicText variant="caption" style={[styles.bookmarkReligion, { color: isDarkMode ? colors.textSecondary : '#374151', fontWeight: '500' }]}>
-                        {bookmark.religionName}
-                      </AmharicText>
-                    </View>
-                    <Ionicons name="chevron-forward" size={16} color={isDarkMode ? colors.textSecondary : '#374151'} />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            );
-          }
-          return null;
-        })()}
 
         {/* Image Slider */}
         <ImageSlider />
@@ -401,47 +352,6 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-  },
-  bookmarksContainer: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  bookmarksHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    paddingBottom: 8,
-  },
-  bookmarksTitle: {
-    marginLeft: 12,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  bookmarkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  bookmarkContent: {
-    flex: 1,
-  },
-  bookmarkTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  bookmarkReligion: {
-    fontSize: 12,
   },
   emptyStateSection: {
     paddingHorizontal: 16,

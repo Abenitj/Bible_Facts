@@ -12,12 +12,14 @@ import { BookmarksProvider } from './src/contexts/BookmarksContext';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
+import BookmarksScreen from './screens/BookmarksScreen';
 import TopicsScreen from './screens/TopicsScreen';
 import TopicDetailScreen from './screens/TopicDetailScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
 
 // Main App with Bottom Tab Navigation
 function MainApp() {
@@ -34,56 +36,36 @@ function MainApp() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Bookmarks') {
+            iconName = focused ? 'bookmark' : 'bookmark-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
           }
 
           return <Ionicons name={iconName} size={24} color={color} />;
         },
-        tabBarActiveTintColor: isDarkMode ? '#60A5FA' : '#3B82F6',
-        tabBarInactiveTintColor: isDarkMode ? '#9CA3AF' : '#6B7280',
+        tabBarActiveTintColor: isDarkMode ? '#60A5FA' : '#2563EB',
+        tabBarInactiveTintColor: isDarkMode ? '#6B7280' : '#9CA3AF',
         tabBarStyle: {
-          backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: isDarkMode ? '#374151' : '#E5E7EB',
-          paddingBottom: Math.max(insets.bottom, 10),
-          paddingTop: 8,
-          height: 50 + Math.max(insets.bottom, 10),
+          backgroundColor: isDarkMode ? '#111827' : '#F9FAFB',
+          borderTopWidth: 0,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 12,
+          height: 70 + Math.max(insets.bottom, 8),
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          elevation: 8,
-          shadowColor: '#000000',
-          shadowOffset: {
-            width: 0,
-            height: -2,
-          },
-          shadowOpacity: isDarkMode ? 0.3 : 0.1,
-          shadowRadius: 4,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarBackground: () => (
-          <View style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          }} />
-        ),
         tabBarItemStyle: {
-          paddingVertical: 5,
-        },
-        tabBarIconStyle: {
-          marginBottom: 2,
+          paddingVertical: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '500',
-          marginTop: 2,
+          fontWeight: '600',
+          marginTop: 4,
         },
         cardStyle: { 
           backgroundColor: isDarkMode ? '#111827' : '#F9FAFB',
@@ -97,7 +79,15 @@ function MainApp() {
         component={HomeScreen}
         options={{
           title: 'ዋና ገጽ',
-          tabBarLabel: 'Home',
+          tabBarLabel: 'መነሻ',
+        }}
+      />
+      <Tab.Screen 
+        name="Bookmarks" 
+        component={BookmarksScreen}
+        options={{
+          title: 'መዝገቦች',
+          tabBarLabel: 'መዝገቦች',
         }}
       />
       <Tab.Screen 
@@ -105,7 +95,7 @@ function MainApp() {
         component={SettingsScreen}
         options={{
           title: 'ቅንብሮች',
-          tabBarLabel: 'Settings',
+          tabBarLabel: 'ቅንብሮች',
         }}
       />
     </Tab.Navigator>
