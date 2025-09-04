@@ -6,7 +6,6 @@ import Sidebar, { MobileMenu } from '../../components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 import { authenticatedApiCall } from '@/lib/api'
-import ImageUpload from '@/components/ImageUpload'
 
 interface Religion {
   id: number
@@ -14,8 +13,6 @@ interface Religion {
   nameEn: string
   description: string
   color: string
-  imageUrl?: string
-  imageAlt?: string
   createdAt: string
   updatedAt: string
   topics: { id: number; title: string }[]
@@ -26,8 +23,6 @@ interface ReligionFormData {
   nameEn: string
   description: string
   color: string
-  imageUrl: string
-  imageAlt: string
 }
 
 export default function ReligionsPage() {
@@ -39,9 +34,7 @@ export default function ReligionsPage() {
     name: '',
     nameEn: '',
     description: '',
-    color: '#8B4513',
-    imageUrl: '',
-    imageAlt: ''
+    color: '#8B4513'
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -158,9 +151,7 @@ export default function ReligionsPage() {
       name: religion.name,
       nameEn: religion.nameEn || '',
       description: religion.description || '',
-      color: religion.color,
-      imageUrl: religion.imageUrl || '',
-      imageAlt: religion.imageAlt || ''
+      color: religion.color
     })
     setShowForm(true)
   }
@@ -226,9 +217,7 @@ export default function ReligionsPage() {
       name: '',
       nameEn: '',
       description: '',
-      color: '#8B4513',
-      imageUrl: '',
-      imageAlt: ''
+      color: '#8B4513'
     })
     setEditingReligion(null)
     setError('')
@@ -448,15 +437,6 @@ export default function ReligionsPage() {
                   </div>
                 </div>
 
-                <div>
-                  <ImageUpload
-                    value={formData.imageUrl}
-                    altText={formData.imageAlt}
-                    onImageChange={(imageUrl, altText) => setFormData(prev => ({ ...prev, imageUrl, imageAlt: altText }))}
-                    label="Religion Image"
-                    description="Upload an image to represent this religion (optional)"
-                  />
-                </div>
 
                 <div className="flex space-x-3 pt-4">
                   <button
@@ -592,19 +572,10 @@ export default function ReligionsPage() {
                      }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      {religion.imageUrl ? (
-                        <img
-                          src={religion.imageUrl}
-                          alt={religion.imageAlt || religion.name}
-                          className="w-12 h-12 rounded-lg object-cover border"
-                          style={{ borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
-                        />
-                      ) : (
-                        <div
-                          className="w-6 h-6 rounded-full"
-                          style={{ backgroundColor: religion.color }}
-                        ></div>
-                      )}
+                      <div
+                        className="w-6 h-6 rounded-full"
+                        style={{ backgroundColor: religion.color }}
+                      ></div>
                       <div>
                         <h4 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>{religion.name}</h4>
                         {religion.nameEn && (

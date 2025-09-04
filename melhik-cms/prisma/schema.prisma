@@ -13,8 +13,6 @@ model Religion {
   nameEn      String?
   description String?
   color       String   @default("#8B4513")
-  imageUrl    String?  // URL to religion image
-  imageAlt    String?  // Alt text for accessibility
   syncStatus  String   @default("pending") // "pending", "synced"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -31,8 +31,6 @@ export const createReligionSchema = z.object({
   nameEn: z.string().optional(),
   description: z.string().optional(),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, 'Color must be a valid hex color').default('#8B4513'),
-  imageUrl: z.string().url('Image URL must be a valid URL').optional().or(z.literal('')),
-  imageAlt: z.string().optional(),
 })
 
 export const updateReligionSchema = createReligionSchema.partial()

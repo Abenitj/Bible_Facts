@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, nameEn, description, color, imageUrl, imageAlt } = body;
+    const { name, nameEn, description, color } = body;
 
     if (!name || !description) {
       return NextResponse.json(
@@ -92,9 +92,7 @@ export async function POST(request: NextRequest) {
         name,
         nameEn: nameEn || name,
         description,
-        color: color || '#3B82F6',
-        imageUrl: imageUrl || null,
-        imageAlt: imageAlt || null
+        color: color || '#3B82F6'
       },
       select: {
         id: true,
@@ -102,8 +100,6 @@ export async function POST(request: NextRequest) {
         nameEn: true,
         description: true,
         color: true,
-        imageUrl: true,
-        imageAlt: true,
         createdAt: true,
         updatedAt: true
       }
