@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, titleEn, description, religionId } = body;
+    const { title, titleEn, description, religionId, imageUrl, imageAlt } = body;
 
     if (!title || !description || !religionId) {
       return NextResponse.json(
@@ -99,7 +99,9 @@ export async function POST(request: NextRequest) {
         title,
         titleEn: titleEn || title,
         description,
-        religionId: parseInt(religionId)
+        religionId: parseInt(religionId),
+        imageUrl: imageUrl || null,
+        imageAlt: imageAlt || null
       },
       select: {
         id: true,
@@ -107,6 +109,8 @@ export async function POST(request: NextRequest) {
         titleEn: true,
         description: true,
         religionId: true,
+        imageUrl: true,
+        imageAlt: true,
         createdAt: true,
         updatedAt: true
       }

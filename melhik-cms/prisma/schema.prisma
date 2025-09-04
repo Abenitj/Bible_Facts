@@ -13,6 +13,8 @@ model Religion {
   nameEn      String?
   description String?
   color       String   @default("#8B4513")
+  imageUrl    String?  // URL to religion image
+  imageAlt    String?  // Alt text for accessibility
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   topics      Topic[]
@@ -26,6 +28,8 @@ model Topic {
   title       String
   titleEn     String?
   description String?
+  imageUrl    String?      // URL to topic image
+  imageAlt    String?      // Alt text for accessibility
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   details     TopicDetail?
