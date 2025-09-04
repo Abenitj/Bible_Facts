@@ -147,8 +147,6 @@ const TopicDetailScreen = ({ navigation, route }) => {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <AppBar 
           title="ዝርዝር መረጃ"
-          showBack={true}
-          onBackPress={() => navigation.goBack()}
           colors={colors}
         />
         <View style={styles.loadingContainer}>
@@ -166,8 +164,6 @@ const TopicDetailScreen = ({ navigation, route }) => {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <AppBar 
           title="ዝርዝር መረጃ"
-          showBack={true}
-          onBackPress={() => navigation.goBack()}
           colors={colors}
         />
         <View style={styles.emptyContainer}>
@@ -193,8 +189,6 @@ const TopicDetailScreen = ({ navigation, route }) => {
       />
       <AppBar 
         title="ዝርዝር መረጃ"
-        showBack={true}
-        onBackPress={() => navigation.goBack()}
         colors={colors}
       />
 

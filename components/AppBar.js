@@ -48,8 +48,21 @@ const AppBar = ({
       alignItems: 'flex-start',
     },
     backButton: {
-      padding: 8,
-      borderRadius: 20,
+      padding: 12,
+      borderRadius: 24,
+      backgroundColor: themeColors.background + '20',
+      minWidth: 48,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: themeColors.shadow,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
     },
     titleContainer: {
       flex: 1,
@@ -87,7 +100,19 @@ const AppBar = ({
           {showBack ? (
             <TouchableOpacity 
               style={styles.backButton}
-              onPress={onBackPress}
+              onPress={() => {
+                console.log('Back button pressed');
+                if (onBackPress) {
+                  try {
+                    onBackPress();
+                  } catch (error) {
+                    console.error('Error in onBackPress:', error);
+                  }
+                } else {
+                  console.warn('onBackPress not provided');
+                }
+              }}
+              activeOpacity={0.7}
             >
               <Ionicons name="arrow-back" size={24} color={themeColors.textPrimary} />
             </TouchableOpacity>

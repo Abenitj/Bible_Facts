@@ -127,8 +127,6 @@ const TopicsScreen = ({ navigation, route }) => {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <AppBar 
           title={religion.name}
-          showBack={true}
-          onBackPress={() => navigation.goBack()}
           colors={colors}
         />
         <View style={styles.loadingContainer}>
@@ -160,8 +158,6 @@ const TopicsScreen = ({ navigation, route }) => {
       />
       <AppBar 
         title={religion.name}
-        showBack={true}
-        onBackPress={() => navigation.goBack()}
         colors={colors}
       />
 
