@@ -114,11 +114,17 @@ const TopicsScreen = ({ navigation, route }) => {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.emptyContainer}>
-          <Ionicons name="book-outline" size={64} color={colors.textSecondary} />
-          <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+          <Ionicons name="book-outline" size={64} color={isDarkMode ? colors.textSecondary : '#6B7280'} />
+          <AmharicText variant="subheading" style={[styles.emptyTitle, { 
+            color: isDarkMode ? colors.textPrimary : '#111827',
+            fontWeight: '700'
+          }]}>
             ሃይማኖት ይምረጡ
           </AmharicText>
-          <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
+          <AmharicText variant="body" style={[styles.emptyText, { 
+            color: isDarkMode ? colors.textSecondary : '#374151',
+            fontWeight: '500'
+          }]}>
             ርዕሰ መልእክቶችን ለማግኘት ዋና ገጽ ላይ ሃይማኖት ይምረጡ።
           </AmharicText>
         </View>
@@ -134,8 +140,11 @@ const TopicsScreen = ({ navigation, route }) => {
           colors={colors}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <AmharicText variant="body" style={[styles.loadingText, { color: colors.textSecondary }]}>
+          <ActivityIndicator size="large" color={isDarkMode ? colors.primary : '#2563EB'} />
+          <AmharicText variant="body" style={[styles.loadingText, { 
+            color: isDarkMode ? colors.textSecondary : '#374151',
+            fontWeight: '500'
+          }]}>
             Loading topics...
           </AmharicText>
         </View>
@@ -175,7 +184,11 @@ const TopicsScreen = ({ navigation, route }) => {
       />
 
       {/* Professional Header Section with Statistics */}
-      <View style={[styles.headerSection, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
+      <View style={[styles.headerSection, { 
+        backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
+        borderWidth: 0.5,
+        borderColor: 'rgba(0, 0, 0, 0.1)'
+      }]}>
         <View style={styles.headerTop}>
           <View style={[styles.religionBadge, { borderColor: religion.color }]}>
             <AmharicText variant="caption" style={[styles.religionBadgeText, { color: religion.color }]}>
@@ -184,20 +197,29 @@ const TopicsScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.headerStats}>
             <View style={styles.statItem}>
-              <Ionicons name="book-outline" size={16} color={colors.textSecondary} />
-              <AmharicText variant="caption" style={[styles.statText, { color: colors.textSecondary }]}>
+              <Ionicons name="book-outline" size={16} color={isDarkMode ? colors.textSecondary : '#374151'} />
+              <AmharicText variant="caption" style={[styles.statText, { 
+                color: isDarkMode ? colors.textSecondary : '#374151',
+                fontWeight: '600'
+              }]}>
                 {totalTopics}
               </AmharicText>
             </View>
             <View style={styles.statItem}>
-              <Ionicons name="checkmark-circle-outline" size={16} color="#10B981" />
-              <AmharicText variant="caption" style={[styles.statText, { color: '#10B981' }]}>
+              <Ionicons name="checkmark-circle-outline" size={16} color={isDarkMode ? "#10B981" : "#059669"} />
+              <AmharicText variant="caption" style={[styles.statText, { 
+                color: isDarkMode ? "#10B981" : "#059669",
+                fontWeight: '600'
+              }]}>
                 {readTopics}
               </AmharicText>
             </View>
             <View style={styles.statItem}>
-              <Ionicons name="bookmark-outline" size={16} color="#F59E0B" />
-              <AmharicText variant="caption" style={[styles.statText, { color: '#F59E0B' }]}>
+              <Ionicons name="bookmark-outline" size={16} color={isDarkMode ? "#F59E0B" : "#D97706"} />
+              <AmharicText variant="caption" style={[styles.statText, { 
+                color: isDarkMode ? "#F59E0B" : "#D97706",
+                fontWeight: '600'
+              }]}>
                 {bookmarkedTopics}
               </AmharicText>
             </View>
@@ -208,10 +230,16 @@ const TopicsScreen = ({ navigation, route }) => {
         {totalTopics > 0 && (
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
-              <AmharicText variant="body" style={[styles.progressLabel, { color: colors.textSecondary }]}>
+              <AmharicText variant="body" style={[styles.progressLabel, { 
+                color: isDarkMode ? colors.textSecondary : '#374151',
+                fontWeight: '600'
+              }]}>
                 የንባብ ሂደት
               </AmharicText>
-              <AmharicText variant="caption" style={[styles.progressPercentage, { color: colors.primary }]}>
+              <AmharicText variant="caption" style={[styles.progressPercentage, { 
+                color: isDarkMode ? colors.primary : '#2563EB',
+                fontWeight: '700'
+              }]}>
                 {progressPercentage}%
               </AmharicText>
             </View>
@@ -244,11 +272,17 @@ const TopicsScreen = ({ navigation, route }) => {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Ionicons name="document-text-outline" size={64} color={colors.textSecondary} />
-          <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+          <Ionicons name="document-text-outline" size={64} color={isDarkMode ? colors.textSecondary : '#6B7280'} />
+          <AmharicText variant="subheading" style={[styles.emptyTitle, { 
+            color: isDarkMode ? colors.textPrimary : '#111827',
+            fontWeight: '700'
+          }]}>
             ርዕሰ መልእክት{topics.length !== 1 ? 'ዎች' : ''} የሉም
           </AmharicText>
-          <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
+          <AmharicText variant="body" style={[styles.emptyText, { 
+            color: isDarkMode ? colors.textSecondary : '#374151',
+            fontWeight: '500'
+          }]}>
             ለዚህ ሃይማኖት ርዕሰ መልእክት{topics.length !== 1 ? 'ዎች' : ''} በቅርቡ ይጨመራሉ።
           </AmharicText>
         </View>

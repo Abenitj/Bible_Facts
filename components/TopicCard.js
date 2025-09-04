@@ -78,7 +78,9 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
     >
       <TouchableOpacity
         style={[styles.card, { 
-          backgroundColor: 'rgba(55, 65, 81, 0.3)', // Match header background opacity
+          backgroundColor: finalColors.isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
+          borderWidth: 0.5,
+          borderColor: 'rgba(0, 0, 0, 0.1)'
         }]}
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -88,28 +90,40 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
         <View style={styles.content}>
           <View style={styles.headerRow}>
             <View style={styles.titleContainer}>
-              <AmharicText variant="subheading" style={[styles.title, { color: finalColors.textPrimary }]}>
+              <AmharicText variant="subheading" style={[styles.title, { 
+                color: finalColors.isDarkMode ? finalColors.textPrimary : '#111827',
+                fontWeight: '700'
+              }]}>
                 {topic.title}
               </AmharicText>
               <View style={styles.indicators}>
                 {isBookmarked && (
-                  <View style={[styles.bookmarkIndicator, { backgroundColor: '#F59E0B' }]}>
+                  <View style={[styles.bookmarkIndicator, { 
+                    backgroundColor: finalColors.isDarkMode ? '#F59E0B' : '#D97706'
+                  }]}>
                     <Ionicons name="bookmark" size={12} color="white" />
                   </View>
                 )}
                 {isRead && (
-                  <View style={[styles.readIndicator, { backgroundColor: '#10B981' }]}>
+                  <View style={[styles.readIndicator, { 
+                    backgroundColor: finalColors.isDarkMode ? '#10B981' : '#059669'
+                  }]}>
                     <Ionicons name="checkmark" size={16} color="white" />
                   </View>
                 )}
               </View>
             </View>
-            <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
-              <Ionicons name="chevron-forward" size={16} color={finalColors.primary} />
+            <View style={[styles.arrowContainer, { 
+              backgroundColor: finalColors.isDarkMode ? finalColors.primaryLight : '#DBEAFE'
+            }]}>
+              <Ionicons name="chevron-forward" size={16} color={finalColors.isDarkMode ? finalColors.primary : '#2563EB'} />
             </View>
           </View>
           
-          <AmharicText variant="body" style={[styles.description, { color: finalColors.textSecondary }]}>
+          <AmharicText variant="body" style={[styles.description, { 
+            color: finalColors.isDarkMode ? finalColors.textSecondary : '#374151',
+            fontWeight: '500'
+          }]}>
             {topic.description}
           </AmharicText>
           
@@ -117,15 +131,21 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
             <View style={styles.statusContainer}>
               {isRead ? (
                 <View style={styles.statusItem}>
-                  <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                  <AmharicText variant="caption" style={[styles.statusText, { color: '#10B981' }]}>
+                  <Ionicons name="checkmark-circle" size={14} color={finalColors.isDarkMode ? "#10B981" : "#059669"} />
+                  <AmharicText variant="caption" style={[styles.statusText, { 
+                    color: finalColors.isDarkMode ? "#10B981" : "#059669",
+                    fontWeight: '600'
+                  }]}>
                     ተነብቷል
                   </AmharicText>
                 </View>
               ) : (
                 <View style={styles.statusItem}>
-                  <Ionicons name="time-outline" size={14} color={finalColors.textSecondary} />
-                  <AmharicText variant="caption" style={[styles.statusText, { color: finalColors.textSecondary }]}>
+                  <Ionicons name="time-outline" size={14} color={finalColors.isDarkMode ? finalColors.textSecondary : '#6B7280'} />
+                  <AmharicText variant="caption" style={[styles.statusText, { 
+                    color: finalColors.isDarkMode ? finalColors.textSecondary : '#6B7280',
+                    fontWeight: '500'
+                  }]}>
                     አልተነበበም
                   </AmharicText>
                 </View>
@@ -133,7 +153,10 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
             </View>
             
             <View style={styles.actionHint}>
-              <AmharicText variant="caption" style={[styles.hintText, { color: finalColors.textSecondary }]}>
+              <AmharicText variant="caption" style={[styles.hintText, { 
+                color: finalColors.isDarkMode ? finalColors.textSecondary : '#6B7280',
+                fontWeight: '500'
+              }]}>
                 ለማንበብ ይንኩ
               </AmharicText>
             </View>
