@@ -111,9 +111,28 @@ const TopicDetailScreen = ({ navigation, route }) => {
     if (!topic || !topicDetail) return;
 
     try {
+      let shareMessage = `${topic.title}\n\nጥያቄ: ${topic.description}\n\nዝርዝር ማብራሪያ:\n${topicDetail.explanation}`;
+
+      // Add Bible verses if available
+      if (topicDetail.bibleVerses && topicDetail.bibleVerses.length > 0) {
+        shareMessage += `\n\nቅዱስ ጥቅሶች:\n${topicDetail.bibleVerses.map(verse => `• ${verse}`).join('\n')}`;
+      }
+
+      // Add key points if available
+      if (topicDetail.keyPoints && topicDetail.keyPoints.length > 0) {
+        shareMessage += `\n\nዋና ዋና ነጥቦች:\n${topicDetail.keyPoints.map(point => `• ${point}`).join('\n')}`;
+      }
+
+      // Add references if available
+      if (topicDetail.references && topicDetail.references.length > 0) {
+        shareMessage += `\n\nማጣቀሻዎች:\n${topicDetail.references.map(ref => `• ${ref.verse}: ${ref.text}`).join('\n')}`;
+      }
+
+      shareMessage += `\n\nMelhik - Evangelism Tool`;
+
       const shareContent = {
         title: topic.title,
-        message: `${topic.title}\n\nጥያቄ: ${topic.description}\n\nዝርዝር ማብራሪያ:\n${topicDetail.explanation}\n\nMelhik - Evangelism Tool`,
+        message: shareMessage,
         url: 'https://melhik.app',
       };
 
@@ -252,7 +271,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
         {/* Separator */}
         <View style={[styles.separator, { backgroundColor: colors.border }]} />
 
-        {/* Description Section */}
+        {/* Main Explanation Section */}
         <View style={[styles.descriptionSection, { backgroundColor: colors.cardBackground }]}>
           <AmharicText variant="subheading" style={[styles.descriptionTitle, { color: colors.textPrimary }]}>
             ዝርዝር ማብራሪያ
@@ -266,6 +285,81 @@ const TopicDetailScreen = ({ navigation, route }) => {
             />
           </View>
         </View>
+
+        {/* Bible Verses Section */}
+        {topicDetail.bibleVerses && topicDetail.bibleVerses.length > 0 && (
+          <View style={[styles.versesSection, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="book-outline" size={24} color={colors.primary} />
+              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                ቅዱስ ጥቅሶች
+              </AmharicText>
+            </View>
+            
+            <View style={styles.versesList}>
+              {topicDetail.bibleVerses.map((verse, index) => (
+                <View key={index} style={[styles.verseItem, { borderLeftColor: colors.primary }]}>
+                  <AmharicText variant="body" style={[styles.verseText, { color: colors.textSecondary }]}>
+                    {verse}
+                  </AmharicText>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Key Points Section */}
+        {topicDetail.keyPoints && topicDetail.keyPoints.length > 0 && (
+          <View style={[styles.keyPointsSection, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="checkmark-circle-outline" size={24} color={colors.primary} />
+              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                ዋና ዋና ነጥቦች
+              </AmharicText>
+            </View>
+            
+            <View style={styles.keyPointsList}>
+              {topicDetail.keyPoints.map((point, index) => (
+                <View key={index} style={styles.keyPointItem}>
+                  <View style={[styles.keyPointBullet, { backgroundColor: colors.primary }]} />
+                  <AmharicText variant="body" style={[styles.keyPointText, { color: colors.textSecondary }]}>
+                    {point}
+                  </AmharicText>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* References Section */}
+        {topicDetail.references && topicDetail.references.length > 0 && (
+          <View style={[styles.referencesSection, { backgroundColor: colors.cardBackground }]}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="library-outline" size={24} color={colors.primary} />
+              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                ማጣቀሻዎች
+              </AmharicText>
+            </View>
+            
+            <View style={styles.referencesList}>
+              {topicDetail.references.map((reference, index) => (
+                <View key={index} style={[styles.referenceItem, { borderColor: colors.border }]}>
+                  <AmharicText variant="body" style={[styles.referenceVerse, { color: colors.primary }]}>
+                    {reference.verse}
+                  </AmharicText>
+                  <AmharicText variant="body" style={[styles.referenceText, { color: colors.textSecondary }]}>
+                    {reference.text}
+                  </AmharicText>
+                  {reference.explanation && (
+                    <AmharicText variant="body" style={[styles.referenceExplanation, { color: colors.textTertiary }]}>
+                      {reference.explanation}
+                    </AmharicText>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Share Button */}
         <TouchableOpacity 
@@ -408,6 +502,90 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
+  },
+  // New styles for enhanced content sections
+  versesSection: {
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3B82F6',
+  },
+  keyPointsSection: {
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+  },
+  referencesSection: {
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B5CF6',
+  },
+  versesList: {
+    marginTop: 12,
+  },
+  verseItem: {
+    padding: 12,
+    marginBottom: 8,
+    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+  },
+  verseText: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  keyPointsList: {
+    marginTop: 12,
+  },
+  keyPointItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    paddingRight: 8,
+  },
+  keyPointBullet: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 8,
+    marginRight: 12,
+  },
+  keyPointText: {
+    fontSize: 16,
+    lineHeight: 24,
+    flex: 1,
+  },
+  referencesList: {
+    marginTop: 12,
+  },
+  referenceItem: {
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: 'rgba(139, 92, 246, 0.05)',
+  },
+  referenceVerse: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  referenceText: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  referenceExplanation: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'normal',
   },
 });
 
