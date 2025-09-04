@@ -123,11 +123,19 @@ const TopicsScreen = ({ navigation, route }) => {
           setSyncing(true);
           try {
             console.log('Starting sync from topics screen...');
-            await SyncService.performFullSync();
-            await loadTopics(); // Reload topics after sync
-            console.log('Topics synced and reloaded');
+            const result = await SyncService.performFullSync();
+            
+            if (result.success) {
+              console.log('Sync completed successfully:', result.message);
+              await loadTopics(); // Reload topics after sync
+              console.log('Topics synced and reloaded');
+            } else {
+              console.log('Sync failed:', result.message);
+              await loadTopics(); // Still try to load existing data
+            }
           } catch (error) {
             console.error('Sync failed:', error);
+            await loadTopics(); // Still try to load existing data
           } finally {
             setSyncing(false);
           }

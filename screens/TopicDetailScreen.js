@@ -156,11 +156,19 @@ const TopicDetailScreen = ({ navigation, route }) => {
           setSyncing(true);
           try {
             console.log('Starting sync from topic detail screen...');
-            await SyncService.performFullSync();
-            await loadTopicData(); // Reload topic data after sync
-            console.log('Topic data synced and reloaded');
+            const result = await SyncService.performFullSync();
+            
+            if (result.success) {
+              console.log('Sync completed successfully:', result.message);
+              await loadTopicData(); // Reload topic data after sync
+              console.log('Topic data synced and reloaded');
+            } else {
+              console.log('Sync failed:', result.message);
+              await loadTopicData(); // Still try to load existing data
+            }
           } catch (error) {
             console.error('Sync failed:', error);
+            await loadTopicData(); // Still try to load existing data
           } finally {
             setSyncing(false);
           }

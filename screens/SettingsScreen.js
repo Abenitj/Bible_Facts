@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 import AppBar from '../components/AppBar';
+import ErrorModal from '../components/ErrorModal';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
 import { clearAllAppData, getStorageInfo } from '../utils/storage';
@@ -21,6 +22,8 @@ const SettingsScreen = ({ navigation }) => {
   const colors = getColors(isDarkMode);
   const [storageInfo, setStorageInfo] = useState(null);
   const [syncing, setSyncing] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSync = async () => {
     if (syncing) return;
@@ -29,11 +32,22 @@ const SettingsScreen = ({ navigation }) => {
     try {
       console.log('Starting sync from settings...');
       const result = await SyncService.performFullSync();
-      console.log('Sync completed:', result.message);
-      Alert.alert('Sync Complete', 'Content has been synced successfully!');
+      console.log('Sync result:', result);
+      
+      if (result.success) {
+        console.log('Sync completed successfully:', result.message);
+        Alert.alert('Sync Complete', result.message || 'Content has been synced successfully!');
+      } else {
+        console.log('Sync failed:', result.message);
+        // Show error modal for real sync failures
+        setErrorMessage(result.message || 'Failed to sync content. Please try again.');
+        setShowErrorModal(true);
+      }
     } catch (error) {
       console.error('Sync failed:', error);
-      Alert.alert('Sync Failed', 'Failed to sync content. Please try again.');
+      // Show error modal for unexpected errors
+      setErrorMessage('An unexpected error occurred. Please try again.');
+      setShowErrorModal(true);
     } finally {
       setSyncing(false);
     }
@@ -114,6 +128,12 @@ const SettingsScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ErrorModal
+        visible={showErrorModal}
+        title="Sync Error"
+        message={errorMessage}
+        onClose={() => setShowErrorModal(false)}
+      />
       <AppBar 
         title="ቅንብሮች"
         onSyncPress={handleSync}

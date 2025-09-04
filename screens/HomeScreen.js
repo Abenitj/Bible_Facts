@@ -15,6 +15,7 @@ import AmharicText from '../src/components/AmharicText';
 import ImageSlider from '../components/ImageSlider';
 import ReligionCard from '../components/ReligionCard';
 import AppBar from '../components/AppBar';
+import ErrorModal from '../components/ErrorModal';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
@@ -23,6 +24,8 @@ const HomeScreen = ({ navigation }) => {
   const [religions, setReligions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { isDarkMode } = useDarkMode();
   const colors = getColors(isDarkMode);
 
@@ -53,18 +56,32 @@ const HomeScreen = ({ navigation }) => {
     if (refreshing) return;
     
     setRefreshing(true);
+    
     try {
       console.log('Starting sync...');
       
       // Perform full sync to get latest data
       const result = await SyncService.performFullSync();
-      console.log('Sync completed:', result.message);
+      console.log('Sync result:', result);
       
-      // Reload data after sync
-      await loadReligions();
-      console.log('Data reloaded after sync');
+      if (result.success) {
+        console.log('Sync completed successfully:', result.message);
+        // Reload data after successful sync
+        await loadReligions();
+        console.log('Data reloaded after sync');
+      } else {
+        console.log('Sync failed:', result.message);
+        // Show error modal for real sync failures
+        setErrorMessage(result.message || 'Sync failed. Please try again.');
+        setShowErrorModal(true);
+        // Still try to load existing data even if sync fails
+        await loadReligions();
+      }
     } catch (error) {
       console.error('Error syncing:', error);
+      // Show error modal for unexpected errors
+      setErrorMessage('An unexpected error occurred. Please try again.');
+      setShowErrorModal(true);
       // Still try to load existing data even if sync fails
       await loadReligions();
     } finally {
@@ -125,6 +142,12 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ErrorModal
+        visible={showErrorModal}
+        title="Sync Error"
+        message={errorMessage}
+        onClose={() => setShowErrorModal(false)}
+      />
       <AppBar 
         title="Melhik"
         onSyncPress={onRefresh}

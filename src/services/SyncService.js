@@ -67,13 +67,40 @@ class SyncService {
             success: true,
             data: result.data,
             syncTimestamp: result.syncTimestamp,
-            message: result.message
+            message: result.message || 'Content synced successfully'
           };
         }
       }
-      throw new Error(`Failed to download content: ${response.status}`);
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Unable to sync content';
+      if (response.status === 401) {
+        errorMessage = 'Server authentication failed';
+      } else if (response.status === 403) {
+        errorMessage = 'Access denied by server';
+      } else if (response.status === 404) {
+        errorMessage = 'Sync service not found';
+      } else if (response.status === 500) {
+        errorMessage = 'Server error occurred';
+      } else if (response.status === 0 || !response.status) {
+        errorMessage = 'Cannot connect to server';
+      } else {
+        errorMessage = `Server error (${response.status})`;
+      }
+      
+      throw new Error(errorMessage);
     } catch (error) {
       console.error('Content download failed:', error);
+      
+      // Provide user-friendly error messages for network issues
+      if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
+        throw new Error('Cannot connect to server. Please check your internet connection.');
+      } else if (error.message.includes('timeout')) {
+        throw new Error('Connection timed out. Please try again.');
+      } else if (error.message.includes('JSON')) {
+        throw new Error('Invalid response from server');
+      }
+      
       throw error;
     }
   }
@@ -169,10 +196,20 @@ class SyncService {
       const result = await this.downloadContent('0'); // '0' means get all data
       console.log('Full sync completed successfully');
       
-      return result;
+      return {
+        success: true,
+        message: result.message || 'Content synced successfully',
+        data: result.data
+      };
     } catch (error) {
       console.error('Full sync failed:', error);
-      throw error;
+      
+      // Return a user-friendly error instead of throwing
+      return {
+        success: false,
+        message: error.message || 'Sync failed. Please try again.',
+        error: error.message
+      };
     }
   }
 
@@ -184,10 +221,20 @@ class SyncService {
       const result = await this.downloadContent(lastSync);
       console.log('Incremental sync completed successfully');
       
-      return result;
+      return {
+        success: true,
+        message: result.message || 'Content updated successfully',
+        data: result.data
+      };
     } catch (error) {
       console.error('Incremental sync failed:', error);
-      throw error;
+      
+      // Return a user-friendly error instead of throwing
+      return {
+        success: false,
+        message: error.message || 'Update failed. Please try again.',
+        error: error.message
+      };
     }
   }
 
