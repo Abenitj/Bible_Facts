@@ -15,6 +15,8 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.20",
     "expo": "~53.0.22",
+    "expo-constants": "~17.1.7",
+    "expo-dev-client": "~5.2.4",
     "expo-file-system": "~18.1.11",
     "expo-sqlite": "~15.2.14",
     "expo-status-bar": "~2.2.3",
@@ -24,14 +26,12 @@
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
-    "react-native-super-grid": "^6.0.1",
-    "expo-constants": "~17.1.7",
-    "expo-dev-client": "~5.2.4"
+    "react-native-super-grid": "^6.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "typescript": "~5.8.3",
-    "@types/react": "~19.0.10"
+    "@types/react": "~19.0.10",
+    "typescript": "~5.8.3"
   },
   "private": true
 }

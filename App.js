@@ -26,6 +26,7 @@ function MainApp() {
   const insets = useSafeAreaInsets();
   const { isDarkMode } = useDarkMode();
   
+  
   return (
     <Tab.Navigator
       initialRouteName="Home"

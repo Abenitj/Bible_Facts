@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   religionsList: {
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   syncButton: {
     flexDirection: 'row',
