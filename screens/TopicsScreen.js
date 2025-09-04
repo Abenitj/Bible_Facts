@@ -175,7 +175,7 @@ const TopicsScreen = ({ navigation, route }) => {
       />
 
       {/* Professional Header Section with Statistics */}
-      <View style={[styles.headerSection, { backgroundColor: colors.card }]}>
+      <View style={[styles.headerSection, { backgroundColor: 'rgba(55, 65, 81, 0.3)' }]}>
         <View style={styles.headerTop}>
           <View style={[styles.religionBadge, { borderColor: religion.color }]}>
             <AmharicText variant="caption" style={[styles.religionBadgeText, { color: religion.color }]}>
@@ -269,14 +269,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     padding: 20,
     borderRadius: 16,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
   },
   headerTop: {
     flexDirection: 'row',

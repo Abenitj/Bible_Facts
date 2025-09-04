@@ -78,9 +78,7 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
     >
       <TouchableOpacity
         style={[styles.card, { 
-          backgroundColor: finalColors.card,
-          borderBottomColor: finalColors.border,
-          borderLeftColor: finalColors.primary,
+          backgroundColor: 'rgba(55, 65, 81, 0.3)', // Match header background opacity
         }]}
         onPress={onPress}
         onPressIn={handlePressIn}
@@ -101,13 +99,13 @@ const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isB
                 )}
                 {isRead && (
                   <View style={[styles.readIndicator, { backgroundColor: '#10B981' }]}>
-                    <Ionicons name="checkmark" size={14} color="white" />
+                    <Ionicons name="checkmark" size={16} color="white" />
                   </View>
                 )}
               </View>
             </View>
             <View style={[styles.arrowContainer, { backgroundColor: finalColors.primaryLight }]}>
-              <Ionicons name="chevron-forward" size={18} color={finalColors.primary} />
+              <Ionicons name="chevron-forward" size={16} color={finalColors.primary} />
             </View>
           </View>
           
@@ -153,21 +151,13 @@ const styles = StyleSheet.create({
   card: {
     padding: 20,
     borderRadius: 16,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
   },
   content: {
     flex: 1,
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
@@ -235,11 +225,12 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   arrowContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'flex-end',
   },
 });
 
