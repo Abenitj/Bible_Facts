@@ -15,7 +15,7 @@ import AppBar from '../components/AppBar';
 import ErrorModal from '../components/ErrorModal';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { getColors } from '../src/theme/colors';
-import { clearAllAppData, getStorageInfo } from '../utils/storage';
+import { getStorageInfo } from '../utils/storage';
 import SyncService from '../src/services/SyncService';
 
 const SettingsScreen = ({ navigation }) => {
@@ -54,29 +54,6 @@ const SettingsScreen = ({ navigation }) => {
     }
   };
 
-  const handleClearData = async () => {
-    Alert.alert(
-      'Clear All Data',
-      'This will remove all synced content and reset the app to its initial state. This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await clearAllAppData();
-              await SyncService.clearStoredContent();
-              Alert.alert('Success', 'All app data has been cleared.');
-            } catch (error) {
-              console.error('Error clearing data:', error);
-              Alert.alert('Error', 'Failed to clear data. Please try again.');
-            }
-          }
-        }
-      ]
-    );
-  };
 
   const handleStorageInfo = async () => {
     try {
@@ -177,13 +154,6 @@ const SettingsScreen = ({ navigation }) => {
             onPress: handleStorageInfo
           })}
           
-          {renderSettingItem({
-            icon: 'trash',
-            title: 'Clear All Data',
-            subtitle: 'Remove all synced content and reset app',
-            onPress: handleClearData,
-            isDestructive: true
-          })}
         </View>
 
         {/* Footer */}
