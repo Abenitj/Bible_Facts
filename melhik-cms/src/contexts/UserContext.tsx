@@ -298,15 +298,21 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
     // Check status immediately on login (force check)
     checkUserStatus(true)
 
-    // Check status when user returns to the tab (window focus)
+    // Check status when user returns to the tab (window focus) - with debouncing
     const handleWindowFocus = () => {
-      checkUserStatus(true) // Force check when user returns
+      const now = Date.now()
+      if (now - lastStatusCheck > 10000) { // Only if more than 10 seconds since last check
+        checkUserStatus(true)
+      }
     }
 
-    // Check status when user navigates (visibility change)
+    // Check status when user navigates (visibility change) - with debouncing
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        checkUserStatus(true) // Force check when tab becomes visible
+        const now = Date.now()
+        if (now - lastStatusCheck > 10000) { // Only if more than 10 seconds since last check
+          checkUserStatus(true)
+        }
       }
     }
 
@@ -346,9 +352,9 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
   const checkUserStatus = async (force: boolean = false) => {
     if (!user) return
     
-    // Debounce: only check if more than 5 seconds have passed since last check
+    // Debounce: only check if more than 30 seconds have passed since last check
     const now = Date.now()
-    if (!force && (now - lastStatusCheck) < 5000) {
+    if (!force && (now - lastStatusCheck) < 30000) {
       return
     }
     
@@ -379,10 +385,14 @@ export const UserProvider: ReactNode = ({ children }: UserProviderProps) => {
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.data) {
-          // Update user data with latest status
+          // Only update if there are actual changes to prevent unnecessary re-renders
           const updatedUser = { ...user, ...data.data }
-          setUser(updatedUser)
-          localStorage.setItem('cms_user', JSON.stringify(updatedUser))
+          const hasChanges = JSON.stringify(user) !== JSON.stringify(updatedUser)
+          
+          if (hasChanges) {
+            setUser(updatedUser)
+            localStorage.setItem('cms_user', JSON.stringify(updatedUser))
+          }
         }
       }
     } catch (error) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import { useUser } from '@/contexts/UserContext'
@@ -13,9 +13,19 @@ export default function Dashboard() {
   const [topics, setTopics] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [dataLoaded, setDataLoaded] = useState(false)
+  const loadingRef = useRef(false)
   const router = useRouter()
   const { darkMode } = useDarkMode()
   const { user, userPermissions, logout } = useUser()
+
+  // Reset data loaded state when user changes
+  useEffect(() => {
+    if (user) {
+      setDataLoaded(false)
+      setLoading(true)
+    }
+  }, [user?.id])
 
   // Debug: Log user data changes
   useEffect(() => {
@@ -37,14 +47,18 @@ export default function Dashboard() {
     }
   }, [user, userPermissions, router])
 
-  // Load dashboard data
+  // Load dashboard data (only once when user is available)
   useEffect(() => {
     const loadData = async () => {
-      if (!user) return
+      if (!user || dataLoaded || loadingRef.current) return
+      
+      loadingRef.current = true
       
       try {
         const token = localStorage.getItem('cms_token')
         if (!token) return
+
+        console.log('Dashboard: Loading data for user:', user.id)
 
         // Load religions
         const religionsRes = await fetch('/api/religions', {
@@ -92,18 +106,30 @@ export default function Dashboard() {
             console.error('Failed to fetch users:', usersRes.status, usersRes.statusText)
           }
         }
+
+        setDataLoaded(true)
       } catch (error) {
         console.error('Error loading dashboard data:', error)
       } finally {
         setLoading(false)
+        loadingRef.current = false
       }
     }
 
     loadData()
-  }, [user])
+  }, [user?.id, userPermissions?.permissions]) // Only depend on user ID and permissions, not the entire user object
+
+  // Manual refresh function
+  const refreshData = () => {
+    setDataLoaded(false)
+    setLoading(true)
+    loadingRef.current = false
+  }
 
   // Handle logout
   const handleLogout = () => {
+    setDataLoaded(false)
+    setLoading(true)
     logout()
   }
 
