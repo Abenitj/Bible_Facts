@@ -64,6 +64,10 @@ export default function ContentEditorPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [versionHistory, setVersionHistory] = useState<VersionHistory | null>(null)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterReligion, setFilterReligion] = useState<number | 'all'>('all')
+  const [filterContentStatus, setFilterContentStatus] = useState<'all' | 'with-content' | 'without-content'>('all')
+  const [sortBy, setSortBy] = useState<'title' | 'religion' | 'content-status'>('title')
   const [user, setUser] = useState<{ 
     username: string; 
     role: string; 
@@ -322,6 +326,54 @@ export default function ContentEditorPage() {
     router.push('/login')
   }
 
+  // Filter and sort topics
+  const filteredAndSortedTopics = topics
+    .filter(topic => {
+      // Search filter
+      const matchesSearch = !searchTerm || 
+        topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (topic.titleEn && topic.titleEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (topic.description && topic.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        topic.religion?.name.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      // Religion filter
+      const matchesReligion = filterReligion === 'all' || topic.religionId === filterReligion
+      
+      // Content status filter
+      const matchesContentStatus = filterContentStatus === 'all' || 
+        (filterContentStatus === 'with-content' && topic.details) ||
+        (filterContentStatus === 'without-content' && !topic.details)
+      
+      return matchesSearch && matchesReligion && matchesContentStatus
+    })
+    .sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case 'title':
+          comparison = a.title.localeCompare(b.title)
+          break
+        case 'religion':
+          comparison = (a.religion?.name || '').localeCompare(b.religion?.name || '')
+          break
+        case 'content-status':
+          // Sort by content status: topics without content first, then with content
+          if (a.details && !b.details) comparison = 1
+          else if (!a.details && b.details) comparison = -1
+          else comparison = a.title.localeCompare(b.title)
+          break
+      }
+      
+      return comparison
+    })
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setFilterReligion('all')
+    setFilterContentStatus('all')
+    setSortBy('title')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
@@ -427,18 +479,123 @@ export default function ContentEditorPage() {
                   <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>Select Topic</h3>
                   <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>Choose a topic to edit content</p>
                 </div>
+                
+                {/* Search and Filter Controls */}
+                <div className="px-6 py-4 border-b space-y-3" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
+                  {/* Search Input */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search topics..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    />
+                  </div>
+
+                  {/* Filter Controls */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={filterReligion}
+                      onChange={(e) => setFilterReligion(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+                      className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    >
+                      <option value="all">All Religions</option>
+                      {topics.reduce((acc, topic) => {
+                        if (!acc.find(r => r.id === topic.religion.id)) {
+                          acc.push(topic.religion)
+                        }
+                        return acc
+                      }, [] as typeof topics[0]['religion'][]).map((religion) => (
+                        <option key={religion.id} value={religion.id}>
+                          {religion.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={filterContentStatus}
+                      onChange={(e) => setFilterContentStatus(e.target.value as 'all' | 'with-content' | 'without-content')}
+                      className="w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    >
+                      <option value="all">All Topics</option>
+                      <option value="with-content">With Content</option>
+                      <option value="without-content">Without Content</option>
+                    </select>
+                  </div>
+
+                  {/* Sort and Clear Controls */}
+                  <div className="flex gap-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as 'title' | 'religion' | 'content-status')}
+                      className="flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                    >
+                      <option value="title">Sort by Title</option>
+                      <option value="religion">Sort by Religion</option>
+                      <option value="content-status">Sort by Content Status</option>
+                    </select>
+
+                    {(searchTerm || filterReligion !== 'all' || filterContentStatus !== 'all') && (
+                      <button
+                        onClick={clearFilters}
+                        className="px-2 py-1 text-xs border rounded transition-colors"
+                        style={{
+                          backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                          color: darkMode ? '#d1d5db' : '#374151'
+                        }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Results Summary */}
+                  <div className="text-xs" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    Showing {filteredAndSortedTopics.length} of {topics.length} topics
+                  </div>
+                </div>
+
                 <div className="p-6">
-                  {topics.length === 0 ? (
+                  {filteredAndSortedTopics.length === 0 ? (
                     <div className="text-center py-8">
                       <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                            style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
-                      <p style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No topics found</p>
+                      <p style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
+                        {topics.length === 0 ? 'No topics found' : 'No topics match your search criteria'}
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {topics.map((topic) => (
+                      {filteredAndSortedTopics.map((topic) => (
                         <button
                           key={topic.id}
                           onClick={() => handleTopicSelect(topic)}

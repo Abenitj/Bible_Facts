@@ -23,7 +23,24 @@ export const BookmarksProvider = ({ children }) => {
     try {
       const savedBookmarks = await AsyncStorage.getItem('bookmarks');
       if (savedBookmarks) {
-        setBookmarks(JSON.parse(savedBookmarks));
+        const parsedBookmarks = JSON.parse(savedBookmarks);
+        
+        // Filter out invalid bookmarks and save cleaned data
+        const validBookmarks = parsedBookmarks.filter(bookmark => 
+          bookmark && 
+          bookmark.id && 
+          bookmark.title && 
+          bookmark.religionId && 
+          bookmark.religionName
+        );
+        
+        // If we found invalid bookmarks, clean up storage
+        if (validBookmarks.length !== parsedBookmarks.length) {
+          console.log(`BookmarksContext: Cleaned up ${parsedBookmarks.length - validBookmarks.length} invalid bookmarks`);
+          await AsyncStorage.setItem('bookmarks', JSON.stringify(validBookmarks));
+        }
+        
+        setBookmarks(validBookmarks);
       }
     } catch (error) {
       console.error('Error loading bookmarks:', error);
@@ -32,6 +49,17 @@ export const BookmarksProvider = ({ children }) => {
 
   const addBookmark = async (topic) => {
     try {
+      // Validate required fields
+      if (!topic.id || !topic.title || !topic.religionId || !topic.religionName) {
+        console.warn('BookmarksContext: Cannot bookmark - missing required fields:', {
+          id: topic.id,
+          title: topic.title,
+          religionId: topic.religionId,
+          religionName: topic.religionName
+        });
+        return;
+      }
+
       const bookmark = {
         id: topic.id,
         title: topic.title,
@@ -63,7 +91,22 @@ export const BookmarksProvider = ({ children }) => {
     }
   };
 
-  const toggleBookmark = async (topic) => {
+  const toggleBookmark = async (topicOrId, title, religionId, religionName) => {
+    // Handle both calling patterns: toggleBookmark(topic) or toggleBookmark(id, title, religionId, religionName)
+    let topic;
+    if (typeof topicOrId === 'object' && topicOrId.id) {
+      // Called with topic object
+      topic = topicOrId;
+    } else {
+      // Called with individual parameters
+      topic = {
+        id: topicOrId,
+        title: title,
+        religionId: religionId,
+        religionName: religionName
+      };
+    }
+
     if (isBookmarked(topic.id)) {
       await removeBookmark(topic.id);
     } else {

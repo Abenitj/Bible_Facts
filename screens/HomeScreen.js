@@ -225,31 +225,59 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Reading Progress Summary */}
+
+
+        {/* Simple Read Progress Header */}
         {!isSearching && (() => {
           const stats = getReadingStats();
-          if (stats.totalRead > 0) {
-            return (
-              <View style={[styles.progressContainer, { 
-                backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
-                borderWidth: 0.5,
-                borderColor: 'rgba(0, 0, 0, 0.1)'
-              }]}>
-                <View style={styles.progressHeader}>
-                  <Ionicons name="book" size={24} color={colors.primary} />
-                  <AmharicText variant="subheading" style={[styles.progressTitle, { color: isDarkMode ? colors.textPrimary : '#111827', fontWeight: '700' }]}>
-                    የንባብ ሂደት
-                  </AmharicText>
-                </View>
-                <AmharicText variant="body" style={[styles.progressText, { color: isDarkMode ? colors.textSecondary : '#374151', fontWeight: '500' }]}>
-                  {stats.totalRead} ርዕሰ መልእክት{stats.totalRead !== 1 ? 'ዎች' : ''} ተነብተዋል
+          const totalTopics = stats.totalTopics || 0;
+          const readTopics = stats.totalRead || 0;
+          const readPercentage = totalTopics > 0 ? Math.round((readTopics / totalTopics) * 100) : 0;
+
+          return (
+            <View style={[styles.readProgressHeader, { 
+              backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
+              borderWidth: 0.5,
+              borderColor: 'rgba(0, 0, 0, 0.1)'
+            }]}>
+              <View style={styles.readProgressTitle}>
+                <Ionicons name="checkmark-circle" size={24} color={isDarkMode ? "#10B981" : "#059669"} />
+                <AmharicText variant="subheading" style={[styles.readProgressTitleText, { 
+                  color: isDarkMode ? colors.textPrimary : '#111827',
+                  fontWeight: '700'
+                }]}>
+                  የንባብ ሂደት
                 </AmharicText>
               </View>
-            );
-          }
-          return null;
+              
+              <View style={styles.readProgressContent}>
+                <AmharicText variant="body" style={[styles.readProgressText, { 
+                  color: isDarkMode ? colors.textSecondary : '#374151',
+                  fontWeight: '600'
+                }]}>
+                  {readTopics} ርዕሰ መልእክት{readTopics !== 1 ? 'ዎች' : ''} ተነብተዋል
+                </AmharicText>
+                
+                {totalTopics > 0 && (
+                  <View style={styles.readProgressBarContainer}>
+                    <View style={[styles.readProgressBar, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.2)' : 'rgba(5, 150, 105, 0.2)' }]}>
+                      <View style={[styles.readProgressFill, { 
+                        width: `${readPercentage}%`,
+                        backgroundColor: isDarkMode ? "#10B981" : "#059669"
+                      }]} />
+                    </View>
+                    <AmharicText variant="caption" style={[styles.readProgressPercentage, { 
+                      color: isDarkMode ? "#10B981" : "#059669",
+                      fontWeight: '700'
+                    }]}>
+                      {readPercentage}%
+                    </AmharicText>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
         })()}
-
 
         {/* Image Slider */}
         <ImageSlider />
@@ -419,6 +447,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  
+  // Simple Read Progress Header Styles
+  readProgressHeader: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    padding: 16,
+  },
+  readProgressTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  readProgressTitleText: {
+    marginLeft: 8,
+    fontSize: 18,
+  },
+  readProgressContent: {
+    alignItems: 'center',
+  },
+  readProgressText: {
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  readProgressBarContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  readProgressBar: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  readProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  readProgressPercentage: {
+    fontSize: 16,
   },
 });
 

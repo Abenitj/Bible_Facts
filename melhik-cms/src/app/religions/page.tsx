@@ -42,6 +42,10 @@ export default function ReligionsPage() {
   const [deletingReligion, setDeletingReligion] = useState<Religion | null>(null)
   const [activeSection, setActiveSection] = useState('religions')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterTopicCount, setFilterTopicCount] = useState<'all' | 'with-topics' | 'without-topics'>('all')
+  const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'topicCount'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [user, setUser] = useState<{ 
     username: string; 
     role: string; 
@@ -228,6 +232,47 @@ export default function ReligionsPage() {
     setShowForm(false)
   }
 
+  // Filter and sort religions
+  const filteredAndSortedReligions = religions
+    .filter(religion => {
+      // Search filter
+      const matchesSearch = !searchTerm || 
+        religion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (religion.nameEn && religion.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (religion.description && religion.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      
+      // Topic count filter
+      const matchesTopicCount = filterTopicCount === 'all' || 
+        (filterTopicCount === 'with-topics' && (religion.topics?.length || 0) > 0) ||
+        (filterTopicCount === 'without-topics' && (religion.topics?.length || 0) === 0)
+      
+      return matchesSearch && matchesTopicCount
+    })
+    .sort((a, b) => {
+      let comparison = 0
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name)
+          break
+        case 'createdAt':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          break
+        case 'topicCount':
+          comparison = (a.topics?.length || 0) - (b.topics?.length || 0)
+          break
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison
+    })
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setFilterTopicCount('all')
+    setSortBy('name')
+    setSortOrder('asc')
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: darkMode ? '#111827' : '#f9fafb' }}>
@@ -313,29 +358,132 @@ export default function ReligionsPage() {
           </div>
         )}
 
-        {/* Add Religion Button - Right Side */}
-        <div className="flex justify-end mb-6">
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-4 py-2 rounded-md transition-colors flex items-center text-sm"
-            style={{
-              backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
-              color: darkMode ? '#ffffff' : '#1e40af',
-              border: darkMode ? 'none' : '1px solid #93c5fd'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
-            }}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="hidden sm:inline">Add Religion</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+        {/* Search and Filter Controls */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Input */}
+            <div className="flex-1">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search religions, descriptions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{
+                    backgroundColor: darkMode ? '#374151' : '#ffffff',
+                    borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                    color: darkMode ? '#ffffff' : '#000000'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Topic Count Filter */}
+            <div className="lg:w-48">
+              <select
+                value={filterTopicCount}
+                onChange={(e) => setFilterTopicCount(e.target.value as 'all' | 'with-topics' | 'without-topics')}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+              >
+                <option value="all">All Religions</option>
+                <option value="with-topics">With Topics</option>
+                <option value="without-topics">Without Topics</option>
+              </select>
+            </div>
+
+            {/* Sort Controls */}
+            <div className="flex gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'createdAt' | 'topicCount')}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+              >
+                <option value="name">Sort by Name</option>
+                <option value="createdAt">Sort by Date</option>
+                <option value="topicCount">Sort by Topic Count</option>
+              </select>
+              
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="px-3 py-2 border rounded-md transition-colors flex items-center"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+                title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {sortOrder === 'asc' ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  )}
+                </svg>
+              </button>
+            </div>
+
+            {/* Clear Filters */}
+            {(searchTerm || filterTopicCount !== 'all') && (
+              <button
+                onClick={clearFilters}
+                className="px-3 py-2 text-sm border rounded-md transition-colors"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#f3f4f6',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#d1d5db' : '#374151'
+                }}
+              >
+                Clear
+              </button>
+            )}
+
+            {/* Add Religion Button */}
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2 rounded-md transition-colors flex items-center text-sm"
+              style={{
+                backgroundColor: darkMode ? '#3b82f6' : '#dbeafe',
+                color: darkMode ? '#ffffff' : '#1e40af',
+                border: darkMode ? 'none' : '1px solid #93c5fd'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#2563eb' : '#bfdbfe'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = darkMode ? '#3b82f6' : '#dbeafe'
+              }}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="hidden sm:inline">Add Religion</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          </div>
+
+          {/* Results Summary */}
+          <div className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+            Showing {filteredAndSortedReligions.length} of {religions.length} religions
+            {searchTerm && ` matching "${searchTerm}"`}
+            {filterTopicCount !== 'all' && ` with ${filterTopicCount === 'with-topics' ? 'topics' : 'no topics'}`}
+          </div>
         </div>
 
         {/* Religion Form */}
@@ -527,11 +675,11 @@ export default function ReligionsPage() {
           <div className="px-6 py-4 border-b" 
                style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
             <h3 className="text-lg font-medium" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
-              All Religions ({religions.length})
+              Religions ({filteredAndSortedReligions.length})
             </h3>
           </div>
           
-          {religions.length === 0 ? (
+          {filteredAndSortedReligions.length === 0 ? (
             <div className="p-8 text-center">
               <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                    style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>

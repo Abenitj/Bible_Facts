@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
 import AppBar from '../components/AppBar';
@@ -23,30 +24,76 @@ const BookmarksScreen = ({ navigation }) => {
   const { getRecentBookmarks, toggleBookmark } = useBookmarks();
   const colors = getColors(isDarkMode);
 
-  useEffect(() => {
-    loadBookmarks();
-  }, []);
-
-  const loadBookmarks = async () => {
+  const loadBookmarks = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       const allBookmarks = getRecentBookmarks(100); // Get all bookmarks
-      setBookmarks(allBookmarks);
+      
+      // Filter out invalid bookmarks
+      const validBookmarks = (allBookmarks || []).filter(bookmark => 
+        bookmark && 
+        bookmark.id && 
+        bookmark.title && 
+        bookmark.religionId && 
+        bookmark.religionName
+      );
+      
+      console.log('BookmarksScreen: Loaded bookmarks:', validBookmarks.length, 'valid out of', (allBookmarks || []).length, 'total');
+      setBookmarks(validBookmarks);
     } catch (error) {
       console.error('Error loading bookmarks:', error);
       setBookmarks([]);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
+  const refreshBookmarks = async () => {
+    // Silent refresh without showing loading state
+    await loadBookmarks(false);
+  };
+
+  useEffect(() => {
+    loadBookmarks();
+  }, []);
+
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      // Refresh bookmarks when screen comes into focus
+      console.log('BookmarksScreen: Auto-refreshing bookmarks on focus');
+      
+      // Immediate refresh
+      const allBookmarks = getRecentBookmarks(100);
+      setBookmarks(allBookmarks);
+      console.log('BookmarksScreen: Updated bookmarks count:', allBookmarks.length);
+      
+      // Also do an async refresh to ensure we have the latest data
+      setTimeout(() => {
+        const latestBookmarks = getRecentBookmarks(100);
+        setBookmarks(latestBookmarks);
+        console.log('BookmarksScreen: Final bookmarks count:', latestBookmarks.length);
+      }, 100);
+    }, [])
+  );
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadBookmarks();
+    await refreshBookmarks();
     setRefreshing(false);
   };
 
   const handleBookmarkPress = (bookmark) => {
+    // Safety check for bookmark
+    if (!bookmark || !bookmark.id) {
+      console.warn('BookmarksScreen: Cannot navigate - invalid bookmark:', bookmark);
+      return;
+    }
+
     // Navigate to the topic detail
     const religion = { id: bookmark.religionId, name: bookmark.religionName };
     navigation.navigate('TopicDetail', { 
@@ -61,57 +108,71 @@ const BookmarksScreen = ({ navigation }) => {
   };
 
   const handleRemoveBookmark = (bookmark) => {
+    // Safety check for bookmark
+    if (!bookmark || !bookmark.id) {
+      console.warn('BookmarksScreen: Cannot remove - invalid bookmark:', bookmark);
+      return;
+    }
+
     toggleBookmark(bookmark.id, bookmark.title, bookmark.religionId, bookmark.religionName);
     // Remove from local state
-    setBookmarks(prev => prev.filter(b => b.id !== bookmark.id));
+    setBookmarks(prev => prev.filter(b => b && b.id && b.id !== bookmark.id));
   };
 
-  const renderBookmarkItem = ({ item, index }) => (
-    <View style={[styles.bookmarkCard, { 
-      backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
-      borderWidth: 0.5,
-      borderColor: 'rgba(0, 0, 0, 0.1)'
-    }]}>
-      <TouchableOpacity
-        style={styles.bookmarkContent}
-        onPress={() => handleBookmarkPress(item)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.bookmarkHeader}>
-          <View style={styles.bookmarkInfo}>
-            <AmharicText variant="subheading" style={[styles.bookmarkTitle, { 
-              color: isDarkMode ? colors.textPrimary : '#111827', 
-              fontWeight: '700' 
-            }]}>
-              {item.title}
-            </AmharicText>
-            <AmharicText variant="caption" style={[styles.bookmarkReligion, { 
-              color: isDarkMode ? colors.textSecondary : '#374151', 
-              fontWeight: '500' 
-            }]}>
-              {item.religionName}
-            </AmharicText>
+  const renderBookmarkItem = ({ item, index }) => {
+    // Safety check for item
+    if (!item || !item.id) {
+      console.warn('BookmarksScreen: Invalid bookmark item:', item);
+      return null;
+    }
+
+    return (
+      <View style={[styles.bookmarkCard, { 
+        backgroundColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(55, 65, 81, 0.05)',
+        borderWidth: 0.5,
+        borderColor: 'rgba(0, 0, 0, 0.1)'
+      }]}>
+        <TouchableOpacity
+          style={styles.bookmarkContent}
+          onPress={() => handleBookmarkPress(item)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.bookmarkHeader}>
+            <View style={styles.bookmarkInfo}>
+              <AmharicText variant="subheading" style={[styles.bookmarkTitle, { 
+                color: isDarkMode ? colors.textPrimary : '#111827', 
+                fontWeight: '700' 
+              }]}>
+                {item.title || 'Untitled'}
+              </AmharicText>
+              <AmharicText variant="caption" style={[styles.bookmarkReligion, { 
+                color: isDarkMode ? colors.textSecondary : '#374151', 
+                fontWeight: '500' 
+              }]}>
+                {item.religionName || 'Unknown Religion'}
+              </AmharicText>
+            </View>
+            <View style={styles.bookmarkActions}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleRemoveBookmark(item)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="bookmark" size={20} color="#F59E0B" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleBookmarkPress(item)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="chevron-forward" size={20} color={isDarkMode ? colors.textSecondary : '#374151'} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.bookmarkActions}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => handleRemoveBookmark(item)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="bookmark" size={20} color="#F59E0B" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => handleBookmarkPress(item)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-forward" size={20} color={isDarkMode ? colors.textSecondary : '#374151'} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -166,7 +227,7 @@ const BookmarksScreen = ({ navigation }) => {
       <FlatList
         data={bookmarks}
         renderItem={renderBookmarkItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => item?.id?.toString() || `bookmark-${index}`}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
