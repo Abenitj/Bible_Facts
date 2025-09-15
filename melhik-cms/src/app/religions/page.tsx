@@ -685,7 +685,9 @@ export default function ReligionsPage() {
                    style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0v-3.5a2 2 0 011.5-1.5h.5m0 0V9H9m4.5 6v-3.5a2 2 0 00-1.5-1.5H9" />
               </svg>
-              <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No religions found</p>
+              <p className="mb-4" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>
+                {religions.length === 0 ? 'No religions found' : 'No religions match your search criteria'}
+              </p>
               <button
                 onClick={() => setShowForm(true)}
                 className="px-4 py-2 rounded-md transition-colors"
@@ -706,7 +708,7 @@ export default function ReligionsPage() {
             </div>
           ) : (
             <div className="divide-y" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-              {religions.map((religion) => (
+              {filteredAndSortedReligions.map((religion) => (
                 <div key={religion.id} className="p-6 hover:bg-gray-50" 
                      style={{ 
                        backgroundColor: darkMode ? '#1f2937' : '#ffffff',
