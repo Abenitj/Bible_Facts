@@ -41,17 +41,29 @@ model Topic {
 model TopicDetail {
   id          Int      @id @default(autoincrement())
   topicId     Int      @unique
-  explanation String
-  bibleVerses String?
-  keyPoints   String?
-  references  String?
   version     Int      @default(1)
+  useBlocks   Boolean  @default(true) // Always use block-based content
   syncStatus  String   @default("pending") // "pending", "synced"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  contentBlocks ContentBlock[]
 
   @@map("topic_details")
+}
+
+model ContentBlock {
+  id          Int      @id @default(autoincrement())
+  topicDetailId Int
+  blockType   String   // "text", "image", "mixed", "gallery"
+  contentData String   // JSON string containing block content
+  orderIndex  Int      // Order of the block within the content
+  syncStatus  String   @default("pending") // "pending", "synced"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  topicDetail TopicDetail @relation(fields: [topicDetailId], references: [id], onDelete: Cascade)
+
+  @@map("content_blocks")
 }
 
 model User {

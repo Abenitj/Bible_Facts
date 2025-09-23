@@ -52,11 +52,18 @@ export default function Dashboard() {
     const loadData = async () => {
       if (!user || dataLoaded || loadingRef.current) return
       
+      // Wait a bit for user context to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       loadingRef.current = true
       
       try {
         const token = localStorage.getItem('cms_token')
-        if (!token) return
+        if (!token) {
+          console.error('Dashboard: No token found, redirecting to login')
+          router.push('/login')
+          return
+        }
 
         console.log('Dashboard: Loading data for user:', user.id)
 
@@ -73,6 +80,11 @@ export default function Dashboard() {
           setReligions(religionsData.data || religionsData)
         } else {
           console.error('Failed to fetch religions:', religionsRes.status, religionsRes.statusText)
+          if (religionsRes.status === 401) {
+            console.error('Authentication failed, redirecting to login')
+            router.push('/login')
+            return
+          }
         }
 
         // Load topics
@@ -88,6 +100,11 @@ export default function Dashboard() {
           setTopics(topicsData.data || topicsData)
         } else {
           console.error('Failed to fetch topics:', topicsRes.status, topicsRes.statusText)
+          if (topicsRes.status === 401) {
+            console.error('Authentication failed, redirecting to login')
+            router.push('/login')
+            return
+          }
         }
 
         // Load users (only if user has permission)

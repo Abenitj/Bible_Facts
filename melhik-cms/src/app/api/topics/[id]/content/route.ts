@@ -74,11 +74,8 @@ export async function POST(
     const content = await prisma.topicDetail.create({
       data: {
         topicId,
-        explanation: contentData.explanation,
-        bibleVerses: contentData.bibleVerses ? JSON.stringify(contentData.bibleVerses) : null,
-        keyPoints: contentData.keyPoints ? JSON.stringify(contentData.keyPoints) : null,
-        references: contentData.references ? JSON.stringify(contentData.references) : null,
-        version: contentData.version || 1
+        version: contentData.version || 1,
+        useBlocks: contentData.useBlocks || true
       },
       include: {
         topic: {
@@ -92,6 +89,9 @@ export async function POST(
               }
             }
           }
+        },
+        contentBlocks: {
+          orderBy: { orderIndex: 'asc' }
         }
       }
     })
@@ -181,11 +181,8 @@ export async function PUT(
     const content = await prisma.topicDetail.update({
       where: { topicId },
       data: {
-        explanation: contentData.explanation,
-        bibleVerses: contentData.bibleVerses ? JSON.stringify(contentData.bibleVerses) : existingContent.bibleVerses,
-        keyPoints: contentData.keyPoints ? JSON.stringify(contentData.keyPoints) : existingContent.keyPoints,
-        references: contentData.references ? JSON.stringify(contentData.references) : existingContent.references,
         version: contentData.version || existingContent.version + 1,
+        useBlocks: contentData.useBlocks !== undefined ? contentData.useBlocks : existingContent.useBlocks,
         syncStatus: 'pending' // Mark as pending when updated
       },
       include: {
@@ -200,6 +197,9 @@ export async function PUT(
               }
             }
           }
+        },
+        contentBlocks: {
+          orderBy: { orderIndex: 'asc' }
         }
       }
     })
@@ -259,6 +259,9 @@ export async function GET(
               }
             }
           }
+        },
+        contentBlocks: {
+          orderBy: { orderIndex: 'asc' }
         }
       }
     })

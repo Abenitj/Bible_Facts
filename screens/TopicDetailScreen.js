@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +16,7 @@ import AppBar from '../components/AppBar';
 import AmharicText from '../src/components/AmharicText';
 import TextWithBibleVerses from '../components/TextWithBibleVerses';
 import ErrorModal from '../components/ErrorModal';
+import ContentBlockRenderer from '../components/ContentBlockRenderer';
 import SyncService from '../src/services/SyncService';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
 import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
@@ -111,7 +113,52 @@ const TopicDetailScreen = ({ navigation, route }) => {
     if (!topic || !topicDetail) return;
 
     try {
-      let shareMessage = `${topic.title}\n\nጥያቄ: ${topic.description}\n\nዝርዝር ማብራሪያ:\n${topicDetail.explanation}`;
+      let shareMessage = `${topic.title}\n\nጥያቄ: ${topic.description}\n\nዝርዝር ማብራሪያ:`;
+
+      // Add content blocks
+      if (topicDetail.contentBlocks && topicDetail.contentBlocks.length > 0) {
+        topicDetail.contentBlocks
+          .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
+          .forEach((block, index) => {
+            const contentData = typeof block.contentData === 'string' 
+              ? JSON.parse(block.contentData) 
+              : block.contentData;
+
+            switch (block.blockType) {
+              case 'text':
+                if (contentData.text) {
+                  shareMessage += `\n\n${contentData.text}`;
+                }
+                break;
+              case 'image':
+                if (contentData.caption) {
+                  shareMessage += `\n\n[Image: ${contentData.caption}]`;
+                }
+                break;
+              case 'mixed':
+                if (contentData.text) {
+                  shareMessage += `\n\n${contentData.text}`;
+                }
+                if (contentData.images && contentData.images.length > 0) {
+                  contentData.images.forEach(img => {
+                    if (img.caption) {
+                      shareMessage += `\n[Image: ${img.caption}]`;
+                    }
+                  });
+                }
+                break;
+              case 'gallery':
+                if (contentData.images && contentData.images.length > 0) {
+                  contentData.images.forEach((img, imgIndex) => {
+                    if (img.caption) {
+                      shareMessage += `\n[Image ${imgIndex + 1}: ${img.caption}]`;
+                    }
+                  });
+                }
+                break;
+            }
+          });
+      }
 
       // Add Bible verses if available
       if (topicDetail.bibleVerses && topicDetail.bibleVerses.length > 0) {
@@ -283,13 +330,32 @@ const TopicDetailScreen = ({ navigation, route }) => {
             </View>
           </View>
           
-          <View style={[styles.explanationCard, { backgroundColor: colors.background }]}>
-            <TextWithBibleVerses
-              text={topicDetail.explanation}
-              style={[styles.explanationText, { color: colors.textSecondary }]}
-              verseData={[]} // Pass an empty array as Bible verses are now data-free
-            />
-          </View>
+          {/* Render content blocks */}
+          {topicDetail.contentBlocks && topicDetail.contentBlocks.length > 0 ? (
+            <View style={styles.contentBlocksContainer}>
+              {topicDetail.contentBlocks
+                .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
+                .map((block, index) => (
+                  <ContentBlockRenderer
+                    key={block.id || index}
+                    block={{
+                      ...block,
+                      contentData: typeof block.contentData === 'string' 
+                        ? JSON.parse(block.contentData) 
+                        : block.contentData
+                    }}
+                    colors={colors}
+                    isDarkMode={isDarkMode}
+                  />
+                ))}
+            </View>
+          ) : (
+            <View style={styles.noContentContainer}>
+              <AmharicText style={[styles.noContentText, { color: colors.textSecondary }]}>
+                ይዘት አልተገኘም።
+              </AmharicText>
+            </View>
+          )}
         </View>
 
         {/* Bible Verses Section */}
@@ -657,6 +723,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  // Content Blocks
+  contentBlocksContainer: {
+    padding: 0,
+  },
+
   // Empty States
   emptyContainer: {
     flex: 1,
@@ -674,6 +745,18 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
+  },
+
+  // No Content
+  noContentContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noContentText: {
+    fontSize: 16,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 });
 

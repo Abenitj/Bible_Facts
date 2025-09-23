@@ -47,21 +47,45 @@ export const createTopicSchema = z.object({
 
 export const updateTopicSchema = createTopicSchema.partial()
 
+// Content Block validation schemas
+export const contentBlockSchema = z.object({
+  blockType: z.enum(['text', 'image', 'mixed', 'gallery']),
+  contentData: z.any(), // JSON object - will be validated based on blockType
+  orderIndex: z.number().int().positive().optional(),
+})
+
 // Topic Detail validation schemas
 export const createTopicDetailSchema = z.object({
   topicId: z.number().int().positive('Topic ID must be a positive integer'),
-  explanation: z.string().min(1, 'Explanation is required'),
-  bibleVerses: z.array(z.string()).optional(),
-  keyPoints: z.array(z.string()).optional(),
-  references: z.array(z.object({
-    verse: z.string(),
-    text: z.string(),
-    explanation: z.string(),
-  })).optional(),
   version: z.number().int().positive().default(1),
+  useBlocks: z.boolean().default(true),
 })
 
 export const updateTopicDetailSchema = createTopicDetailSchema.partial()
+
+// Content Blocks API validation schemas
+export const createContentBlocksSchema = z.object({
+  topicId: z.number().int().positive('Topic ID must be a positive integer'),
+  useBlocks: z.boolean().default(true),
+  blocks: z.array(contentBlockSchema).min(1, 'At least one content block is required'),
+})
+
+export const updateContentBlocksSchema = z.object({
+  blocks: z.array(contentBlockSchema).min(1, 'At least one content block is required'),
+})
+
+// Image validation schemas
+export const imageUploadSchema = z.object({
+  file: z.any(), // File object
+  alt: z.string().optional(),
+  caption: z.string().optional(),
+})
+
+export const imageUrlValidationSchema = z.object({
+  url: z.string().url('Invalid URL format'),
+  alt: z.string().optional(),
+  caption: z.string().optional(),
+})
 
 // Sync validation schemas
 export const syncCheckSchema = z.object({

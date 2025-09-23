@@ -32,12 +32,20 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             version: true,
-            explanation: true,
-            bibleVerses: true,
-            keyPoints: true,
-            references: true,
+            useBlocks: true,
             createdAt: true,
-            updatedAt: true
+            updatedAt: true,
+            contentBlocks: {
+              select: {
+                id: true,
+                blockType: true,
+                contentData: true,
+                orderIndex: true
+              },
+              orderBy: {
+                orderIndex: 'asc'
+              }
+            }
           }
         }
       },

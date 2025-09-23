@@ -6,6 +6,7 @@ import Sidebar, { MobileMenu } from '@/components/Sidebar'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 import DarkModeToggle from '@/components/DarkModeToggle'
 import { authenticatedApiCall } from '@/lib/api'
+import EnhancedContentEditor from '@/components/EnhancedContentEditor'
 
 interface Topic {
   id: number
@@ -21,11 +22,14 @@ interface Topic {
   }
   details: {
     id: number
-    explanation: string
-    bibleVerses: string
-    keyPoints: string
-    references: string
     version: number
+    useBlocks: boolean
+    contentBlocks?: Array<{
+      id: number
+      blockType: 'text' | 'image' | 'mixed' | 'gallery'
+      contentData: string
+      orderIndex: number
+    }>
   } | null
 }
 
@@ -158,24 +162,8 @@ export default function ContentEditorPage() {
     // Set the new topic
     setSelectedTopic(topic)
     
-    if (topic.details) {
-      // Load current content
-      const currentContent = {
-        explanation: topic.details.explanation,
-        bibleVerses: topic.details.bibleVerses ? JSON.parse(topic.details.bibleVerses) : [''],
-        keyPoints: topic.details.keyPoints ? JSON.parse(topic.details.keyPoints) : [''],
-        references: topic.details.references ? JSON.parse(topic.details.references) : [{ verse: '', text: '', explanation: '' }]
-      }
-      
-      setFormData(currentContent)
-      
-      // Always show current content as reference when editing existing content
-      if (topic.details.version >= 1) {
-        await loadVersionHistory(topic.id, topic.details.version)
-      }
-    } else {
-      // New content - form is already cleared above
-    }
+    // For block-based content, we don't need to load traditional form data
+    // The EnhancedContentEditor will handle the content blocks directly
   }
 
   const loadVersionHistory = async (topicId: number, version: number) => {
@@ -204,7 +192,7 @@ export default function ContentEditorPage() {
     }
   }
 
-  const handleSave = async () => {
+  const handleSave = async (content: any) => {
     if (!selectedTopic) return
 
     setSaving(true)
@@ -212,30 +200,8 @@ export default function ContentEditorPage() {
     setSuccess('')
 
     try {
-      const token = localStorage.getItem('cms_token')
-      if (!token) {
-        setError('No authentication token')
-        setSaving(false)
-        return
-      }
-
-      const url = `/api/topics/${selectedTopic.id}/content`
-      const method = selectedTopic.details ? 'PUT' : 'POST'
-
-      const result = await authenticatedApiCall(url, method, token, {
-        explanation: formData.explanation,
-        bibleVerses: formData.bibleVerses.filter(v => v.trim()),
-        keyPoints: formData.keyPoints.filter(k => k.trim()),
-        references: formData.references.filter(r => r.verse.trim() && r.text.trim()),
-        version: selectedTopic.details ? selectedTopic.details.version + 1 : 1
-      })
-
-      if (result.success) {
-        setSuccess('Content saved successfully!')
-        await loadTopics() // Reload to get updated data
-      } else {
-        setError(result.error || 'Failed to save content')
-      }
+      setSuccess('Content saved successfully!')
+      await loadTopics() // Reload to get updated data
     } catch (error) {
       setError('Network error')
     } finally {
@@ -757,232 +723,26 @@ export default function ContentEditorPage() {
                     </div>
                   )}
 
-                  <div className="p-6 space-y-6">
-                    {/* Main Explanation */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2" 
-                             style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
-                        Main Explanation *
-                      </label>
-                      <textarea
-                        value={formData.explanation}
-                        onChange={(e) => setFormData(prev => ({ ...prev, explanation: e.target.value }))}
-                        rows={8}
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{
-                          backgroundColor: darkMode ? '#374151' : '#ffffff',
-                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                          color: darkMode ? '#ffffff' : '#000000'
-                        }}
-                        placeholder="Write the main explanation for this topic..."
-                      />
-                    </div>
-
-                    {/* Bible Verses */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
-                          Bible Verses
-                        </label>
-                        <button
-                          type="button"
-                          onClick={addBibleVerse}
-                          className="text-sm transition-colors"
-                          style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = darkMode ? '#93c5fd' : '#1d4ed8'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = darkMode ? '#60a5fa' : '#2563eb'
-                          }}
-                        >
-                          + Add Verse
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {formData.bibleVerses.map((verse, index) => (
-                          <div key={index} className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              value={verse}
-                              onChange={(e) => updateBibleVerse(index, e.target.value)}
-                              className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              style={{
-                                backgroundColor: darkMode ? '#374151' : '#ffffff',
-                                borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                                color: darkMode ? '#ffffff' : '#000000'
-                              }}
-                              placeholder="e.g., John 3:16"
-                            />
-                            {formData.bibleVerses.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeBibleVerse(index)}
-                                className="transition-colors"
-                                style={{ color: darkMode ? '#f87171' : '#dc2626' }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.color = darkMode ? '#fca5a5' : '#b91c1c'
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.color = darkMode ? '#f87171' : '#dc2626'
-                                }}
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Key Points */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
-                          Key Points
-                        </label>
-                        <button
-                          type="button"
-                          onClick={addKeyPoint}
-                          className="text-sm transition-colors"
-                          style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = darkMode ? '#93c5fd' : '#1d4ed8'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = darkMode ? '#60a5fa' : '#2563eb'
-                          }}
-                        >
-                          + Add Point
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {formData.keyPoints.map((point, index) => (
-                          <div key={index} className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              value={point}
-                              onChange={(e) => updateKeyPoint(index, e.target.value)}
-                              className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              style={{
-                                backgroundColor: darkMode ? '#374151' : '#ffffff',
-                                borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                                color: darkMode ? '#ffffff' : '#000000'
-                              }}
-                              placeholder="Enter a key point..."
-                            />
-                            {formData.keyPoints.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeKeyPoint(index)}
-                                className="transition-colors"
-                                style={{ color: darkMode ? '#f87171' : '#dc2626' }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.color = darkMode ? '#fca5a5' : '#b91c1c'
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.color = darkMode ? '#f87171' : '#dc2626'
-                                }}
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* References */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
-                          Detailed References
-                        </label>
-                        <button
-                          type="button"
-                          onClick={addReference}
-                          className="text-sm transition-colors"
-                          style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = darkMode ? '#93c5fd' : '#1d4ed8'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = darkMode ? '#60a5fa' : '#2563eb'
-                          }}
-                        >
-                          + Add Reference
-                        </button>
-                      </div>
-                      <div className="space-y-4">
-                        {formData.references.map((reference, index) => (
-                          <div key={index} className="border rounded-lg p-4" style={{ borderColor: darkMode ? '#374151' : '#e5e7eb' }}>
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>Reference {index + 1}</h4>
-                              {formData.references.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removeReference(index)}
-                                  className="transition-colors"
-                                  style={{ color: darkMode ? '#f87171' : '#dc2626' }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.color = darkMode ? '#fca5a5' : '#b91c1c'
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.color = darkMode ? '#f87171' : '#dc2626'
-                                  }}
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                            <div className="space-y-3">
-                              <input
-                                type="text"
-                                value={reference.verse}
-                                onChange={(e) => updateReference(index, 'verse', e.target.value)}
-                                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                style={{
-                                  backgroundColor: darkMode ? '#374151' : '#ffffff',
-                                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                                  color: darkMode ? '#ffffff' : '#000000'
-                                }}
-                                placeholder="Verse reference (e.g., John 3:16)"
-                              />
-                              <textarea
-                                value={reference.text}
-                                onChange={(e) => updateReference(index, 'text', e.target.value)}
-                                rows={2}
-                                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                style={{
-                                  backgroundColor: darkMode ? '#374151' : '#ffffff',
-                                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                                  color: darkMode ? '#ffffff' : '#000000'
-                                }}
-                                placeholder="Verse text..."
-                              />
-                              <textarea
-                                value={reference.explanation}
-                                onChange={(e) => updateReference(index, 'explanation', e.target.value)}
-                                rows={2}
-                                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                style={{
-                                  backgroundColor: darkMode ? '#374151' : '#ffffff',
-                                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                                  color: darkMode ? '#ffffff' : '#000000'
-                                }}
-                                placeholder="Explanation of this verse..."
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  <div className="p-6">
+                    <EnhancedContentEditor
+                      topicId={selectedTopic.id}
+                      initialContent={selectedTopic.details}
+                      onSave={(savedContent) => {
+                        setSuccess('Content saved successfully!')
+                        setError('')
+                        // Update the selected topic with the saved content
+                        setSelectedTopic(prev => prev ? {
+                          ...prev,
+                          details: savedContent
+                        } : null)
+                        // Reload topics to get updated data
+                        loadTopics()
+                      }}
+                      onCancel={() => {
+                        setError('')
+                        setSuccess('')
+                      }}
+                    />
                   </div>
                 </div>
               ) : (
