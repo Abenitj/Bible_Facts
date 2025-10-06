@@ -100,9 +100,9 @@ export async function POST(
 
     // Validate blocks structure
     for (const block of blocks) {
-      if (!block.blockType || !['text', 'image', 'mixed', 'gallery'].includes(block.blockType)) {
+      if (!block.blockType || !['text', 'image', 'mixed', 'gallery', 'title', 'subtitle', 'list'].includes(block.blockType)) {
         return NextResponse.json({ 
-          error: 'Invalid block type. Must be text, image, mixed, or gallery' 
+          error: 'Invalid block type. Must be text, image, mixed, gallery, title, subtitle, or list' 
         }, { status: 400 })
       }
       

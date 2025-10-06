@@ -121,10 +121,42 @@ class SyncService {
         console.log(`Stored ${content.topics.length} topics`);
       }
 
-      // Store topic details
+      // Store topic details with content blocks
       if (content.topicDetails && content.topicDetails.length > 0) {
-        await AsyncStorage.setItem('melhik_topic_details', JSON.stringify(content.topicDetails));
+        // Process each topic detail to ensure content blocks are properly stored
+        const processedTopicDetails = content.topicDetails.map(detail => {
+          // Ensure contentBlocks is an array and properly formatted
+          const contentBlocks = Array.isArray(detail.contentBlocks) 
+            ? detail.contentBlocks.map(block => ({
+                id: block.id,
+                blockType: block.blockType,
+                contentData: typeof block.contentData === 'string' 
+                  ? JSON.parse(block.contentData) 
+                  : block.contentData,
+                orderIndex: block.orderIndex || 0,
+                createdAt: block.createdAt,
+                updatedAt: block.updatedAt
+              }))
+            : [];
+          
+          return {
+            id: detail.id,
+            topicId: detail.topicId,
+            version: detail.version,
+            useBlocks: detail.useBlocks,
+            contentBlocks: contentBlocks,
+            createdAt: detail.createdAt,
+            updatedAt: detail.updatedAt
+          };
+        });
+        
+        await AsyncStorage.setItem('melhik_topic_details', JSON.stringify(processedTopicDetails));
         console.log(`Stored ${content.topicDetails.length} topic details`);
+        
+        // Log content blocks count for debugging
+        const totalContentBlocks = processedTopicDetails.reduce((sum, detail) => 
+          sum + (detail.contentBlocks?.length || 0), 0);
+        console.log(`Total content blocks stored: ${totalContentBlocks}`);
       }
 
       console.log('Content stored successfully');

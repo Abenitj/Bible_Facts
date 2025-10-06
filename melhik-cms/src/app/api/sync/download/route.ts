@@ -16,22 +16,29 @@ export async function GET(request: Request) {
         updatedAt: { gt: new Date(parseInt(lastSync)) },
         syncStatus: 'synced' // Only get synced content
       },
-      include: {
-        topics: {
-          where: {
-            updatedAt: { gt: new Date(parseInt(lastSync)) },
-            syncStatus: 'synced' // Only get synced topics
-          },
-          include: {
-            details: {
-              where: {
-                updatedAt: { gt: new Date(parseInt(lastSync)) },
-                syncStatus: 'synced' // Only get synced details
+        include: {
+          topics: {
+            where: {
+              updatedAt: { gt: new Date(parseInt(lastSync)) },
+              syncStatus: 'synced' // Only get synced topics
+            },
+            include: {
+              details: {
+                where: {
+                  updatedAt: { gt: new Date(parseInt(lastSync)) },
+                  syncStatus: 'synced' // Only get synced details
+                },
+                include: {
+                  contentBlocks: {
+                    orderBy: {
+                      orderIndex: 'asc'
+                    }
+                  }
+                }
               }
             }
           }
-        }
-      },
+        },
       orderBy: {
         name: 'asc'
       }
@@ -52,6 +59,13 @@ export async function GET(request: Request) {
               details: {
                 where: {
                   syncStatus: 'synced' // Only get synced details
+                },
+                include: {
+                  contentBlocks: {
+                    orderBy: {
+                      orderIndex: 'asc'
+                    }
+                  }
                 }
               }
             }
@@ -92,11 +106,9 @@ export async function GET(request: Request) {
             topic.details ? [{
               id: topic.details.id,
               topicId: topic.details.topicId,
-              explanation: topic.details.explanation,
-              bibleVerses: topic.details.bibleVerses ? JSON.parse(topic.details.bibleVerses) : [],
-              keyPoints: topic.details.keyPoints ? JSON.parse(topic.details.keyPoints) : [],
-              references: topic.details.references ? JSON.parse(topic.details.references) : [],
               version: topic.details.version,
+              useBlocks: topic.details.useBlocks,
+              contentBlocks: topic.details.contentBlocks || [],
               createdAt: topic.details.createdAt,
               updatedAt: topic.details.updatedAt
             }] : []
@@ -143,11 +155,9 @@ export async function GET(request: Request) {
           topic.details ? [{
             id: topic.details.id,
             topicId: topic.details.topicId,
-            explanation: topic.details.explanation,
-            bibleVerses: topic.details.bibleVerses ? JSON.parse(topic.details.bibleVerses) : [],
-            keyPoints: topic.details.keyPoints ? JSON.parse(topic.details.keyPoints) : [],
-            references: topic.details.references ? JSON.parse(topic.details.references) : [],
             version: topic.details.version,
+            useBlocks: topic.details.useBlocks,
+            contentBlocks: topic.details.contentBlocks || [],
             createdAt: topic.details.createdAt,
             updatedAt: topic.details.updatedAt
           }] : []

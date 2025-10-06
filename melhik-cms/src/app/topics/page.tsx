@@ -48,6 +48,7 @@ export default function TopicsPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showForceDelete, setShowForceDelete] = useState(false)
   const [deletingTopic, setDeletingTopic] = useState<Topic | null>(null)
   const [activeSection, setActiveSection] = useState('topics')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -181,7 +182,7 @@ export default function TopicsPage() {
     setShowDeleteConfirm(true)
   }
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (forceDelete = false) => {
     if (!deletingTopic) return
 
     try {
@@ -191,9 +192,10 @@ export default function TopicsPage() {
         return
       }
 
-      console.log('Attempting to delete topic:', deletingTopic.id, deletingTopic.title)
+      console.log('Attempting to delete topic:', deletingTopic.id, deletingTopic.title, forceDelete ? '(force delete)' : '')
       
-      const result = await authenticatedApiCall(`/api/topics/${deletingTopic.id}`, 'DELETE', token)
+      const url = forceDelete ? `/api/topics/${deletingTopic.id}?force=true` : `/api/topics/${deletingTopic.id}`
+      const result = await authenticatedApiCall(url, 'DELETE', token)
 
       console.log('Delete response:', result)
       
@@ -201,34 +203,38 @@ export default function TopicsPage() {
         console.log('Topic deleted successfully')
         await loadData()
         setShowDeleteConfirm(false)
+        setShowForceDelete(false)
         setDeletingTopic(null)
         setError('') // Clear any previous errors
       } else {
         console.error('Delete failed:', result.error)
         
-        // Provide specific error messages based on the business rules
-        let errorMessage = result.error || 'Failed to delete topic'
-        
-        if (result.error?.includes('content')) {
-          errorMessage = `Cannot delete "${deletingTopic.title}" because it has content. Please delete the content first from the Content Editor.`
-        } else if (result.error?.includes('not found')) {
-          errorMessage = `Topic "${deletingTopic.title}" not found. It may have been deleted by another user.`
+        // Check if this is a content error and we haven't tried force delete yet
+        if (result.error?.includes('content') && !forceDelete && result.contentBlocksCount) {
+          // Show force delete option
+          setError(`Cannot delete "${deletingTopic.title}" because it has ${result.contentBlocksCount} content block(s). Click "Force Delete" to delete the topic and all its content.`)
+          setShowForceDelete(true)
+        } else {
+          // Other errors
+          let errorMessage = result.message || result.error || 'Failed to delete topic'
+          setError(errorMessage)
+          setShowDeleteConfirm(false)
+          setShowForceDelete(false)
+          setDeletingTopic(null)
         }
-        
-        setError(errorMessage)
-        setShowDeleteConfirm(false)
-        setDeletingTopic(null)
       }
     } catch (error) {
       console.error('Network error during delete:', error)
       setError('Network error. Please check your connection and try again.')
       setShowDeleteConfirm(false)
+      setShowForceDelete(false)
       setDeletingTopic(null)
     }
   }
 
   const cancelDelete = () => {
     setShowDeleteConfirm(false)
+    setShowForceDelete(false)
     setDeletingTopic(null)
   }
 
@@ -659,24 +665,46 @@ export default function TopicsPage() {
                       Delete "{deletingTopic.title}"?
                     </p>
                     <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                      This action cannot be undone. All associated content will also be deleted.
+                      {showForceDelete 
+                        ? 'This will permanently delete the topic and ALL its content blocks. This action cannot be undone.'
+                        : 'This action cannot be undone. All associated content will also be deleted.'
+                      }
                     </p>
                   </div>
                 </div>
 
                 <div className="flex space-x-3 pt-4">
-                  <button
-                    onClick={confirmDelete}
-                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={cancelDelete}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  {showForceDelete ? (
+                    <>
+                      <button
+                        onClick={() => confirmDelete(true)}
+                        className="flex-1 bg-red-700 text-white py-2 px-4 rounded-md hover:bg-red-800 transition-colors"
+                      >
+                        Force Delete
+                      </button>
+                      <button
+                        onClick={cancelDelete}
+                        className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => confirmDelete(false)}
+                        className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={cancelDelete}
+                        className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

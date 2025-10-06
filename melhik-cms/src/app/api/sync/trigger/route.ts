@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark all pending content as synced
-    const [religionUpdate, topicUpdate, detailUpdate] = await Promise.all([
+    const [religionUpdate, topicUpdate, detailUpdate, contentBlockUpdate] = await Promise.all([
       prisma.religion.updateMany({
         where: { syncStatus: 'pending' },
         data: { syncStatus: 'synced' }
@@ -59,14 +59,19 @@ export async function POST(request: NextRequest) {
       prisma.topicDetail.updateMany({
         where: { syncStatus: 'pending' },
         data: { syncStatus: 'synced' }
+      }),
+      prisma.contentBlock.updateMany({
+        where: { syncStatus: 'pending' },
+        data: { syncStatus: 'synced' }
       })
     ])
 
     // Get current sync statistics
-    const [religionCount, topicCount, topicDetailCount] = await Promise.all([
+    const [religionCount, topicCount, topicDetailCount, contentBlockCount] = await Promise.all([
       prisma.religion.count(),
       prisma.topic.count(),
-      prisma.topicDetail.count()
+      prisma.topicDetail.count(),
+      prisma.contentBlock.count()
     ])
 
     // Get the latest content version
@@ -80,7 +85,7 @@ export async function POST(request: NextRequest) {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const [recentReligions, recentTopics, recentDetails] = await Promise.all([
+    const [recentReligions, recentTopics, recentDetails, recentContentBlocks] = await Promise.all([
       prisma.religion.count({
         where: {
           updatedAt: {
@@ -101,6 +106,13 @@ export async function POST(request: NextRequest) {
             gte: yesterday
           }
         }
+      }),
+      prisma.contentBlock.count({
+        where: {
+          updatedAt: {
+            gte: yesterday
+          }
+        }
       })
     ]);
 
@@ -112,25 +124,28 @@ export async function POST(request: NextRequest) {
         religions: religionCount,
         topics: topicCount,
         topicDetails: topicDetailCount,
-        totalItems: religionCount + topicCount + topicDetailCount
+        contentBlocks: contentBlockCount,
+        totalItems: religionCount + topicCount + topicDetailCount + contentBlockCount
       },
       syncedItems: {
         religions: religionUpdate.count,
         topics: topicUpdate.count,
         details: detailUpdate.count,
-        total: religionUpdate.count + topicUpdate.count + detailUpdate.count
+        contentBlocks: contentBlockUpdate.count,
+        total: religionUpdate.count + topicUpdate.count + detailUpdate.count + contentBlockUpdate.count
       },
       recentChanges: {
         religions: recentReligions,
         topics: recentTopics,
         details: recentDetails,
-        total: recentReligions + recentTopics + recentDetails
+        contentBlocks: recentContentBlocks,
+        total: recentReligions + recentTopics + recentDetails + recentContentBlocks
       },
       status: 'completed',
-      message: `Manual sync completed successfully. ${religionUpdate.count + topicUpdate.count + detailUpdate.count} items are now available to mobile apps.`,
+      message: `Manual sync completed successfully. ${religionUpdate.count + topicUpdate.count + detailUpdate.count + contentBlockUpdate.count} items are now available to mobile apps.`,
       triggeredBy: payload.username,
       mobileAppsNotified: 0, // Would be updated in real implementation
-      dataSize: `${Math.round((religionCount + topicCount + topicDetailCount) * 0.5)}KB`
+      dataSize: `${Math.round((religionCount + topicCount + topicDetailCount + contentBlockCount) * 0.5)}KB`
     }
 
     // Log sync operation

@@ -9,26 +9,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AmharicText from '../src/components/AmharicText';
+import { getColors } from '../src/theme/colors';
 
 const { width } = Dimensions.get('window');
 
 const TopicCard = ({ topic, onPress, index = 0, colors = {}, isRead = false, isBookmarked = false }) => {
-  // Debug: Log the colors being received
-  console.log('TopicCard colors:', colors);
-  console.log('TopicCard isDarkMode:', colors.isDarkMode);
-  
-  // Default colors if none provided
-  const defaultColors = {
-    card: '#FFFFFF',
-    border: '#E5E7EB',
-    primary: '#3B82F6',
-    primaryLight: '#DBEAFE',
-    textPrimary: '#1F2937',
-    textSecondary: '#6B7280',
-    isDarkMode: false
-  };
-  
-  const finalColors = Object.keys(colors).length > 0 ? colors : defaultColors;
+  // Use theme colors as base, then override with provided colors
+  const finalColors = { ...getColors(colors.isDarkMode || false), ...colors };
   
   const [scaleValue] = useState(new Animated.Value(1));
   const [opacityValue] = useState(new Animated.Value(0));

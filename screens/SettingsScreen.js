@@ -76,6 +76,37 @@ const SettingsScreen = ({ navigation }) => {
     }
   };
 
+  const handleClearData = () => {
+    Alert.alert(
+      '⚠️ Clear All Data',
+      'This will permanently delete all cached content including:\n\n• All religions and topics\n• Downloaded content\n• Sync history\n\nYou will need to sync again to download fresh content from the CMS.\n\nAre you sure you want to continue?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Clear Data',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('Clearing all cached data...');
+              await SyncService.clearStoredContent();
+              Alert.alert(
+                'Success',
+                'All cached data has been cleared successfully. Pull down to refresh and sync new content.',
+                [{ text: 'OK' }]
+              );
+            } catch (error) {
+              console.error('Error clearing data:', error);
+              Alert.alert('Error', 'Failed to clear data. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const renderSettingItem = ({ icon, title, subtitle, onPress, showArrow = true, isDestructive = false }) => (
     <TouchableOpacity
       style={[
@@ -172,12 +203,28 @@ const SettingsScreen = ({ navigation }) => {
             Data Management
           </AmharicText>
           
+          {renderSettingItem({
+            icon: 'sync',
+            title: 'Force Sync',
+            subtitle: syncing ? 'Syncing...' : 'Download latest content from CMS',
+            onPress: handleSync,
+            showArrow: false
+          })}
           
           {renderSettingItem({
             icon: 'information-circle',
             title: 'Storage Information',
             subtitle: 'View app data usage and sync status',
             onPress: handleStorageInfo
+          })}
+          
+          {renderSettingItem({
+            icon: 'trash',
+            title: 'Clear All Data',
+            subtitle: 'Remove all cached content and sync history',
+            onPress: handleClearData,
+            showArrow: false,
+            isDestructive: true
           })}
           
         </View>

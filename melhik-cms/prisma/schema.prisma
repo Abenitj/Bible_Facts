@@ -55,7 +55,7 @@ model TopicDetail {
 model ContentBlock {
   id          Int      @id @default(autoincrement())
   topicDetailId Int
-  blockType   String   // "text", "image", "mixed", "gallery"
+  blockType   String   // "text", "image", "mixed", "gallery", "title", "subtitle", "list"
   contentData String   // JSON string containing block content
   orderIndex  Int      // Order of the block within the content
   syncStatus  String   @default("pending") // "pending", "synced"

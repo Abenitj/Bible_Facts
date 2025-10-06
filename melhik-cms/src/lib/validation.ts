@@ -49,7 +49,7 @@ export const updateTopicSchema = createTopicSchema.partial()
 
 // Content Block validation schemas
 export const contentBlockSchema = z.object({
-  blockType: z.enum(['text', 'image', 'mixed', 'gallery']),
+  blockType: z.enum(['text', 'image', 'mixed', 'gallery', 'title', 'subtitle', 'list']),
   contentData: z.any(), // JSON object - will be validated based on blockType
   orderIndex: z.number().int().positive().optional(),
 })

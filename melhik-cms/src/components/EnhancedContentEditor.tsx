@@ -6,7 +6,7 @@ import ContentBlockEditor from './ContentBlockEditor'
 
 interface ContentBlock {
   id?: string
-  blockType: 'text' | 'image' | 'mixed' | 'gallery'
+  blockType: 'text' | 'image' | 'mixed' | 'gallery' | 'title' | 'subtitle' | 'list'
   contentData: any
   orderIndex?: number
 }
@@ -48,7 +48,7 @@ export default function EnhancedContentEditor({
     }
   }, [initialContent])
 
-  const addBlock = (blockType: 'text' | 'image' | 'mixed' | 'gallery') => {
+  const addBlock = (blockType: 'text' | 'image' | 'mixed' | 'gallery' | 'title' | 'subtitle' | 'list') => {
     const newBlock: ContentBlock = {
       id: `block_${Date.now()}`,
       blockType,
@@ -68,6 +68,12 @@ export default function EnhancedContentEditor({
         return { text: '', images: [] }
       case 'gallery':
         return { images: [] }
+      case 'title':
+        return { text: '' }
+      case 'subtitle':
+        return { text: '' }
+      case 'list':
+        return { items: [''] }
       default:
         return {}
     }
@@ -153,10 +159,31 @@ export default function EnhancedContentEditor({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
+            onClick={() => addBlock('title')}
+            className="px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            + Title
+          </button>
+          <button
+            type="button"
+            onClick={() => addBlock('subtitle')}
+            className="px-3 py-2 text-sm bg-pink-600 text-white rounded hover:bg-pink-700 transition-colors"
+          >
+            + Subtitle
+          </button>
+          <button
+            type="button"
             onClick={() => addBlock('text')}
             className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             + Text Block
+          </button>
+          <button
+            type="button"
+            onClick={() => addBlock('list')}
+            className="px-3 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+          >
+            + List Block
           </button>
           <button
             type="button"

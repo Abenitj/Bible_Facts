@@ -195,6 +195,40 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // Check for force delete parameter
+    const url = new URL(request.url)
+    const forceDelete = url.searchParams.get('force') === 'true'
+
+    // Get current user's permissions
+    const currentUser = await prisma.$queryRaw`SELECT permissions FROM users WHERE id = ${payload.userId}`
+    const userData = Array.isArray(currentUser) ? currentUser[0] : currentUser
+    let userPermissions: string[] | null = null
+    
+    if (userData && userData.permissions) {
+      try {
+        userPermissions = JSON.parse(userData.permissions)
+      } catch (error) {
+        console.error('Error parsing user permissions:', error)
+        userPermissions = null
+      }
+    }
+
+    // Check if user has permission to delete topics
+    if (!checkPermission(payload.role as any, userPermissions, PERMISSIONS.DELETE_TOPICS)) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
     const { id: idParam } = await params
     const id = parseInt(idParam)
     
@@ -205,11 +239,15 @@ export async function DELETE(
       )
     }
 
-    // Check if topic exists and has details
+    // Check if topic exists and has content
     const existingTopic = await prisma.topic.findUnique({
       where: { id },
       include: {
-        details: true
+        details: {
+          include: {
+            contentBlocks: true
+          }
+        }
       }
     })
 
@@ -220,22 +258,27 @@ export async function DELETE(
       )
     }
 
-    // Check if topic has details
-    if (existingTopic.details) {
+    // Check if topic has content blocks (unless force delete is enabled)
+    if (!forceDelete && existingTopic.details && existingTopic.details.contentBlocks && existingTopic.details.contentBlocks.length > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete topic with existing content. Delete the content first.' },
+        { 
+          error: 'Cannot delete topic with existing content',
+          message: `This topic has ${existingTopic.details.contentBlocks.length} content block(s). Please delete the content first using the content editor, or use the force delete option.`,
+          contentBlocksCount: existingTopic.details.contentBlocks.length,
+          forceDeleteUrl: `/api/topics/${id}?force=true`
+        },
         { status: 400 }
       )
     }
 
-    // Delete topic
+    // Delete topic (this will cascade delete topic details and content blocks due to foreign key constraints)
     await prisma.topic.delete({
       where: { id }
     })
 
     return NextResponse.json({
       success: true,
-      message: 'Topic deleted successfully'
+      message: forceDelete ? 'Topic and all content deleted successfully' : 'Topic deleted successfully'
     })
 
   } catch (error) {

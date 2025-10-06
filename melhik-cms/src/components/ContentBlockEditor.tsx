@@ -5,7 +5,7 @@ import { useDarkMode } from '@/contexts/DarkModeContext'
 
 interface ContentBlock {
   id?: string
-  blockType: 'text' | 'image' | 'mixed' | 'gallery'
+  blockType: 'text' | 'image' | 'mixed' | 'gallery' | 'title' | 'subtitle' | 'list'
   contentData: any
   orderIndex?: number
 }
@@ -400,6 +400,110 @@ export default function ContentBlockEditor({
           </div>
         )
 
+      case 'title':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                Title Text
+              </label>
+              <input
+                type="text"
+                value={localContent.text || ''}
+                onChange={(e) => setLocalContent({ ...localContent, text: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xl font-bold"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+                placeholder="Enter title text..."
+              />
+            </div>
+          </div>
+        )
+
+      case 'subtitle':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                Subtitle Text
+              </label>
+              <input
+                type="text"
+                value={localContent.text || ''}
+                onChange={(e) => setLocalContent({ ...localContent, text: e.target.value })}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
+                style={{
+                  backgroundColor: darkMode ? '#374151' : '#ffffff',
+                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                  color: darkMode ? '#ffffff' : '#000000'
+                }}
+                placeholder="Enter subtitle text..."
+              />
+            </div>
+          </div>
+        )
+
+      case 'list':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                List Items
+              </label>
+              <div className="space-y-2">
+                {(localContent.items || []).map((item: string, index: number) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <span className="text-sm font-medium" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                      {index + 1}.
+                    </span>
+                    <input
+                      type="text"
+                      value={item}
+                      onChange={(e) => {
+                        const newItems = [...(localContent.items || [])]
+                        newItems[index] = e.target.value
+                        setLocalContent({ ...localContent, items: newItems })
+                      }}
+                      className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        backgroundColor: darkMode ? '#374151' : '#ffffff',
+                        borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        color: darkMode ? '#ffffff' : '#000000'
+                      }}
+                      placeholder={`List item ${index + 1}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newItems = (localContent.items || []).filter((_: string, i: number) => i !== index)
+                        setLocalContent({ ...localContent, items: newItems })
+                      }}
+                      className="text-red-600 hover:text-red-800 p-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newItems = [...(localContent.items || []), '']
+                    setLocalContent({ ...localContent, items: newItems })
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  + Add List Item
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+
       default:
         return <div>Unknown block type</div>
     }
@@ -551,6 +655,31 @@ export default function ContentBlockEditor({
                 </div>
               ) : (
                 <p>No images in gallery</p>
+              )}
+            </div>
+          )}
+          {block.blockType === 'title' && (
+            <div className="text-xl font-bold" style={{ color: darkMode ? '#f9fafb' : '#111827' }}>
+              {localContent.text || 'No title text'}
+            </div>
+          )}
+          {block.blockType === 'subtitle' && (
+            <div className="text-lg font-semibold opacity-80" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+              {localContent.text || 'No subtitle text'}
+            </div>
+          )}
+          {block.blockType === 'list' && (
+            <div>
+              {localContent.items && localContent.items.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1">
+                  {localContent.items.map((item: string, index: number) => (
+                    <li key={index} className="text-sm" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                      {item || `Empty list item ${index + 1}`}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No list items</p>
               )}
             </div>
           )}

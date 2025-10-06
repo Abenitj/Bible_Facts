@@ -1,40 +1,67 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  StyleSheet,
+  Text,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
   Share,
   Alert,
   ActivityIndicator,
-  RefreshControl,
-  Image,
+  Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import AppBar from '../components/AppBar';
-import AmharicText from '../src/components/AmharicText';
-import TextWithBibleVerses from '../components/TextWithBibleVerses';
-import ErrorModal from '../components/ErrorModal';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import ContentBlockRenderer from '../components/ContentBlockRenderer';
 import SyncService from '../src/services/SyncService';
-import { useDarkMode } from '../src/contexts/DarkModeContext';
-import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
-import { useBookmarks } from '../src/contexts/BookmarksContext';
 import { getColors } from '../src/theme/colors';
+import { useDarkMode } from '../src/contexts/DarkModeContext';
+
+// Simple fallback components that don't rely on native modules
+const SimpleGradient = ({ children, colors, style, ...props }) => (
+  <View style={[style, { backgroundColor: colors[0] }]} {...props}>
+    {children}
+  </View>
+);
+
+const SimpleBlurView = ({ children, intensity, style, ...props }) => (
+  <View style={[style, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} {...props}>
+    {children}
+  </View>
+);
 
 const TopicDetailScreen = ({ navigation, route }) => {
   const { religion, topicId } = route.params;
   const [topic, setTopic] = useState(null);
   const [topicDetail, setTopicDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const { isDarkMode } = useDarkMode();
-  const { markTopicAsRead, isTopicRead } = useReadingProgress();
-  const { toggleBookmark, isBookmarked } = useBookmarks();
-  const colors = getColors(isDarkMode);
+  const [error, setError] = useState(null);
+  
+  // Get theme colors with fallback
+  let isDarkMode = false;
+  let colors = {};
+  
+  try {
+    const darkModeContext = useDarkMode();
+    isDarkMode = darkModeContext?.isDarkMode || false;
+    colors = getColors(isDarkMode);
+  } catch (error) {
+    console.warn('Error getting dark mode context, using defaults:', error);
+    isDarkMode = false;
+    colors = getColors(false);
+  }
+  
+  // Ensure colors object has all required properties
+  if (!colors || typeof colors !== 'object') {
+    console.warn('Invalid colors object, using defaults');
+    colors = getColors(false);
+  }
+  
+  // Animation refs
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  // Create styles with current colors
+  const styles = createStyles(colors);
 
   useEffect(() => {
     if (topicId) {
@@ -42,70 +69,108 @@ const TopicDetailScreen = ({ navigation, route }) => {
     }
   }, [topicId]);
 
+  useEffect(() => {
+    if (topic && topicDetail) {
+      // Start animations when content loads
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [topic, topicDetail]);
+
   const loadTopicData = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Loading topic data for topicId:', topicId);
+      
+      // Get stored content
       const storedContent = await SyncService.getStoredContent();
+      console.log('Stored content:', {
+        religions: storedContent.religions?.length || 0,
+        topics: storedContent.topics?.length || 0,
+        topicDetails: storedContent.topicDetails?.length || 0
+      });
       
       // Find the topic
-      const foundTopic = storedContent.topics.find(t => t.id === topicId);
-      if (foundTopic) {
-        setTopic(foundTopic);
+      const foundTopic = storedContent.topics?.find(t => t.id === topicId);
+      console.log('Looking for topicId:', topicId);
+      console.log('Available topics:', storedContent.topics?.map(t => ({ id: t.id, title: t.title })) || []);
+      
+      if (!foundTopic) {
+        throw new Error('Topic not found');
+      }
+      
+      setTopic(foundTopic);
+      console.log('Found topic:', foundTopic.title);
+      
+      // Find the topic detail
+      const foundDetail = storedContent.topicDetails?.find(d => d.topicId === topicId);
+      console.log('Looking for topicDetail with topicId:', topicId);
+      console.log('Available topicDetails:', storedContent.topicDetails?.map(d => ({ 
+        topicId: d.topicId, 
+        useBlocks: d.useBlocks, 
+        contentBlocks: d.contentBlocks?.length || 0 
+      })) || []);
+      
+      if (foundDetail) {
+        setTopicDetail(foundDetail);
+        console.log(`Loaded topic detail for: ${foundTopic.title}`, {
+          useBlocks: foundDetail.useBlocks,
+          contentBlocks: foundDetail.contentBlocks?.length || 0
+        });
         
-        // Find the topic detail
-        const foundDetail = storedContent.topicDetails.find(d => d.topicId === topicId);
-        if (foundDetail) {
-          setTopicDetail(foundDetail);
-          console.log(`Loaded topic detail for: ${foundTopic.title}`);
-          
-          // Mark topic as read
-          markTopicAsRead(topicId, religion.id);
-          console.log(`Marked topic ${topicId} as read`);
+        // Debug: Log the actual content blocks structure
+        if (foundDetail.contentBlocks && foundDetail.contentBlocks.length > 0) {
+          console.log('Content blocks structure:', foundDetail.contentBlocks.map((block, index) => ({
+            index,
+            id: block.id,
+            blockType: block.blockType,
+            orderIndex: block.orderIndex,
+            contentDataKeys: block.contentData ? Object.keys(block.contentData) : [],
+            hasText: block.contentData?.text ? 'YES' : 'NO',
+            hasImageUrl: block.contentData?.imageUrl ? 'YES' : 'NO',
+            hasUrl: block.contentData?.url ? 'YES' : 'NO'
+          })));
         } else {
-          console.log('No topic detail found');
+          console.log('No content blocks found in topic detail');
         }
       } else {
-        console.log('Topic not found');
+        console.log('No topic detail found for topicId:', topicId);
+        // Create a mock topic detail if none exists
+        const mockDetail = {
+          id: `detail_${topicId}`,
+          topicId: topicId,
+          useBlocks: true,
+          contentBlocks: [
+            {
+              id: 1,
+              blockType: 'text',
+              contentData: {
+                text: 'This topic is currently being prepared. Content will be available soon.',
+              },
+              orderIndex: 0,
+            }
+          ]
+        };
+        setTopicDetail(mockDetail);
       }
+      
     } catch (error) {
       console.error('Error loading topic data:', error);
+      setError(error.message || 'Failed to load topic data');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    if (refreshing) return;
-    
-    setRefreshing(true);
-    
-    try {
-      console.log('Starting sync from topic detail screen...');
-      const result = await SyncService.performFullSync();
-      console.log('Sync result:', result);
-      
-      if (result.success) {
-        console.log('Sync completed successfully:', result.message);
-        // Reload topic data after successful sync
-        await loadTopicData();
-        console.log('Topic data synced and reloaded');
-      } else {
-        console.log('Sync failed:', result.message);
-        // Show error modal for real sync failures
-        setErrorMessage(result.message || 'Sync failed. Please try again.');
-        setShowErrorModal(true);
-        // Still try to load existing data even if sync fails
-        await loadTopicData();
-      }
-    } catch (error) {
-      console.error('Error syncing:', error);
-      // Show error modal for unexpected errors
-      setErrorMessage('An unexpected error occurred. Please try again.');
-      setShowErrorModal(true);
-      // Still try to load existing data even if sync fails
-      await loadTopicData();
-    } finally {
-      setRefreshing(false);
     }
   };
 
@@ -113,650 +178,443 @@ const TopicDetailScreen = ({ navigation, route }) => {
     if (!topic || !topicDetail) return;
 
     try {
-      let shareMessage = `${topic.title}\n\nጥያቄ: ${topic.description}\n\nዝርዝር ማብራሪያ:`;
+      let shareMessage = `${topic.title}\n\n`;
 
       // Add content blocks
       if (topicDetail.contentBlocks && topicDetail.contentBlocks.length > 0) {
         topicDetail.contentBlocks
           .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
-          .forEach((block, index) => {
+          .forEach((block) => {
             const contentData = typeof block.contentData === 'string' 
               ? JSON.parse(block.contentData) 
               : block.contentData;
 
-            switch (block.blockType) {
-              case 'text':
-                if (contentData.text) {
-                  shareMessage += `\n\n${contentData.text}`;
-                }
-                break;
-              case 'image':
-                if (contentData.caption) {
-                  shareMessage += `\n\n[Image: ${contentData.caption}]`;
-                }
-                break;
-              case 'mixed':
-                if (contentData.text) {
-                  shareMessage += `\n\n${contentData.text}`;
-                }
-                if (contentData.images && contentData.images.length > 0) {
-                  contentData.images.forEach(img => {
-                    if (img.caption) {
-                      shareMessage += `\n[Image: ${img.caption}]`;
-                    }
-                  });
-                }
-                break;
-              case 'gallery':
-                if (contentData.images && contentData.images.length > 0) {
-                  contentData.images.forEach((img, imgIndex) => {
-                    if (img.caption) {
-                      shareMessage += `\n[Image ${imgIndex + 1}: ${img.caption}]`;
-                    }
-                  });
-                }
-                break;
+            if (contentData.text) {
+              shareMessage += `${contentData.text}\n\n`;
             }
           });
       }
 
-      // Add Bible verses if available
-      if (topicDetail.bibleVerses && topicDetail.bibleVerses.length > 0) {
-        shareMessage += `\n\nቅዱስ ጥቅሶች:\n${topicDetail.bibleVerses.map(verse => `• ${verse}`).join('\n')}`;
-      }
+      shareMessage += `Melhik - Evangelism Tool`;
 
-      // Add key points if available
-      if (topicDetail.keyPoints && topicDetail.keyPoints.length > 0) {
-        shareMessage += `\n\nዋና ዋና ነጥቦች:\n${topicDetail.keyPoints.map(point => `• ${point}`).join('\n')}`;
-      }
-
-      // Add references if available
-      if (topicDetail.references && topicDetail.references.length > 0) {
-        shareMessage += `\n\nማጣቀሻዎች:\n${topicDetail.references.map(ref => `• ${ref.verse}: ${ref.text}`).join('\n')}`;
-      }
-
-      shareMessage += `\n\nMelhik - Evangelism Tool`;
-
-      const shareContent = {
+      await Share.share({
         title: topic.title,
         message: shareMessage,
-        url: 'https://melhik.app',
-      };
-
-      const result = await Share.share(shareContent);
-      
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          console.log('Shared with activity type:', result.activityType);
-        } else {
-          console.log('Shared successfully');
-        }
-      } else if (result.action === Share.dismissedAction) {
-        console.log('Share dismissed');
-      }
+      });
     } catch (error) {
-      Alert.alert('ስህተት', 'ይዘቱን ለማጋራት አልተቻለም።');
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Failed to share content');
     }
   };
 
-  // If no topic is provided, show a message
-  if (!topicId) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="document-text-outline" size={64} color={colors.textSecondary} />
-          <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-            ርዕሰ መልእክት ይምረጡ
-          </AmharicText>
-          <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
-            ዝርዝር መረጃ ለማግኘት ርዕሰ መልእክት ይምረጡ።
-          </AmharicText>
+  const renderLoadingState = () => (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color={colors.primary} />
+      <Text style={styles.loadingText}>Loading topic details...</Text>
+    </View>
+  );
+
+  const renderErrorState = () => (
+    <View style={styles.errorContainer}>
+      <MaterialCommunityIcons name="alert-circle" size={48} color={colors.error} />
+      <Text style={styles.errorTitle}>Error Loading Content</Text>
+      <Text style={styles.errorMessage}>{error}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={loadTopicData}>
+        <Text style={styles.retryButtonText}>Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderHeroSection = () => (
+    <Animated.View style={[styles.heroSection, { opacity: fadeAnim }]}>
+      <SimpleGradient
+        colors={['#1F2937', '#111827']}
+        style={styles.heroGradient}
+      >
+        {/* Back Button */}
+        <View style={styles.headerContainer}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.shareButton}
+            onPress={handleShare}
+          >
+            <Ionicons name="share-outline" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-      </SafeAreaView>
-    );
-  }
+        
+        <View style={styles.heroContent}>
+          <Text style={styles.heroTitle}>{topic?.title || 'Topic'}</Text>
+          <Text style={styles.heroSubtitle}>
+            Explore the depths of this important topic
+          </Text>
+        </View>
+      </SimpleGradient>
+    </Animated.View>
+  );
+
+  const renderQuestionCard = () => (
+    <Animated.View 
+      style={[
+        styles.questionCardContainer,
+        { 
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
+        }
+      ]}
+    >
+      <View style={styles.questionCard}>
+        <View style={styles.questionHeader}>
+          <MaterialCommunityIcons name="help-circle" size={24} color={colors.primary} />
+          <Text style={styles.questionTitle}>What is this topic about?</Text>
+        </View>
+        <Text style={styles.questionText}>
+          {topic?.description || `This topic explores the fundamental concepts and teachings related to ${topic?.title?.toLowerCase() || 'this subject'}.`}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+
+  const renderMainContent = () => (
+    <Animated.View style={[styles.mainContent, { opacity: fadeAnim }]}>
+      <View style={styles.contentSection}>
+        <View style={styles.modernSectionHeader}>
+          <View style={styles.sectionTitleContainer}>
+            <SimpleGradient colors={[colors.primary, colors.primaryDark]} style={styles.sectionIcon}>
+              <MaterialCommunityIcons name="book-open" size={20} color="#FFFFFF" />
+            </SimpleGradient>
+            <View style={styles.sectionTitleText}>
+              <Text style={styles.sectionTitle}>Content</Text>
+              <Text style={styles.sectionSubtitle}>
+                {topicDetail?.contentBlocks?.length || 0} content blocks
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.contentBlocksContainer}>
+          {topicDetail?.contentBlocks && Array.isArray(topicDetail.contentBlocks) && topicDetail.contentBlocks.length > 0 ? (
+            topicDetail.contentBlocks.map((block, index) => {
+              // Validate block structure
+              if (!block || !block.blockType) {
+                console.warn('Invalid block at index', index, block);
+                return null;
+              }
+              
+              return (
+                <Animated.View
+                  key={block.id || index}
+                  style={[
+                    styles.contentBlock,
+                    {
+                      opacity: fadeAnim,
+                      transform: [
+                        {
+                          translateY: Animated.add(
+                            slideAnim,
+                            new Animated.Value(index * 20)
+                          )
+                        }
+                      ]
+                    }
+                  ]}
+                >
+                  <ContentBlockRenderer 
+                    block={block} 
+                    colors={colors}
+                    isDarkMode={isDarkMode}
+                  />
+                </Animated.View>
+              );
+            }).filter(Boolean)
+          ) : (
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons name="book-open" size={48} color={colors.textTertiary} />
+              <Text style={styles.emptyTitle}>No Content Available</Text>
+              <Text style={styles.emptyMessage}>
+                This topic doesn't have any content blocks yet.
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </Animated.View>
+  );
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-        <AppBar 
-          title="ዝርዝር መረጃ"
-          colors={colors}
-        />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <AmharicText variant="body" style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Loading content...
-          </AmharicText>
-        </View>
-      </SafeAreaView>
-    );
+    return renderLoadingState();
   }
 
-  if (!topic || !topicDetail) {
+  if (error) {
+    return renderErrorState();
+  }
+
+  if (!topic) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-        <AppBar 
-          title="ዝርዝር መረጃ"
-          colors={colors}
-        />
-        <View style={styles.emptyContainer}>
-          <Ionicons name="document-text-outline" size={64} color={colors.textSecondary} />
-          <AmharicText variant="subheading" style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-            ይዘት አልተገኘም
-          </AmharicText>
-          <AmharicText variant="body" style={[styles.emptyText, { color: colors.textSecondary }]}>
-            ይህ ርዕሰ መልእክት ዝርዝር መረጃ አልተገኘም።
-          </AmharicText>
-        </View>
-      </SafeAreaView>
+      <View style={styles.errorContainer}>
+        <MaterialCommunityIcons name="alert-circle" size={48} color={colors.error} />
+        <Text style={styles.errorTitle}>Topic Not Found</Text>
+        <Text style={styles.errorMessage}>The requested topic could not be found.</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.retryButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <ErrorModal
-        visible={showErrorModal}
-        title="Sync Error"
-        message={errorMessage}
-        onClose={() => setShowErrorModal(false)}
-      />
-      <AppBar 
-        title="ዝርዝር መረጃ"
-        colors={colors}
-      />
-
-      <ScrollView 
+    <View style={styles.container}>
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
       >
-        {/* Header Section with Topic Title and Religion Badge */}
-        <View style={[styles.headerSection, { backgroundColor: colors.cardBackground }]}>
-          <View style={styles.headerTop}>
-            <View style={[styles.religionBadge, { borderColor: religion.color }]}>
-              <AmharicText variant="caption" style={[styles.religionBadgeText, { color: religion.color }]}>
-                {religion.name}
-              </AmharicText>
-            </View>
-            <TouchableOpacity 
-              style={[styles.headerBookmarkButton, { 
-                backgroundColor: isBookmarked(topic.id) ? colors.primary : 'transparent'
-              }]}
-              onPress={() => toggleBookmark({
-                id: topic.id,
-                title: topic.title,
-                description: topic.description,
-                religionId: religion.id,
-                religionName: religion.name
-              })}
-            >
-              <Ionicons 
-                name={isBookmarked(topic.id) ? "bookmark" : "bookmark-outline"} 
-                size={20} 
-                color={isBookmarked(topic.id) ? "white" : colors.primary} 
-              />
-            </TouchableOpacity>
-          </View>
-          
-          <AmharicText variant="heading" style={[styles.topicTitle, { color: colors.textPrimary }]}>
-            {topic.title}
-          </AmharicText>
-          
-          <View style={[styles.questionCard, { backgroundColor: colors.background }]}>
-            <View style={styles.questionHeader}>
-              <Ionicons name="help-circle" size={20} color={colors.primary} />
-              <AmharicText variant="subheading" style={[styles.questionLabel, { color: colors.primary }]}>
-                ጥያቄ
-              </AmharicText>
-            </View>
-            <AmharicText variant="body" style={[styles.questionText, { color: colors.textSecondary }]}>
-              {topic.description}
-            </AmharicText>
-          </View>
-        </View>
-
-        {/* Main Explanation Section */}
-        <View style={[styles.explanationSection, { backgroundColor: colors.cardBackground }]}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionTitleContainer}>
-              <Ionicons name="document-text" size={24} color={colors.primary} />
-              <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                ዝርዝር ማብራሪያ
-              </AmharicText>
-            </View>
-          </View>
-          
-          {/* Render content blocks */}
-          {topicDetail.contentBlocks && topicDetail.contentBlocks.length > 0 ? (
-            <View style={styles.contentBlocksContainer}>
-              {topicDetail.contentBlocks
-                .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
-                .map((block, index) => (
-                  <ContentBlockRenderer
-                    key={block.id || index}
-                    block={{
-                      ...block,
-                      contentData: typeof block.contentData === 'string' 
-                        ? JSON.parse(block.contentData) 
-                        : block.contentData
-                    }}
-                    colors={colors}
-                    isDarkMode={isDarkMode}
-                  />
-                ))}
-            </View>
-          ) : (
-            <View style={styles.noContentContainer}>
-              <AmharicText style={[styles.noContentText, { color: colors.textSecondary }]}>
-                ይዘት አልተገኘም።
-              </AmharicText>
-            </View>
-          )}
-        </View>
-
-        {/* Bible Verses Section */}
-        {topicDetail.bibleVerses && topicDetail.bibleVerses.length > 0 && (
-          <View style={[styles.versesSection, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleContainer}>
-                <Ionicons name="book" size={24} color="#3B82F6" />
-                <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                  ቅዱስ ጥቅሶች
-                </AmharicText>
-              </View>
-            </View>
-            
-            <View style={styles.versesList}>
-              {topicDetail.bibleVerses.map((verse, index) => (
-                <View key={index} style={[styles.verseCard, { backgroundColor: colors.background }]}>
-                  <View style={[styles.verseNumber, { backgroundColor: '#3B82F6' }]}>
-                    <AmharicText variant="caption" style={styles.verseNumberText}>
-                      {index + 1}
-                    </AmharicText>
-                  </View>
-                  <AmharicText variant="body" style={[styles.verseText, { color: colors.textSecondary }]}>
-                    {verse}
-                  </AmharicText>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Key Points Section */}
-        {topicDetail.keyPoints && topicDetail.keyPoints.length > 0 && (
-          <View style={[styles.keyPointsSection, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleContainer}>
-                <Ionicons name="checkmark-circle" size={24} color="#10B981" />
-                <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                  ዋና ዋና ነጥቦች
-                </AmharicText>
-              </View>
-            </View>
-            
-            <View style={styles.keyPointsList}>
-              {topicDetail.keyPoints.map((point, index) => (
-                <View key={index} style={[styles.keyPointCard, { backgroundColor: colors.background }]}>
-                  <View style={[styles.keyPointIcon, { backgroundColor: '#10B981' }]}>
-                    <Ionicons name="checkmark" size={16} color="white" />
-                  </View>
-                  <AmharicText variant="body" style={[styles.keyPointText, { color: colors.textSecondary }]}>
-                    {point}
-                  </AmharicText>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* References Section */}
-        {topicDetail.references && topicDetail.references.length > 0 && (
-          <View style={[styles.referencesSection, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleContainer}>
-                <Ionicons name="library" size={24} color="#8B5CF6" />
-                <AmharicText variant="subheading" style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-                  ማጣቀሻዎች
-                </AmharicText>
-              </View>
-            </View>
-            
-            <View style={styles.referencesList}>
-              {topicDetail.references.map((reference, index) => (
-                <View key={index} style={[styles.referenceCard, { backgroundColor: colors.background }]}>
-                  <View style={styles.referenceHeader}>
-                    <AmharicText variant="body" style={[styles.referenceVerse, { color: '#8B5CF6' }]}>
-                      {reference.verse}
-                    </AmharicText>
-                  </View>
-                  <AmharicText variant="body" style={[styles.referenceText, { color: colors.textSecondary }]}>
-                    {reference.text}
-                  </AmharicText>
-                  {reference.explanation && (
-                    <View style={[styles.referenceExplanationContainer, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
-                      <AmharicText variant="body" style={[styles.referenceExplanation, { color: colors.textTertiary }]}>
-                        {reference.explanation}
-                      </AmharicText>
-                    </View>
-                  )}
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Floating Action Buttons */}
-        <View style={styles.floatingButtons}>
-          <TouchableOpacity 
-            style={[styles.floatingButton, { backgroundColor: colors.primary }]}
-            onPress={handleShare}
-          >
-            <Ionicons name="share-social" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
+        {renderHeroSection()}
+        {renderQuestionCard()}
+        {renderMainContent()}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 0,
-    paddingVertical: 20,
-    paddingBottom: 100,
+    paddingBottom: 40,
   },
-  
-  // Header Section Styles
-  headerSection: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
     marginBottom: 24,
-    padding: 20,
-    borderRadius: 16,
-    width: '98%',
-    alignSelf: 'center',
   },
-  headerTop: {
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: colors.textInverse,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  heroSection: {
+    height: 200,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    width: '100%',
+  },
+  heroGradient: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 0,
+    paddingTop: 16,
+    paddingBottom: 24,
+    width: '100%',
+  },
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shareButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  heroContent: {
+    alignItems: 'flex-start',
+    paddingHorizontal: 24,
+    paddingBottom: 20,
   },
   religionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-  },
-  religionBadgeText: {
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  headerBookmarkButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  topicTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 16,
-    lineHeight: 32,
+  },
+  religionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  heroTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    lineHeight: 40,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 24,
+  },
+  questionCardContainer: {
+    marginHorizontal: 0,
+    marginBottom: 0,
+    paddingHorizontal: 16,
+    marginTop: -20,
+    zIndex: 10,
   },
   questionCard: {
-    padding: 12,
-    borderRadius: 12,
-    width: '100%',
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   questionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  questionLabel: {
-    marginLeft: 8,
+  questionTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    fontSize: 16,
+    color: colors.textPrimary,
+    marginLeft: 12,
   },
   questionText: {
     fontSize: 16,
+    color: colors.textSecondary,
     lineHeight: 24,
   },
-
-  // Section Styles
-  explanationSection: {
-    marginBottom: 16,
-    padding: 8,
-    borderRadius: 0,
+  mainContent: {
+    paddingHorizontal: 0,
+    paddingBottom: 32,
+    marginTop: 16,
     width: '100%',
-    alignSelf: 'stretch',
   },
-  versesSection: {
-    marginBottom: 24,
-    padding: 20,
-    borderRadius: 16,
-    width: '98%',
-    alignSelf: 'center',
+  contentSection: {
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    padding: 24,
+    marginHorizontal: 0,
+    minHeight: 200,
+    width: '100%',
   },
-  keyPointsSection: {
-    marginBottom: 24,
-    padding: 20,
-    borderRadius: 16,
-    width: '98%',
-    alignSelf: 'center',
-  },
-  referencesSection: {
-    marginBottom: 24,
-    padding: 20,
-    borderRadius: 16,
-    width: '98%',
-    alignSelf: 'center',
-  },
-
-  // Section Header Styles
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    padding: 12,
-    borderRadius: 8,
+  modernSectionHeader: {
+    marginBottom: 20,
   },
   sectionTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 12,
-  },
-  sectionBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  sectionBadgeText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-
-  // Content Card Styles
-  explanationCard: {
-    padding: 8,
-    borderRadius: 0,
-    width: '100%',
-  },
-  explanationText: {
-    fontSize: 16,
-    lineHeight: 26,
-  },
-
-  // Verses Styles
-  versesList: {
-    marginTop: 4,
-  },
-  verseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 12,
-    width: '100%',
-  },
-  verseNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  verseNumberText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  verseText: {
-    fontSize: 16,
-    lineHeight: 24,
-    flex: 1,
-    fontStyle: 'italic',
-  },
-
-  // Key Points Styles
-  keyPointsList: {
-    marginTop: 4,
-  },
-  keyPointCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 12,
-    width: '100%',
-  },
-  keyPointIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  keyPointText: {
-    fontSize: 16,
-    lineHeight: 24,
-    flex: 1,
-  },
-
-  // References Styles
-  referencesList: {
-    marginTop: 4,
-  },
-  referenceCard: {
-    padding: 12,
-    marginBottom: 16,
-    borderRadius: 12,
-    width: '100%',
-  },
-  referenceHeader: {
-    paddingLeft: 12,
-    marginBottom: 12,
-  },
-  referenceVerse: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  referenceText: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 12,
-    fontStyle: 'italic',
-  },
-  referenceExplanationContainer: {
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  referenceExplanation: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontStyle: 'normal',
-  },
-
-  // Floating Buttons
-  floatingButtons: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    flexDirection: 'row',
-  },
-  floatingButton: {
+  sectionIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-
-  // Content Blocks
-  contentBlocksContainer: {
-    padding: 0,
-  },
-
-  // Empty States
-  emptyContainer: {
+  sectionTitleText: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  contentBlocksContainer: {
+    gap: 16,
+  },
+  contentBlock: {
+    marginBottom: 16,
+  },
+  emptyContainer: {
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textPrimary,
     marginTop: 16,
-    textAlign: 'center',
+    marginBottom: 8,
   },
-  emptyText: {
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-  },
-
-  // No Content
-  noContentContainer: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  noContentText: {
+  emptyMessage: {
     fontSize: 16,
-    fontStyle: 'italic',
+    color: colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 24,
   },
 });
 
