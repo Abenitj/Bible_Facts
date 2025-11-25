@@ -8,6 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +18,28 @@ import AmharicText from '../src/components/AmharicText';
 import SyncService from '../src/services/SyncService';
 import { getColors } from '../src/theme/colors';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
+import ImageCarousel from '../components/ImageCarousel';
+
+// Blur effect component using pure React Native (no native modules)
+const BlurViewComponent = ({ intensity = 20, tint = 'dark', style, ...props }) => {
+  // Single layer blur effect
+  const baseOpacity = Math.min(intensity / 100, 0.4);
+  const isDark = tint === 'dark';
+  
+  return (
+    <View 
+      style={[
+        style, 
+        { 
+          backgroundColor: isDark 
+            ? `rgba(0, 0, 0, ${baseOpacity})` 
+            : `rgba(255, 255, 255, ${baseOpacity})`,
+        }
+      ]} 
+      {...props} 
+    />
+  );
+};
 
 // Simple fallback components that don't rely on native modules
 const SimpleGradient = ({ children, colors, style, ...props }) => (
@@ -56,6 +80,11 @@ const TopicDetailScreen = ({ navigation, route }) => {
     console.warn('Invalid colors object, using defaults');
     colors = getColors(false);
   }
+  
+  // Use light gray background for better visual harmony
+  const screenBackgroundColor = isDarkMode 
+    ? colors.background 
+    : colors.borderLight; // Light gray (#F3F4F6) for light mode
   
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -209,7 +238,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   };
 
   const renderLoadingState = () => (
-    <SafeAreaView style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.loadingContainer, { backgroundColor: screenBackgroundColor }]}>
       <ActivityIndicator size="large" color={colors.primary} />
       <AmharicText variant="body" color={colors.textSecondary} style={styles.loadingText}>
         ይጠብቃል...
@@ -218,7 +247,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
   );
 
   const renderErrorState = () => (
-    <SafeAreaView style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.errorContainer, { backgroundColor: screenBackgroundColor }]}>
       <MaterialCommunityIcons name="alert-circle" size={48} color={colors.error} />
       <AmharicText variant="heading" color={colors.textPrimary} style={styles.errorTitle}>
         ስህተት ተፈጥሯል
@@ -237,39 +266,75 @@ const TopicDetailScreen = ({ navigation, route }) => {
     </SafeAreaView>
   );
 
-  const renderHeroSection = () => (
-    <Animated.View style={[styles.heroSection, { opacity: fadeAnim }]}>
-      <SimpleGradient
-        colors={['#1F2937', '#111827']}
-        style={styles.heroGradient}
-      >
-        {/* Back Button */}
-        <View style={styles.headerContainer}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.shareButton}
-            onPress={handleShare}
-          >
-            <Ionicons name="share-outline" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.heroContent}>
-          <AmharicText variant="largeTitle" color="#FFFFFF" bold style={styles.heroTitle}>
-            {topic?.title || 'Topic'}
-          </AmharicText>
-          <AmharicText variant="body" color="rgba(255, 255, 255, 0.9)" style={styles.heroSubtitle}>
-            ይህንን አስፈላጊ ርዕስ ይመልከቱ
-          </AmharicText>
-        </View>
-      </SimpleGradient>
-    </Animated.View>
-  );
+  const renderHeroSection = () => {
+    // Use three images from assets
+    const headerImages = [
+      require('../assets/topic-header/bible 1.jpg'),
+      require('../assets/topic-header/bible2.jpg'),
+      require('../assets/topic-header/bible3.jpg'),
+    ];
+    
+    const hasImages = headerImages.length > 0;
+    
+    return (
+      <View style={styles.heroSection}>
+        {hasImages ? (
+          <View style={styles.heroImageContainer}>
+            <ImageCarousel
+              images={headerImages}
+              height={250}
+              flexible={false}
+              showPagination={true}
+              showFullScreen={true}
+              autoPlay={true}
+              autoPlayInterval={5000}
+              showCounter={false}
+            />
+            {/* Linear gradient overlay with topic title */}
+            <View style={styles.heroOverlay}>
+              <View style={styles.heroContentOverlay}>
+                <AmharicText 
+                  variant="largeTitle" 
+                  color="#FFFFFF" 
+                  bold 
+                  style={styles.heroTitleOverlay}
+                >
+                  {topic?.title || 'Topic'}
+                </AmharicText>
+                <AmharicText 
+                  variant="body" 
+                  color="rgba(255, 255, 255, 0.9)" 
+                  style={styles.heroSubtitleOverlay}
+                >
+                  ይህንን አስፈላጊ ርዕስ ይመልከቱ
+                </AmharicText>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.heroGradient, { backgroundColor: colors.surface }]}>
+            <View style={styles.heroContent}>
+              <AmharicText 
+                variant="largeTitle" 
+                color={colors.textPrimary} 
+                bold 
+                style={styles.heroTitle}
+              >
+                {topic?.title || 'Topic'}
+              </AmharicText>
+              <AmharicText 
+                variant="body" 
+                color={colors.textSecondary} 
+                style={styles.heroSubtitle}
+              >
+                ይህንን አስፈላጊ ርዕስ ይመልከቱ
+              </AmharicText>
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   const renderQuestionCard = () => (
     <Animated.View 
@@ -281,13 +346,31 @@ const TopicDetailScreen = ({ navigation, route }) => {
         }
       ]}
     >
-      <View style={styles.questionCard}>
-        <View style={styles.questionHeader}>
-          <MaterialCommunityIcons name="help-circle" size={24} color={colors.primary} />
+      <View 
+        style={[
+          styles.questionCard, 
+          { 
+            backgroundColor: colors.surface,
+            ...Platform.select({
+              ios: {
+                shadowColor: colors.shadow,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+              },
+              android: {
+                elevation: 3,
+              },
+            }),
+          }
+        ]}
+      >
+        <View style={styles.questionCardHeader}>
           <AmharicText variant="subheading" color={colors.textPrimary} bold style={styles.questionTitle}>
             ይህ ርዕስ ስለ ምን ነው?
           </AmharicText>
         </View>
+        <View style={[styles.questionDivider, { backgroundColor: colors.borderLight }]} />
         <AmharicText variant="body" color={colors.textSecondary} style={styles.questionText}>
           {topic?.description || `ይህ ርዕስ ${topic?.title || 'ይህ ርዕስ'} ከተዛመዱ መሰረታዊ ጽንሰ-ሀሳቦችን እና ትምህርቶችን ያስላል።`}
         </AmharicText>
@@ -385,7 +468,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
   if (!topic) {
     return (
-      <SafeAreaView style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.errorContainer, { backgroundColor: screenBackgroundColor }]}>
         <MaterialCommunityIcons name="alert-circle" size={48} color={colors.error} />
         <AmharicText variant="heading" color={colors.textPrimary} style={styles.errorTitle}>
           ርዕስ አልተገኘም
@@ -406,9 +489,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: screenBackgroundColor }]} edges={[]}>
       <ScrollView
-        style={styles.scrollView}
+        style={[styles.scrollView, { backgroundColor: screenBackgroundColor }]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
@@ -475,52 +558,94 @@ const createStyles = (colors) => StyleSheet.create({
     fontWeight: '600',
   },
   heroSection: {
-    height: 200,
+    width: '100%',
     marginBottom: 0,
     marginHorizontal: 0,
+  },
+  heroImageContainer: {
     width: '100%',
+    height: 250,
+    position: 'relative',
+  },
+  heroOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    paddingTop: 20,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    justifyContent: 'flex-end',
+  },
+  heroGradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+  },
+  gradientLayer1: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '25%',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+  },
+  gradientLayer2: {
+    position: 'absolute',
+    top: '25%',
+    left: 0,
+    right: 0,
+    height: '25%',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  gradientLayer3: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    height: '25%',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  gradientLayer4: {
+    position: 'absolute',
+    top: '75%',
+    left: 0,
+    right: 0,
+    height: '25%',
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  heroContentOverlay: {
+    width: '100%',
+    zIndex: 10,
+  },
+  heroTitleOverlay: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    lineHeight: 36,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  heroSubtitleOverlay: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 22,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   heroGradient: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingHorizontal: 0,
-    paddingTop: 16,
+    minHeight: 200,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 40,
     paddingBottom: 24,
     width: '100%',
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  shareButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   heroContent: {
     alignItems: 'flex-start',
@@ -545,49 +670,48 @@ const createStyles = (colors) => StyleSheet.create({
   heroTitle: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#FFFFFF',
     marginBottom: 8,
     lineHeight: 40,
   },
   heroSubtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 24,
   },
   questionCardContainer: {
-    marginHorizontal: 0,
-    marginBottom: 0,
-    paddingHorizontal: 16,
-    marginTop: -20,
-    zIndex: 10,
+    marginHorizontal: 16,
+    marginBottom: 24,
+    marginTop: 16,
   },
   questionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: 16,
+    padding: 20,
   },
-  questionHeader: {
-    flexDirection: 'row',
+  questionCardHeader: {
+    marginBottom: 16,
+  },
+  questionIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginRight: 12,
   },
   questionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginLeft: 12,
+    fontWeight: '700',
+    flex: 1,
+    letterSpacing: 0.3,
+  },
+  questionDivider: {
+    height: 1,
+    marginBottom: 16,
+    width: '100%',
   },
   questionText: {
-    fontSize: 16,
-    color: colors.textSecondary,
+    fontSize: 15,
     lineHeight: 24,
+    letterSpacing: 0.2,
   },
   mainContent: {
     paddingHorizontal: 0,

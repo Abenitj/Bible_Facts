@@ -36,8 +36,9 @@ const ImageBlockComponent = ({ imageData, colors, isDarkMode, style }) => {
       <ImageCard
         imageUrl={imageUrl}
         caption={caption}
-        height={400}
-        borderRadius={16}
+        flexible={true}
+        maxHeight={800}
+        borderRadius={0}
         showFullScreen={true}
         containerStyle={styles.imageCardContainer}
       />
@@ -93,7 +94,8 @@ const ContentBlockRenderer = ({ block, colors = {}, isDarkMode = false }) => {
             <View style={styles.imageBlock}>
               <ImageCarousel
                 images={[imageContentData]}
-                height={400}
+                flexible={true}
+                maxHeight={800}
                 showPagination={false}
                 showFullScreen={true}
               />
@@ -130,14 +132,16 @@ const ContentBlockRenderer = ({ block, colors = {}, isDarkMode = false }) => {
                 {mixedContentData.images && mixedContentData.images.length > 0 ? (
                   <ImageCarousel
                     images={mixedContentData.images}
-                    height={350}
+                    flexible={true}
+                    maxHeight={800}
                     showPagination={true}
                     showFullScreen={true}
                   />
                 ) : (
                   <ImageCarousel
                     images={[mixedContentData]}
-                    height={350}
+                    flexible={true}
+                    maxHeight={800}
                     showPagination={false}
                     showFullScreen={true}
                   />
@@ -158,7 +162,8 @@ const ContentBlockRenderer = ({ block, colors = {}, isDarkMode = false }) => {
             {galleryContentData?.images && galleryContentData.images.length > 0 ? (
               <ImageCarousel
                 images={galleryContentData.images}
-                height={400}
+                flexible={true}
+                maxHeight={800}
                 showPagination={true}
                 showFullScreen={true}
                 autoPlay={false}

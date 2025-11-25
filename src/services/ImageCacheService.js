@@ -19,15 +19,22 @@ const getBaseUrl = () => {
   return baseUrl.replace(/\/api\/?$/, '');
 };
 
-// Convert localhost URLs to IP address from API config
+// Convert localhost URLs to IP address from API config and handle relative paths
 const normalizeImageUrl = (url) => {
   if (!url || typeof url !== 'string') return url;
   
   try {
+    const baseUrl = getBaseUrl();
+    
+    // Handle relative paths (starting with /)
+    if (url.startsWith('/')) {
+      const normalizedUrl = `${baseUrl}${url}`;
+      console.log(`Normalized relative URL: ${url} -> ${normalizedUrl}`);
+      return normalizedUrl;
+    }
+    
     // If URL contains localhost or 127.0.0.1, replace with IP from API config
     if (url.includes('localhost') || url.includes('127.0.0.1')) {
-      const baseUrl = getBaseUrl();
-      
       // Try to parse as URL
       try {
         const urlObj = new URL(url);
@@ -49,6 +56,19 @@ const normalizeImageUrl = (url) => {
         }
         return normalizedUrl;
       }
+    }
+    
+    // If URL is already absolute (starts with http:// or https://), return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // If URL doesn't start with / or http, it might be a relative path without leading slash
+    // Try to construct absolute URL
+    if (!url.includes('://')) {
+      const normalizedUrl = `${baseUrl}/${url}`;
+      console.log(`Normalized path URL: ${url} -> ${normalizedUrl}`);
+      return normalizedUrl;
     }
   } catch (error) {
     console.warn('Error normalizing URL:', error);
@@ -135,6 +155,9 @@ class ImageCacheService {
    * Generate cache filename from URL
    */
   getCacheFileName(url) {
+    // Skip for local sources (numbers from require)
+    if (typeof url === 'number') return null;
+    
     if (!url || typeof url !== 'string') return null;
     
     try {
@@ -157,8 +180,11 @@ class ImageCacheService {
     } catch (error) {
       console.error('Error generating cache filename:', error);
       // Fallback: use a simple hash
-      const simpleHash = url.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return `${Math.abs(simpleHash)}.jpg`;
+      if (typeof url === 'string') {
+        const simpleHash = url.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return `${Math.abs(simpleHash)}.jpg`;
+      }
+      return null;
     }
   }
 
@@ -176,6 +202,12 @@ class ImageCacheService {
    */
   async isCached(url) {
     if (!url) return false;
+    
+    // Skip caching for local sources (numbers from require)
+    if (typeof url === 'number') return false;
+    
+    // Check if url is a valid string before calling string methods
+    if (typeof url !== 'string') return false;
     
     // If URL is already a local file, check if it exists
     if (url.startsWith('file://')) {
@@ -222,6 +254,12 @@ class ImageCacheService {
   async getCachedImageUri(url) {
     if (!url) return null;
     
+    // Skip caching for local sources (numbers from require) - return as is
+    if (typeof url === 'number') return url;
+    
+    // Check if url is a valid string before calling string methods
+    if (typeof url !== 'string') return url;
+    
     // If URL is already a local file, return it directly
     if (url.startsWith('file://')) {
       return url;
@@ -254,9 +292,20 @@ class ImageCacheService {
    * Download and cache image
    */
   async cacheImage(url, options = {}) {
-    if (!url || typeof url !== 'string') {
+    if (!url) {
       console.warn('ImageCacheService: No valid URL provided');
       return null;
+    }
+    
+    // Skip caching for local sources (numbers from require) - return as is
+    if (typeof url === 'number') {
+      return url;
+    }
+    
+    // Check if url is a valid string
+    if (typeof url !== 'string') {
+      console.warn('ImageCacheService: URL must be a string or number');
+      return url;
     }
 
     // If URL is already a local file, return it directly
@@ -299,6 +348,12 @@ class ImageCacheService {
         return normalizedUrl;
       }
 
+      // Validate that normalized URL is absolute before attempting download
+      if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://') && !normalizedUrl.startsWith('file://')) {
+        console.warn(`ImageCacheService: Invalid URL format, cannot download: ${normalizedUrl}`);
+        return normalizedUrl; // Return as-is, let the Image component handle it
+      }
+
       console.log(`Downloading image: ${normalizedUrl} -> ${localUri}`);
 
       // Download image (use normalized URL)
@@ -338,7 +393,12 @@ class ImageCacheService {
         return normalizedUrl; // Return normalized URL as fallback
       }
     } catch (error) {
-      console.error(`Error caching image ${normalizedUrl}:`, error);
+      // More detailed error logging
+      if (error.message && error.message.includes('Resources$NotFoundException')) {
+        console.warn(`ImageCacheService: URL format issue for ${url}. Normalized: ${normalizedUrl}. Using normalized URL directly.`);
+      } else {
+        console.error(`Error caching image ${normalizedUrl}:`, error);
+      }
       return normalizedUrl; // Return normalized URL as fallback
     }
   }
@@ -355,7 +415,15 @@ class ImageCacheService {
     for (let i = 0; i < urls.length; i++) {
       const url = urls[i];
       try {
-        // Skip if already a local file
+        // Skip if already a local file or local source (require)
+        if (typeof url === 'number') {
+          results.push({ url, normalizedUrl: url, cachedUri: url, success: true, skipped: true });
+          if (onProgress) {
+            onProgress(i + 1, urls.length, url);
+          }
+          continue;
+        }
+        
         if (url && typeof url === 'string' && url.startsWith('file://')) {
           results.push({ url, normalizedUrl: url, cachedUri: url, success: true, skipped: true });
           if (onProgress) {
@@ -368,7 +436,7 @@ class ImageCacheService {
         const normalizedUrl = normalizeImageUrl(url);
         
         // Skip if normalized URL is a local file
-        if (normalizedUrl.startsWith('file://')) {
+        if (normalizedUrl && typeof normalizedUrl === 'string' && normalizedUrl.startsWith('file://')) {
           results.push({ url, normalizedUrl, cachedUri: normalizedUrl, success: true, skipped: true });
           if (onProgress) {
             onProgress(i + 1, urls.length, normalizedUrl);

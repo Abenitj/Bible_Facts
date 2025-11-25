@@ -33,12 +33,14 @@ const ImageCard = ({
   imageUrl,
   caption,
   altText,
-  height = 300,
-  borderRadius = 16,
+  height = null, // null means flexible sizing
+  borderRadius = 0, // No rounded corners by default
   onPress,
   onLongPress,
   showCaption = true,
   showFullScreen = true,
+  flexible = true, // Enable flexible sizing by default
+  maxHeight = null, // Optional max height constraint
   style,
   containerStyle,
   ...props
@@ -49,16 +51,98 @@ const ImageCard = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [displayUri, setDisplayUri] = useState(imageUrl); // Use URL directly
+  // Handle both local sources (numbers from require) and URLs (strings)
+  const isLocalSource = typeof imageUrl === 'number';
+  const [displayUri, setDisplayUri] = useState(isLocalSource ? imageUrl : imageUrl);
+  const [imageDimensions, setImageDimensions] = useState(null); // { width, height }
+  const [calculatedHeight, setCalculatedHeight] = useState(height || 300);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
+  // Get image dimensions for flexible sizing
+  useEffect(() => {
+    if (!imageUrl) {
+      setCalculatedHeight(height || 300);
+      return;
+    }
+    
+    // Skip dimension calculation for local sources (require)
+    if (typeof imageUrl === 'number') {
+      setCalculatedHeight(height || 300);
+      return;
+    }
+    
+    // Get image dimensions if flexible sizing is enabled
+    if (flexible && !height) {
+      // Use original URL for dimension calculation (works better than cached URI)
+      Image.getSize(
+        imageUrl,
+        (width, imgHeight) => {
+          const aspectRatio = imgHeight / width;
+          const screenWidth = SCREEN_WIDTH - 32; // Account for padding
+          let calculatedH = screenWidth * aspectRatio;
+          
+          // Apply max height constraint if provided
+          if (maxHeight && calculatedH > maxHeight) {
+            calculatedH = maxHeight;
+          }
+          
+          setImageDimensions({ width, height: imgHeight });
+          setCalculatedHeight(calculatedH);
+        },
+        (error) => {
+          console.warn('ImageCard: Could not get image dimensions, trying cached URI:', error);
+          // Try with displayUri if original URL fails
+          if (displayUri && displayUri !== imageUrl) {
+            Image.getSize(
+              displayUri,
+              (width, imgHeight) => {
+                const aspectRatio = imgHeight / width;
+                const screenWidth = SCREEN_WIDTH - 32;
+                let calculatedH = screenWidth * aspectRatio;
+                
+                if (maxHeight && calculatedH > maxHeight) {
+                  calculatedH = maxHeight;
+                }
+                
+                setImageDimensions({ width, height: imgHeight });
+                setCalculatedHeight(calculatedH);
+              },
+              (err) => {
+                console.warn('ImageCard: Could not get image dimensions from cached URI:', err);
+                // Fallback to default height if dimensions can't be retrieved
+                setCalculatedHeight(height || 300);
+              }
+            );
+          } else {
+            // Fallback to default height if dimensions can't be retrieved
+            setCalculatedHeight(height || 300);
+          }
+        }
+      );
+    } else {
+      setCalculatedHeight(height || 300);
+    }
+  }, [imageUrl, flexible, height, maxHeight]);
+
   // Check for cached version on mount (non-blocking, optional optimization)
   useEffect(() => {
-    if (!imageUrl || imageUrl.startsWith('file://')) {
+    // Skip caching for local sources (require)
+    if (typeof imageUrl === 'number') {
+      setDisplayUri(imageUrl);
+      return;
+    }
+    
+    // Check if imageUrl is a valid string before calling string methods
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      setDisplayUri(imageUrl);
+      return;
+    }
+    
+    if (imageUrl.startsWith('file://')) {
       setDisplayUri(imageUrl);
       return;
     }
@@ -66,7 +150,7 @@ const ImageCard = ({
     // Check if cached version exists (non-blocking check)
     ImageCacheService.getCachedImageUri(imageUrl)
       .then(cachedUri => {
-        if (cachedUri && cachedUri.startsWith('file://')) {
+        if (cachedUri && typeof cachedUri === 'string' && cachedUri.startsWith('file://')) {
           // Use cached version if available
           setDisplayUri(cachedUri);
         }
@@ -134,11 +218,12 @@ const ImageCard = ({
     setImageLoaded(true);
     
     // Cache image AFTER it loads successfully (background, non-blocking)
-    if (imageUrl && !imageUrl.startsWith('file://')) {
+    // Only cache if imageUrl is a string URL (not local require source)
+    if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('file://')) {
       ImageCacheService.cacheImage(imageUrl)
         .then(cachedUri => {
           // If cached successfully, update to use cached version
-          if (cachedUri && cachedUri.startsWith('file://')) {
+          if (cachedUri && typeof cachedUri === 'string' && cachedUri.startsWith('file://')) {
             setDisplayUri(cachedUri);
             ImageCacheService.updateLastAccessed(imageUrl);
           }
@@ -166,18 +251,17 @@ const ImageCard = ({
   };
 
   const displayCaption = caption || altText;
+  const imageHeight = flexible && !height ? calculatedHeight : (height || 300);
 
   // Don't render if no image URI
   if (!displayUri) {
     return (
       <View style={[styles.container, containerStyle]}>
-        <View style={[styles.card, { height, borderRadius, backgroundColor: isDarkMode ? colors.surface : '#FFFFFF' }, style]}>
-          <View style={[styles.imageContainer, { borderRadius, height, justifyContent: 'center', alignItems: 'center' }]}>
-            <Ionicons name="image-outline" size={48} color={colors.textTertiary} />
-            <AmharicText variant="caption" color={colors.textTertiary} style={{ marginTop: 8 }}>
-              ምስል አልተገኘም
-            </AmharicText>
-          </View>
+        <View style={[styles.imageContainer, { minHeight: 200, justifyContent: 'center', alignItems: 'center' }, style]}>
+          <Ionicons name="image-outline" size={48} color={colors.textTertiary} />
+          <AmharicText variant="caption" color={colors.textTertiary} style={{ marginTop: 8 }}>
+            ምስል አልተገኘም
+          </AmharicText>
         </View>
       </View>
     );
@@ -189,20 +273,11 @@ const ImageCard = ({
         activeOpacity={0.9}
         onPress={handlePress}
         onLongPress={onLongPress}
-        style={[
-          styles.card,
-          {
-            height,
-            borderRadius,
-            backgroundColor: isDarkMode ? colors.surface : '#FFFFFF',
-            shadowColor: colors.shadow,
-          },
-          style,
-        ]}
+        style={[styles.imageWrapper, style]}
         {...props}
       >
         {/* Image Container */}
-        <View style={[styles.imageContainer, { borderRadius, height }]}>
+        <View style={[styles.imageContainer, { height: imageHeight }]}>
           {!error ? (
             <>
               {/* Shimmer Loading Effect */}
@@ -223,20 +298,19 @@ const ImageCard = ({
 
               {/* Image */}
               <Animated.Image
-                source={{ 
-                  uri: displayUri,
-                  cache: 'default' // Use default cache
-                }}
+                source={typeof displayUri === 'number' 
+                  ? displayUri 
+                  : { uri: displayUri, cache: 'default' }}
                 style={[
                   styles.image,
                   {
-                    height,
-                    borderRadius,
+                    width: '100%',
+                    height: imageHeight,
                     opacity: fadeAnim,
                     transform: [{ scale: scaleAnim }],
                   },
                 ]}
-                resizeMode="cover"
+                resizeMode={flexible ? "contain" : "cover"}
                 onLoadStart={handleLoadStart}
                 onLoadEnd={handleLoadEnd}
                 onError={(error) => {
@@ -262,8 +336,21 @@ const ImageCard = ({
               {/* Full-Screen Indicator */}
               {showFullScreen && !loading && !error && (
                 <View style={styles.fullScreenIndicator}>
-                  <View style={[styles.fullScreenBadge, { backgroundColor: colors.overlay }]}>
-                    <Ionicons name="expand" size={16} color={colors.textInverse} />
+                  <View 
+                    style={[
+                      styles.fullScreenBadge, 
+                      { 
+                        backgroundColor: isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.2)' 
+                          : 'rgba(0, 0, 0, 0.6)'
+                      }
+                    ]}
+                  >
+                    <Ionicons 
+                      name="expand" 
+                      size={16} 
+                      color={isDarkMode ? '#FFFFFF' : '#FFFFFF'} 
+                    />
                   </View>
                 </View>
               )}
@@ -274,8 +361,7 @@ const ImageCard = ({
               style={[
                 styles.errorContainer,
                 {
-                  height,
-                  borderRadius,
+                  minHeight: imageHeight,
                   backgroundColor: isDarkMode ? colors.surface : '#F9FAFB',
                 },
               ]}
@@ -303,18 +389,10 @@ const ImageCard = ({
             style={[
               styles.captionContainer,
               {
-                backgroundColor: isDarkMode ? colors.surface : '#FFFFFF',
                 opacity: fadeAnim,
               },
             ]}
           >
-            <View style={styles.captionIconContainer}>
-              <Ionicons
-                name="information-circle"
-                size={16}
-                color={colors.primary}
-              />
-            </View>
             <AmharicText
               variant="caption"
               color={colors.textSecondary}
@@ -334,40 +412,27 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
-  card: {
+  imageWrapper: {
     width: '100%',
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
   imageContainer: {
     width: '100%',
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   shimmerContainer: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
   },
   image: {
     width: '100%',
-    height: '100%',
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
   },
   loadingText: {
     marginTop: 8,
@@ -383,17 +448,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
   },
   errorContainer: {
     width: '100%',
@@ -405,18 +459,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   captionContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  captionIconContainer: {
-    marginRight: 8,
-    marginTop: 2,
+    paddingTop: 8,
+    paddingHorizontal: 4,
   },
   captionText: {
-    flex: 1,
     lineHeight: 18,
   },
 });

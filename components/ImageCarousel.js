@@ -35,11 +35,14 @@ const FULLSCREEN_HEIGHT = SCREEN_HEIGHT;
  */
 const ImageCarousel = ({ 
   images = [], 
-  height = CAROUSEL_HEIGHT,
+  height = null, // null means flexible sizing
   showPagination = true,
   showFullScreen = true,
   autoPlay = false,
   autoPlayInterval = 3000,
+  flexible = true, // Enable flexible sizing by default
+  maxHeight = null, // Optional max height constraint
+  showCounter = true, // Show counter badge
   style,
 }) => {
   const { isDarkMode } = useDarkMode();
@@ -52,21 +55,42 @@ const ImageCarousel = ({
   const scrollX = useRef(new Animated.Value(0)).current;
 
   // Helper functions (defined before useMemo)
+  const getImageSource = (img) => {
+    // Handle local require() sources (numbers)
+    if (typeof img === 'number') return img;
+    // Handle string URLs
+    if (typeof img === 'string') return { uri: img };
+    // Handle objects with url property
+    if (img?.url) {
+      // Check if it's a local require() source
+      if (typeof img.url === 'number') return img.url;
+      return { uri: img.url };
+    }
+    // Handle objects with imageUrl property
+    if (img?.imageUrl) {
+      if (typeof img.imageUrl === 'number') return img.imageUrl;
+      return { uri: img.imageUrl };
+    }
+    return null;
+  };
+
   const getImageUrl = (img) => {
+    // For local sources (require), return the number
+    if (typeof img === 'number') return img;
     if (typeof img === 'string') return img;
     return img?.url || img?.imageUrl || '';
   };
 
   const getImageCaption = (img) => {
-    if (typeof img === 'string') return null;
+    if (typeof img === 'string' || typeof img === 'number') return null;
     return img?.caption || img?.altText || null;
   };
 
   // Filter out invalid images (memoized to prevent unnecessary recalculations)
   const validImages = useMemo(() => {
     return images.filter(img => {
-      const url = getImageUrl(img);
-      return url && typeof url === 'string' && url.length > 0;
+      const source = getImageSource(img);
+      return source !== null;
     });
   }, [images]);
 
@@ -119,7 +143,7 @@ const ImageCarousel = ({
 
   if (validImages.length === 0) {
     return (
-      <View style={[styles.emptyContainer, { height }, style]}>
+      <View style={[styles.emptyContainer, { minHeight: height || 200 }, style]}>
         <Ionicons name="image-outline" size={48} color={colors.textTertiary} />
         <AmharicText variant="caption" color={colors.textTertiary}>
           No images available
@@ -138,7 +162,9 @@ const ImageCarousel = ({
           imageUrl={imageUrl} // Always pass original URL, ImageCard will handle caching
           caption={caption}
           height={height}
-          borderRadius={16}
+          flexible={flexible}
+          maxHeight={maxHeight}
+          borderRadius={0}
           onPress={() => openFullScreen(0)}
           showFullScreen={showFullScreen}
           containerStyle={styles.singleImageContainer}
@@ -163,8 +189,8 @@ const ImageCarousel = ({
         scrollEventThrottle={16}
         decelerationRate="fast"
         snapToInterval={SCREEN_WIDTH}
-        snapToAlignment="center"
-        contentContainerStyle={styles.scrollContent}
+        snapToAlignment="start"
+        contentContainerStyle={[styles.scrollContent, { width: SCREEN_WIDTH * validImages.length }]}
       >
         {validImages.map((img, index) => {
           const imageUrl = getImageUrl(img);
@@ -177,6 +203,8 @@ const ImageCarousel = ({
                 imageUrl={imageUrl} // Pass original URL, not cached URI
                 caption={caption}
                 height={height}
+                flexible={flexible}
+                maxHeight={maxHeight}
                 borderRadius={0}
                 onPress={() => openFullScreen(index)}
                 showFullScreen={showFullScreen}
@@ -226,7 +254,7 @@ const ImageCarousel = ({
         </View>
       )}
 
-      {validImages.length > 1 && (
+      {validImages.length > 1 && showCounter && (
         <View style={styles.counterContainer}>
           <View style={[styles.counterBadge, { backgroundColor: colors.overlay }]}>
             <AmharicText variant="small" color={colors.textInverse} bold>
@@ -257,26 +285,48 @@ const FullScreenViewer = ({ visible, images, initialIndex, onClose, colors, isDa
   const scrollViewRef = useRef(null);
   
   // Helper functions for full-screen viewer
+  const getImageSource = (img) => {
+    // Handle local require() sources (numbers)
+    if (typeof img === 'number') return img;
+    // Handle string URLs
+    if (typeof img === 'string') return { uri: img };
+    // Handle objects with url property
+    if (img?.url) {
+      // Check if it's a local require() source
+      if (typeof img.url === 'number') return img.url;
+      return { uri: img.url };
+    }
+    // Handle objects with imageUrl property
+    if (img?.imageUrl) {
+      if (typeof img.imageUrl === 'number') return img.imageUrl;
+      return { uri: img.imageUrl };
+    }
+    return null;
+  };
+
   const getImageUrl = (img) => {
+    // For local sources (require), return the number
+    if (typeof img === 'number') return img;
     if (typeof img === 'string') return img;
     return img?.url || img?.imageUrl || '';
   };
 
   const getImageCaption = (img) => {
-    if (typeof img === 'string') return null;
+    if (typeof img === 'string' || typeof img === 'number') return null;
     return img?.caption || img?.altText || null;
   };
 
   useEffect(() => {
-    if (visible && scrollViewRef.current) {
+    if (visible && scrollViewRef.current && images.length > 0) {
+      const validIndex = Math.min(Math.max(0, currentIndex), images.length - 1);
       setTimeout(() => {
         scrollViewRef.current?.scrollTo({
-          x: currentIndex * SCREEN_WIDTH,
+          x: validIndex * SCREEN_WIDTH,
           animated: false,
         });
       }, 100);
     }
-  }, [visible, currentIndex]);
+  }, [visible, currentIndex, images.length]);
 
   const handleScroll = (event) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -313,18 +363,24 @@ const FullScreenViewer = ({ visible, images, initialIndex, onClose, colors, isDa
           contentContainerStyle={styles.fullScreenScrollContent}
         >
           {images.map((img, index) => {
-            const imageUrl = getImageUrl(img);
+            const imageSource = getImageSource(img);
             const caption = getImageCaption(img);
+            
+            // Skip if no valid image source
+            if (!imageSource) {
+              return null;
+            }
             
             return (
               <View key={index} style={styles.fullScreenImageWrapper}>
                 <Image
-                  source={{ uri: imageUrl }}
+                  source={imageSource}
                   style={styles.fullScreenImage}
                   resizeMode="contain"
                   onLoadEnd={() => {
-                    // Cache image after it loads (background, non-blocking)
-                    if (imageUrl && !imageUrl.startsWith('file://')) {
+                    // Cache image after it loads (background, non-blocking) - only for URLs
+                    const imageUrl = getImageUrl(img);
+                    if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('file://')) {
                       ImageCacheService.cacheImage(imageUrl).catch(() => {
                         // Silently fail - image is already displayed
                       });
@@ -340,7 +396,7 @@ const FullScreenViewer = ({ visible, images, initialIndex, onClose, colors, isDa
                 )}
               </View>
             );
-          })}
+          }).filter(Boolean)}
         </ScrollView>
 
         {images.length > 1 && (
@@ -369,6 +425,7 @@ const styles = StyleSheet.create({
   imageWrapper: {
     width: SCREEN_WIDTH,
     height: '100%',
+    flex: 0,
   },
   singleImageContainer: {
     width: '100%',
