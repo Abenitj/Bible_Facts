@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useDarkMode } from '@/contexts/DarkModeContext'
 
 interface ContentBlock {
@@ -32,7 +32,6 @@ export default function ContentBlockEditor({
   const { darkMode } = useDarkMode()
   const [isEditing, setIsEditing] = useState(false)
   const [localContent, setLocalContent] = useState(block.contentData)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSave = () => {
     onUpdate({
@@ -45,43 +44,6 @@ export default function ContentBlockEditor({
   const handleCancel = () => {
     setLocalContent(block.contentData)
     setIsEditing(false)
-  }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('alt', localContent.alt || '')
-      formData.append('caption', localContent.caption || '')
-
-      const response = await fetch('/api/images/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('cms_token')}`
-        },
-        body: formData
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        setLocalContent({
-          ...localContent,
-          url: result.data.url,
-          fileName: result.data.fileName,
-          size: result.data.size,
-          type: result.data.type
-        })
-      } else {
-        const error = await response.json()
-        alert(`Upload failed: ${error.error}`)
-      }
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert('Upload failed. Please try again.')
-    }
   }
 
   const handleExternalUrlChange = async (url: string) => {
@@ -156,34 +118,8 @@ export default function ContentBlockEditor({
                   borderColor: darkMode ? '#4b5563' : '#d1d5db',
                   color: darkMode ? '#ffffff' : '#000000'
                 }}
-                placeholder="Enter image URL or upload file below"
+                placeholder="Enter image URL"
               />
-            </div>
-
-            {/* File Upload */}
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
-                Or Upload File
-              </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full px-3 py-2 border-2 border-dashed rounded-md transition-colors"
-                style={{
-                  backgroundColor: darkMode ? '#374151' : '#f9fafb',
-                  borderColor: darkMode ? '#4b5563' : '#d1d5db',
-                  color: darkMode ? '#d1d5db' : '#374151'
-                }}
-              >
-                Click to upload image
-              </button>
             </div>
 
             {/* Image Preview */}

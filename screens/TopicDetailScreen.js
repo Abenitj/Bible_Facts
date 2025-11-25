@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -11,7 +10,9 @@ import {
   Animated,
 } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ContentBlockRenderer from '../components/ContentBlockRenderer';
+import AmharicText from '../src/components/AmharicText';
 import SyncService from '../src/services/SyncService';
 import { getColors } from '../src/theme/colors';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
@@ -208,21 +209,32 @@ const TopicDetailScreen = ({ navigation, route }) => {
   };
 
   const renderLoadingState = () => (
-    <View style={styles.loadingContainer}>
+    <SafeAreaView style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
       <ActivityIndicator size="large" color={colors.primary} />
-      <Text style={styles.loadingText}>Loading topic details...</Text>
-    </View>
+      <AmharicText variant="body" color={colors.textSecondary} style={styles.loadingText}>
+        ይጠብቃል...
+      </AmharicText>
+    </SafeAreaView>
   );
 
   const renderErrorState = () => (
-    <View style={styles.errorContainer}>
+    <SafeAreaView style={[styles.errorContainer, { backgroundColor: colors.background }]}>
       <MaterialCommunityIcons name="alert-circle" size={48} color={colors.error} />
-      <Text style={styles.errorTitle}>Error Loading Content</Text>
-      <Text style={styles.errorMessage}>{error}</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={loadTopicData}>
-        <Text style={styles.retryButtonText}>Try Again</Text>
+      <AmharicText variant="heading" color={colors.textPrimary} style={styles.errorTitle}>
+        ስህተት ተፈጥሯል
+      </AmharicText>
+      <AmharicText variant="body" color={colors.textSecondary} align="center" style={styles.errorMessage}>
+        {error}
+      </AmharicText>
+      <TouchableOpacity 
+        style={[styles.retryButton, { backgroundColor: colors.primary }]} 
+        onPress={loadTopicData}
+      >
+        <AmharicText variant="button" color={colors.textInverse}>
+          እንደገና ሞክር
+        </AmharicText>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 
   const renderHeroSection = () => (
@@ -248,10 +260,12 @@ const TopicDetailScreen = ({ navigation, route }) => {
         </View>
         
         <View style={styles.heroContent}>
-          <Text style={styles.heroTitle}>{topic?.title || 'Topic'}</Text>
-          <Text style={styles.heroSubtitle}>
-            Explore the depths of this important topic
-          </Text>
+          <AmharicText variant="largeTitle" color="#FFFFFF" bold style={styles.heroTitle}>
+            {topic?.title || 'Topic'}
+          </AmharicText>
+          <AmharicText variant="body" color="rgba(255, 255, 255, 0.9)" style={styles.heroSubtitle}>
+            ይህንን አስፈላጊ ርዕስ ይመልከቱ
+          </AmharicText>
         </View>
       </SimpleGradient>
     </Animated.View>
@@ -270,11 +284,13 @@ const TopicDetailScreen = ({ navigation, route }) => {
       <View style={styles.questionCard}>
         <View style={styles.questionHeader}>
           <MaterialCommunityIcons name="help-circle" size={24} color={colors.primary} />
-          <Text style={styles.questionTitle}>What is this topic about?</Text>
+          <AmharicText variant="subheading" color={colors.textPrimary} bold style={styles.questionTitle}>
+            ይህ ርዕስ ስለ ምን ነው?
+          </AmharicText>
         </View>
-        <Text style={styles.questionText}>
-          {topic?.description || `This topic explores the fundamental concepts and teachings related to ${topic?.title?.toLowerCase() || 'this subject'}.`}
-        </Text>
+        <AmharicText variant="body" color={colors.textSecondary} style={styles.questionText}>
+          {topic?.description || `ይህ ርዕስ ${topic?.title || 'ይህ ርዕስ'} ከተዛመዱ መሰረታዊ ጽንሰ-ሀሳቦችን እና ትምህርቶችን ያስላል።`}
+        </AmharicText>
       </View>
     </Animated.View>
   );
@@ -288,56 +304,70 @@ const TopicDetailScreen = ({ navigation, route }) => {
               <MaterialCommunityIcons name="book-open" size={20} color="#FFFFFF" />
             </SimpleGradient>
             <View style={styles.sectionTitleText}>
-              <Text style={styles.sectionTitle}>Content</Text>
-              <Text style={styles.sectionSubtitle}>
-                {topicDetail?.contentBlocks?.length || 0} content blocks
-              </Text>
+              <AmharicText variant="heading" color={colors.textPrimary} bold style={styles.sectionTitle}>
+                ይዘት
+              </AmharicText>
+              <AmharicText variant="caption" color={colors.textSecondary} style={styles.sectionSubtitle}>
+                {topicDetail?.contentBlocks?.length || 0} የይዘት ክፍሎች
+              </AmharicText>
             </View>
           </View>
         </View>
 
         <View style={styles.contentBlocksContainer}>
           {topicDetail?.contentBlocks && Array.isArray(topicDetail.contentBlocks) && topicDetail.contentBlocks.length > 0 ? (
-            topicDetail.contentBlocks.map((block, index) => {
-              // Validate block structure
-              if (!block || !block.blockType) {
-                console.warn('Invalid block at index', index, block);
-                return null;
-              }
-              
-              return (
-                <Animated.View
-                  key={block.id || index}
-                  style={[
-                    styles.contentBlock,
-                    {
-                      opacity: fadeAnim,
-                      transform: [
-                        {
-                          translateY: Animated.add(
-                            slideAnim,
-                            new Animated.Value(index * 20)
-                          )
-                        }
-                      ]
-                    }
-                  ]}
-                >
-                  <ContentBlockRenderer 
-                    block={block} 
-                    colors={colors}
-                    isDarkMode={isDarkMode}
-                  />
-                </Animated.View>
-              );
-            }).filter(Boolean)
+            topicDetail.contentBlocks
+              .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0))
+              .map((block, index) => {
+                // Validate block structure
+                if (!block || !block.blockType) {
+                  console.warn('Invalid block at index', index, block);
+                  return null;
+                }
+                
+                // Ensure contentData is an object, not a string
+                const processedBlock = {
+                  ...block,
+                  contentData: typeof block.contentData === 'string' 
+                    ? JSON.parse(block.contentData) 
+                    : block.contentData
+                };
+                
+                return (
+                  <Animated.View
+                    key={block.id || index}
+                    style={[
+                      styles.contentBlock,
+                      {
+                        opacity: fadeAnim,
+                        transform: [
+                          {
+                            translateY: Animated.add(
+                              slideAnim,
+                              new Animated.Value(index * 20)
+                            )
+                          }
+                        ]
+                      }
+                    ]}
+                  >
+                    <ContentBlockRenderer 
+                      block={processedBlock} 
+                      colors={colors}
+                      isDarkMode={isDarkMode}
+                    />
+                  </Animated.View>
+                );
+              }).filter(Boolean)
           ) : (
             <View style={styles.emptyContainer}>
               <MaterialCommunityIcons name="book-open" size={48} color={colors.textTertiary} />
-              <Text style={styles.emptyTitle}>No Content Available</Text>
-              <Text style={styles.emptyMessage}>
-                This topic doesn't have any content blocks yet.
-              </Text>
+              <AmharicText variant="subheading" color={colors.textPrimary} style={styles.emptyTitle}>
+                ይዘት የለም
+              </AmharicText>
+              <AmharicText variant="body" color={colors.textSecondary} align="center" style={styles.emptyMessage}>
+                ይህ ርዕስ እስካሁን የይዘት ክፍሎች የሉትም።
+              </AmharicText>
             </View>
           )}
         </View>
@@ -355,19 +385,28 @@ const TopicDetailScreen = ({ navigation, route }) => {
 
   if (!topic) {
     return (
-      <View style={styles.errorContainer}>
+      <SafeAreaView style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <MaterialCommunityIcons name="alert-circle" size={48} color={colors.error} />
-        <Text style={styles.errorTitle}>Topic Not Found</Text>
-        <Text style={styles.errorMessage}>The requested topic could not be found.</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryButtonText}>Go Back</Text>
+        <AmharicText variant="heading" color={colors.textPrimary} style={styles.errorTitle}>
+          ርዕስ አልተገኘም
+        </AmharicText>
+        <AmharicText variant="body" color={colors.textSecondary} align="center" style={styles.errorMessage}>
+          የተጠየቀው ርዕስ ሊገኝ አልቻለም።
+        </AmharicText>
+        <TouchableOpacity 
+          style={[styles.retryButton, { backgroundColor: colors.primary }]} 
+          onPress={() => navigation.goBack()}
+        >
+          <AmharicText variant="button" color={colors.textInverse}>
+            ተመለስ
+          </AmharicText>
         </TouchableOpacity>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -377,7 +416,7 @@ const TopicDetailScreen = ({ navigation, route }) => {
         {renderQuestionCard()}
         {renderMainContent()}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

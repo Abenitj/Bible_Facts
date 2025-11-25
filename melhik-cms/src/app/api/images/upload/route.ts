@@ -4,7 +4,12 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-// POST /api/images/upload - Upload image file
+/**
+ * @deprecated This endpoint is deprecated. The system now uses URL-based images only.
+ * File uploads are no longer supported. Please use image URLs directly in content blocks.
+ * 
+ * POST /api/images/upload - Upload image file (DEPRECATED)
+ */
 export async function POST(request: NextRequest) {
   try {
     // Check authentication

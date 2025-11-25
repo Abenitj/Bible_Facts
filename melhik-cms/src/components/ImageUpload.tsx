@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Card, CardContent } from './ui/card'
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react'
+import { X, Image as ImageIcon, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from './ui/alert'
 
 interface ImageUploadProps {
@@ -24,69 +24,15 @@ export default function ImageUpload({
   onImageChange,
   onRemove,
   disabled = false,
-  label = 'Image',
+  label = 'Image URL',
   description
 }: ImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(value || null)
   const [altTextValue, setAltTextValue] = useState(altText)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml']
-    if (!allowedTypes.includes(file.type)) {
-      setError('Please select a valid image file (JPEG, PNG, GIF, WebP, or SVG)')
-      return
-    }
-
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    if (file.size > maxSize) {
-      setError('File size must be less than 5MB')
-      return
-    }
-
-    setIsUploading(true)
-    setError(null)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/images', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-
-      if (!response.ok) {
-        throw new Error('Upload failed')
-      }
-
-      const result = await response.json()
-      if (result.success) {
-        const imageUrl = result.data.url
-        setPreviewUrl(imageUrl)
-        onImageChange(imageUrl, altTextValue)
-      } else {
-        throw new Error(result.error || 'Upload failed')
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-    } finally {
-      setIsUploading(false)
-    }
-  }
 
   const handleUrlChange = (url: string) => {
+    setError(null)
     setPreviewUrl(url)
     onImageChange(url, altTextValue)
   }
@@ -103,19 +49,29 @@ export default function ImageUpload({
     if (onRemove) {
       onRemove()
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+  }
+
+  const validateUrl = (url: string) => {
+    if (!url) return true
+    try {
+      new URL(url)
+      return true
+    } catch {
+      setError('Please enter a valid URL (e.g., https://example.com/image.jpg)')
+      return false
     }
   }
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click()
+  const handleUrlBlur = (url: string) => {
+    if (url && !validateUrl(url)) {
+      return
+    }
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="image-upload" className="text-sm font-medium">
+        <Label htmlFor="image-url" className="text-sm font-medium">
           {label}
         </Label>
         {description && (
@@ -139,6 +95,9 @@ export default function ImageUpload({
                   src={previewUrl}
                   alt={altTextValue || 'Preview'}
                   className="w-full h-48 object-cover rounded-lg border"
+                  onError={() => {
+                    setError('Failed to load image. Please check the URL.')
+                  }}
                 />
                 <Button
                   type="button"
@@ -159,6 +118,7 @@ export default function ImageUpload({
                   type="url"
                   value={previewUrl}
                   onChange={(e) => handleUrlChange(e.target.value)}
+                  onBlur={(e) => handleUrlBlur(e.target.value)}
                   placeholder="https://example.com/image.jpg"
                   disabled={disabled}
                 />
@@ -180,44 +140,25 @@ export default function ImageUpload({
             <div className="text-center py-8">
               <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-sm text-muted-foreground mb-4">
-                Upload an image or enter an image URL
+                Enter an image URL
               </p>
               <div className="space-y-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleUploadClick}
-                  disabled={disabled || isUploading}
-                  className="w-full"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isUploading ? 'Uploading...' : 'Upload Image'}
-                </Button>
-                
-                <div className="text-xs text-muted-foreground">
-                  Or enter an image URL below
-                </div>
-                
                 <Input
+                  id="image-url"
                   type="url"
                   placeholder="https://example.com/image.jpg"
                   onChange={(e) => handleUrlChange(e.target.value)}
+                  onBlur={(e) => handleUrlBlur(e.target.value)}
                   disabled={disabled}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Enter a direct URL to an image file
+                </p>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-        disabled={disabled}
-      />
     </div>
   )
 }

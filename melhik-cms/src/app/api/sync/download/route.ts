@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const lastSync = searchParams.get('lastSync') || '0'
     const appVersion = searchParams.get('version') || '1.0.0'
-
+    
     console.log(`Sync request: lastSync=${lastSync}, appVersion=${appVersion}`)
 
     // Get only new/updated data since last sync that has been synced

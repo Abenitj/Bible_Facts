@@ -127,16 +127,20 @@ class SyncService {
         const processedTopicDetails = content.topicDetails.map(detail => {
           // Ensure contentBlocks is an array and properly formatted
           const contentBlocks = Array.isArray(detail.contentBlocks) 
-            ? detail.contentBlocks.map(block => ({
-                id: block.id,
-                blockType: block.blockType,
-                contentData: typeof block.contentData === 'string' 
+            ? detail.contentBlocks.map(block => {
+                const contentData = typeof block.contentData === 'string' 
                   ? JSON.parse(block.contentData) 
-                  : block.contentData,
-                orderIndex: block.orderIndex || 0,
-                createdAt: block.createdAt,
-                updatedAt: block.updatedAt
-              }))
+                  : block.contentData;
+                
+                return {
+                  id: block.id,
+                  blockType: block.blockType,
+                  contentData: contentData,
+                  orderIndex: block.orderIndex || 0,
+                  createdAt: block.createdAt,
+                  updatedAt: block.updatedAt
+                };
+              })
             : [];
           
           return {
@@ -157,6 +161,8 @@ class SyncService {
         const totalContentBlocks = processedTopicDetails.reduce((sum, detail) => 
           sum + (detail.contentBlocks?.length || 0), 0);
         console.log(`Total content blocks stored: ${totalContentBlocks}`);
+        
+        // Note: Images will be cached automatically after they load in ImageCard component
       }
 
       console.log('Content stored successfully');

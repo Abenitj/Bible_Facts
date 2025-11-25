@@ -24,12 +24,19 @@ export async function GET(request: NextRequest) {
 	}
 }
 
+/**
+ * @deprecated File upload functionality is deprecated. The system now uses URL-based images only.
+ * Please use image URLs directly in content blocks instead of uploading files.
+ */
 export async function POST(request: NextRequest) {
 	try {
 		const token = getTokenFromHeader(request.headers.get('authorization') || undefined)
 		if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 		const payload = verifyToken(token)
 		if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+
+		// Deprecation warning in response
+		console.warn('DEPRECATED: File upload API is being used. Please migrate to URL-based images.')
 
 		const contentType = request.headers.get('content-type') || ''
 		if (!contentType.includes('multipart/form-data')) {
