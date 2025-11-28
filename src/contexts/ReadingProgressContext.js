@@ -91,18 +91,42 @@ export const ReadingProgressProvider = ({ children }) => {
     return readingProgress[topicId]?.readAt;
   };
 
-  const getReadingStats = () => {
-    const totalRead = Object.keys(readingProgress).length;
-    const lastRead = lastReadTopics[0];
-    
-    return {
-      totalRead,
-      lastReadTopic: lastRead ? {
-        topicId: lastRead.topicId,
-        religionId: lastRead.religionId,
-        readAt: lastRead.readAt
-      } : null
-    };
+  const getReadingStats = async () => {
+    try {
+      const totalRead = Object.keys(readingProgress).length;
+      const lastRead = lastReadTopics[0];
+      
+      // Get total topics from stored content
+      let totalTopics = 0;
+      try {
+        const SyncService = require('../services/SyncService').default;
+        const storedContent = await SyncService.getStoredContent();
+        if (storedContent.topics && Array.isArray(storedContent.topics)) {
+          totalTopics = storedContent.topics.length;
+        }
+      } catch (error) {
+        console.warn('Error getting total topics count:', error);
+        // If we can't get total, use read count as minimum
+        totalTopics = totalRead;
+      }
+      
+      return {
+        totalRead,
+        totalTopics,
+        lastReadTopic: lastRead ? {
+          topicId: lastRead.topicId,
+          religionId: lastRead.religionId,
+          readAt: lastRead.readAt
+        } : null
+      };
+    } catch (error) {
+      console.error('Error getting reading stats:', error);
+      return {
+        totalRead: Object.keys(readingProgress).length,
+        totalTopics: 0,
+        lastReadTopic: null
+      };
+    }
   };
 
   const getReligionProgress = (religionId) => {

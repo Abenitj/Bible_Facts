@@ -12,7 +12,7 @@ class SyncService {
   }
 
 
-  async checkForUpdates() {
+  async checkForUpdates(timeout = 10000) {
     try {
       console.log('Checking for updates from Melhik CMS...');
       
@@ -21,7 +21,28 @@ class SyncService {
       
       const statusUrl = getApiUrl(API_CONFIG.ENDPOINTS.SYNC_STATUS);
       console.log(`Making request to: ${statusUrl}`);
-      const response = await fetch(statusUrl);
+      
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      
+      let response;
+      try {
+        response = await fetch(statusUrl, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.warn('Sync check timed out');
+          return { hasUpdates: false, serverData: null, lastSync, serverTime: null };
+        }
+        throw fetchError;
+      }
       
       if (response.ok) {
         const result = await response.json();
@@ -42,18 +63,40 @@ class SyncService {
       return { hasUpdates: false, serverData: null, lastSync, serverTime: null };
     } catch (error) {
       console.error('Sync check failed:', error);
-      return { hasUpdates: false, serverData: null, lastSync: '0', serverTime: null };
+      // Don't throw error for check - just return no updates
+      // This allows app to continue with cached data
+      return { hasUpdates: false, serverData: null, lastSync: lastSync || '0', serverTime: null };
     }
   }
 
-  async downloadContent(lastSync = '0') {
+  async downloadContent(lastSync = '0', timeout = 30000) {
     try {
       console.log(`Downloading content from Melhik CMS since: ${lastSync}`);
       
       const downloadUrl = getApiUrl(`${API_CONFIG.ENDPOINTS.SYNC_DOWNLOAD}?lastSync=${lastSync}`);
       console.log('Download URL:', downloadUrl);
       
-      const response = await fetch(downloadUrl);
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      
+      let response;
+      try {
+        response = await fetch(downloadUrl, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Connection timed out. Please check your internet connection and try again.');
+        }
+        throw fetchError;
+      }
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
@@ -90,18 +133,47 @@ class SyncService {
       
       throw new Error(errorMessage);
     } catch (error) {
-      console.error('Content download failed:', error);
+      // Determine if this is an expected network error
+      const errorMessage = error.message || '';
+      const errorName = error.name || '';
+      const isNetworkError = 
+        errorMessage.includes('Network request failed') || 
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('Failed to fetch') ||
+        errorMessage.includes('NetworkError') ||
+        errorMessage.includes('Cannot connect') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('ENOTFOUND') ||
+        errorMessage.includes('DNS') ||
+        (errorName === 'TypeError' && (errorMessage.includes('Network') || errorMessage.includes('fetch')));
+      
+      // Only log unexpected errors - suppress expected network errors
+      if (!isNetworkError) {
+        console.error('Content download failed:', error);
+      }
+      // Network errors are expected and handled gracefully - no logging needed
       
       // Provide user-friendly error messages for network issues
-      if (error.message.includes('Network request failed') || error.message.includes('fetch')) {
-        throw new Error('Cannot connect to server. Please check your internet connection.');
-      } else if (error.message.includes('timeout')) {
-        throw new Error('Connection timed out. Please try again.');
-      } else if (error.message.includes('JSON')) {
-        throw new Error('Invalid response from server');
+      if (isNetworkError) {
+        // Create error without logging
+        const networkError = new Error('ኢንተርኔት ግንኙነት አልተገኘም። እባክዎ ኢንተርኔትዎን ይፈትሹ።');
+        networkError.isNetworkError = true; // Mark as network error
+        throw networkError;
+      } else if (errorMessage.includes('timeout') || errorMessage.includes('timed out') || errorMessage.includes('AbortError')) {
+        const timeoutError = new Error('ግንኙነቱ ረጅም ጊዜ ወስዷል። እባክዎ እንደገና ይሞክሩ።');
+        timeoutError.isNetworkError = true;
+        throw timeoutError;
+      } else if (errorMessage.includes('JSON') || errorMessage.includes('parse')) {
+        throw new Error('ከሰርቨር የተሳሳተ መልስ ተቀብሏል።');
       }
       
-      throw error;
+      // If error message is already in Amharic, use it; otherwise provide generic message
+      if (errorMessage.includes('ኢንተርኔት') || errorMessage.includes('ግንኙነት')) {
+        error.isNetworkError = true;
+        throw error;
+      }
+      
+      throw new Error(`ስህተት: ${errorMessage || 'ያልታወቀ ስህተት ተፈጥሯል።'}`);
     }
   }
 
@@ -231,23 +303,56 @@ class SyncService {
     try {
       console.log('Performing full sync from Melhik CMS...');
       
+      // Check if we have cached data to fall back to
+      const hasCachedData = await this.hasCachedContent();
+      
       const result = await this.downloadContent('0'); // '0' means get all data
       console.log('Full sync completed successfully');
       
       return {
         success: true,
-        message: result.message || 'Content synced successfully',
-        data: result.data
+        message: result.message || 'ይዘቱ በተሳካ ሁኔታ ተሰምሯል።',
+        data: result.data,
+        hasCachedData
       };
     } catch (error) {
-      console.error('Full sync failed:', error);
+      // Check if this is an expected network error
+      const errorMessage = error.message || '';
+      const isNetworkError = 
+        error.isNetworkError === true ||
+        errorMessage.includes('ኢንተርኔት') ||
+        errorMessage.includes('ግንኙነት') ||
+        errorMessage.includes('Network') ||
+        errorMessage.includes('timeout') ||
+        (error.name === 'TypeError' && errorMessage.includes('Network'));
       
-      // Return a user-friendly error instead of throwing
+      // Only log unexpected errors - suppress expected network errors
+      if (!isNetworkError) {
+        console.error('Full sync failed with unexpected error:', error);
+      }
+      // Network errors are expected and handled gracefully - no logging needed
+      
+      // Check if we have cached data to use
+      const hasCachedData = await this.hasCachedContent();
+      
+      // Return a user-friendly error with cached data status
       return {
         success: false,
-        message: error.message || 'Sync failed. Please try again.',
-        error: error.message
+        message: error.message || 'ስምር አልተሳካም። እባክዎ እንደገና ይሞክሩ።',
+        error: error.message,
+        hasCachedData,
+        canUseCachedData: hasCachedData,
+        isNetworkError
       };
+    }
+  }
+
+  async hasCachedContent() {
+    try {
+      const content = await this.getStoredContent();
+      return content.religions.length > 0 || content.topics.length > 0;
+    } catch (error) {
+      return false;
     }
   }
 
@@ -265,13 +370,32 @@ class SyncService {
         data: result.data
       };
     } catch (error) {
-      console.error('Incremental sync failed:', error);
+      // Check if this is an expected network error
+      const errorMessage = error.message || '';
+      const isNetworkError = 
+        error.isNetworkError === true ||
+        errorMessage.includes('ኢንተርኔት') ||
+        errorMessage.includes('ግንኙነት') ||
+        errorMessage.includes('Network') ||
+        (error.name === 'TypeError' && errorMessage.includes('Network'));
+      
+      // Only log unexpected errors - suppress expected network errors
+      if (!isNetworkError) {
+        console.error('Incremental sync failed:', error);
+      }
+      // Network errors are expected and handled gracefully - no logging needed
+      
+      // Check if we have cached data
+      const hasCachedData = await this.hasCachedContent();
       
       // Return a user-friendly error instead of throwing
       return {
         success: false,
         message: error.message || 'Update failed. Please try again.',
-        error: error.message
+        error: error.message,
+        hasCachedData,
+        canUseCachedData: hasCachedData,
+        isNetworkError
       };
     }
   }

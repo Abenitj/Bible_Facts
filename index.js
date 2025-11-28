@@ -1,3 +1,11 @@
+// Safe CSS import - won't crash if CSS fails to load
+try {
+  require('./global.css');
+} catch (error) {
+  // CSS import is optional - NativeWind will work without it in some cases
+  console.warn('CSS import failed (this is OK):', error.message);
+}
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

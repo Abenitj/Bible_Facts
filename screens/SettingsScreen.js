@@ -36,6 +36,8 @@ const SettingsScreen = ({ navigation }) => {
     if (syncing) return;
     
     setSyncing(true);
+    setShowErrorModal(false);
+    
     try {
       console.log('Starting sync from settings...');
       const result = await SyncService.performFullSync();
@@ -43,17 +45,31 @@ const SettingsScreen = ({ navigation }) => {
       
       if (result.success) {
         console.log('Sync completed successfully:', result.message);
-        Alert.alert('Sync Complete', result.message || 'Content has been synced successfully!');
+        Alert.alert(
+          'ስምር ተጠናቋል',
+          result.message || 'ይዘቱ በተሳካ ሁኔታ ተሰምሯል።',
+          [{ text: 'እሺ', style: 'default' }]
+        );
       } else {
         console.log('Sync failed:', result.message);
-        // Show error modal for real sync failures
-        setErrorMessage(result.message || 'Failed to sync content. Please try again.');
+        
+        // Build error message
+        let errorMsg = result.message || 'ስምር አልተሳካም።';
+        if (result.canUseCachedData) {
+          errorMsg += '\n\nአሁን የተቀመጡ ውሂቦች ጥቅም ላይ ውለዋል።';
+        } else {
+          errorMsg += '\n\nእባክዎ ኢንተርኔት ግንኙነትዎን ይፈትሹ።';
+        }
+        
+        setErrorMessage(errorMsg);
         setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Sync failed:', error);
-      // Show error modal for unexpected errors
-      setErrorMessage('An unexpected error occurred. Please try again.');
+      const errorMsg = error.message || 'ያልታወቀ ስህተት ተፈጥሯል።';
+      setErrorMessage(
+        `${errorMsg}\n\nእባክዎ እንደገና ይሞክሩ።`
+      );
       setShowErrorModal(true);
     } finally {
       setSyncing(false);

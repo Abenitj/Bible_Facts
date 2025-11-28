@@ -65,6 +65,7 @@ const TopicsScreen = ({ navigation, route }) => {
     if (refreshing) return;
     
     setRefreshing(true);
+    setShowErrorModal(false);
     
     try {
       console.log('Starting sync from topics screen...');
@@ -78,19 +79,37 @@ const TopicsScreen = ({ navigation, route }) => {
         console.log('Topics synced and reloaded');
       } else {
         console.log('Sync failed:', result.message);
-        // Show error modal for real sync failures
-        setErrorMessage(result.message || 'Sync failed. Please try again.');
-        setShowErrorModal(true);
-        // Still try to load existing data even if sync fails
+        
+        // Load cached data regardless
         await loadTopics();
+        
+        // Show appropriate error message
+        if (result.canUseCachedData) {
+          setErrorMessage(
+            `${result.message}\n\nአሁን የተቀመጡ ውሂቦች ጥቅም ላይ ውለዋል።`
+          );
+        } else {
+          setErrorMessage(
+            `${result.message}\n\nእባክዎ ኢንተርኔት ግንኙነትዎን ይፈትሹ።`
+          );
+        }
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error syncing:', error);
-      // Show error modal for unexpected errors
-      setErrorMessage('An unexpected error occurred. Please try again.');
+      
+      // Try to load cached data
+      try {
+        await loadTopics();
+      } catch (loadError) {
+        console.error('Error loading cached topics:', loadError);
+      }
+      
+      const errorMsg = error.message || 'ያልታወቀ ስህተት ተፈጥሯል።';
+      setErrorMessage(
+        `${errorMsg}\n\nእባክዎ እንደገና ይሞክሩ።`
+      );
       setShowErrorModal(true);
-      // Still try to load existing data even if sync fails
-      await loadTopics();
     } finally {
       setRefreshing(false);
     }

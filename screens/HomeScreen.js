@@ -34,12 +34,31 @@ const HomeScreen = ({ navigation }) => {
   const [isSearching, setIsSearching] = useState(false);
   const { isDarkMode } = useDarkMode();
   const { getReadingStats } = useReadingProgress();
+  const [readingStats, setReadingStats] = useState({ totalRead: 0, totalTopics: 0 });
   const { getRecentBookmarks, getBookmarksCount } = useBookmarks();
   const colors = getColors(isDarkMode);
 
   useEffect(() => {
     loadReligions();
+    loadReadingStats();
   }, []);
+
+  // Reload stats when component focuses (user returns from reading)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadReadingStats();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const loadReadingStats = async () => {
+    try {
+      const stats = await getReadingStats();
+      setReadingStats(stats);
+    } catch (error) {
+      console.error('Error loading reading stats:', error);
+    }
+  };
 
   const loadReligions = async () => {
     try {
@@ -93,38 +112,92 @@ const HomeScreen = ({ navigation }) => {
     if (refreshing) return;
     
     setRefreshing(true);
+    setShowErrorModal(false); // Clear any previous errors
     
     try {
       console.log('Starting sync...');
       
       // Perform full sync to get latest data
       const result = await SyncService.performFullSync();
-      console.log('Sync result:', result);
       
       if (result.success) {
-        console.log('Sync completed successfully:', result.message);
+        console.log('Sync completed successfully');
         // Reload data after successful sync
         await loadReligions();
+        await loadReadingStats();
         // Re-apply search filter if user is searching
         if (isSearching) {
           handleSearch(searchQuery);
         }
-        console.log('Data reloaded after sync');
       } else {
-        console.log('Sync failed:', result.message);
-        // Show error modal for real sync failures
-        setErrorMessage(result.message || 'Sync failed. Please try again.');
-        setShowErrorModal(true);
-        // Still try to load existing data even if sync fails
-        await loadReligions();
+        // Sync failed - handle gracefully
+        // If we have cached data, show a less severe error
+        if (result.canUseCachedData) {
+          // Load cached data and show info message
+          await loadReligions();
+          await loadReadingStats();
+          
+          // Only show error modal if user explicitly needs to know
+          // For network errors with cached data, we can be silent or show a subtle message
+          const isNetworkError = result.message?.includes('ኢንተርኔት') || result.message?.includes('ግንኙነት');
+          
+          if (isNetworkError) {
+            // For network errors with cached data, don't show error modal
+            // Just silently use cached data
+            console.log('Using cached data due to network issue');
+          } else {
+            // For other errors, show the error
+            setErrorMessage(
+              `${result.message}\n\nአሁን የተቀመጡ ውሂቦች ጥቅም ላይ ውለዋል።`
+            );
+            setShowErrorModal(true);
+          }
+        } else {
+          // No cached data - show error
+          setErrorMessage(
+            `${result.message}\n\nእባክዎ ኢንተርኔት ግንኙነትዎን ይፈትሹ።`
+          );
+          setShowErrorModal(true);
+          // Still try to load existing data even if sync fails
+          await loadReligions();
+        }
       }
     } catch (error) {
-      console.error('Error syncing:', error);
-      // Show error modal for unexpected errors
-      setErrorMessage('An unexpected error occurred. Please try again.');
-      setShowErrorModal(true);
-      // Still try to load existing data even if sync fails
-      await loadReligions();
+      // Only log unexpected errors - network errors are expected and handled
+      const isNetworkError = error.isNetworkError === true ||
+                            error.message?.includes('ኢንተርኔት') || 
+                            error.message?.includes('ግንኙነት') ||
+                            error.message?.includes('Network') ||
+                            (error.name === 'TypeError' && error.message?.includes('Network'));
+      
+      if (!isNetworkError) {
+        console.error('Unexpected error during sync:', error);
+      }
+      // Network errors are expected - no logging needed
+      
+      // Try to load cached data even on unexpected errors
+      try {
+        await loadReligions();
+        await loadReadingStats();
+      } catch (loadError) {
+        // Only log if it's not a network error
+        const isLoadNetworkError = loadError.isNetworkError === true ||
+                                  loadError.message?.includes('Network') ||
+                                  (loadError.name === 'TypeError' && loadError.message?.includes('Network'));
+        if (!isLoadNetworkError) {
+          console.error('Error loading cached data:', loadError);
+        }
+      }
+      
+      // Only show error modal for non-network errors or if no cached data
+      const hasCachedData = await SyncService.hasCachedContent();
+      if (!hasCachedData || !isNetworkError) {
+        const errorMsg = error.message || 'ያልታወቀ ስህተት ተፈጥሯል።';
+        setErrorMessage(
+          `${errorMsg}\n\nእባክዎ እንደገና ይሞክሩ።`
+        );
+        setShowErrorModal(true);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -229,9 +302,8 @@ const HomeScreen = ({ navigation }) => {
 
         {/* Simple Read Progress Header */}
         {!isSearching && (() => {
-          const stats = getReadingStats();
-          const totalTopics = stats.totalTopics || 0;
-          const readTopics = stats.totalRead || 0;
+          const totalTopics = readingStats.totalTopics || 0;
+          const readTopics = readingStats.totalRead || 0;
           const readPercentage = totalTopics > 0 ? Math.round((readTopics / totalTopics) * 100) : 0;
 
           return (

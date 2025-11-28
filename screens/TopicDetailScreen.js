@@ -18,6 +18,7 @@ import AmharicText from '../src/components/AmharicText';
 import SyncService from '../src/services/SyncService';
 import { getColors } from '../src/theme/colors';
 import { useDarkMode } from '../src/contexts/DarkModeContext';
+import { useReadingProgress } from '../src/contexts/ReadingProgressContext';
 import ImageCarousel from '../components/ImageCarousel';
 
 // Blur effect component using pure React Native (no native modules)
@@ -60,6 +61,9 @@ const TopicDetailScreen = ({ navigation, route }) => {
   const [topicDetail, setTopicDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
+  const scrollViewRef = useRef(null);
+  const readTimerRef = useRef(null);
   
   // Get theme colors with fallback
   let isDarkMode = false;
@@ -73,6 +77,15 @@ const TopicDetailScreen = ({ navigation, route }) => {
     console.warn('Error getting dark mode context, using defaults:', error);
     isDarkMode = false;
     colors = getColors(false);
+  }
+
+  // Get reading progress context
+  let markTopicAsRead = null;
+  try {
+    const readingProgress = useReadingProgress();
+    markTopicAsRead = readingProgress?.markTopicAsRead;
+  } catch (error) {
+    console.warn('Error getting reading progress context:', error);
   }
   
   // Ensure colors object has all required properties
@@ -114,8 +127,29 @@ const TopicDetailScreen = ({ navigation, route }) => {
           useNativeDriver: true,
         }),
       ]).start();
+
+      // Mark topic as read after user views it for 3 seconds
+      // This ensures they actually read the content
+      if (!hasMarkedAsRead && markTopicAsRead && religion) {
+        readTimerRef.current = setTimeout(() => {
+          try {
+            markTopicAsRead(topicId, religion.id);
+            setHasMarkedAsRead(true);
+            console.log(`Marked topic ${topicId} as read`);
+          } catch (error) {
+            console.error('Error marking topic as read:', error);
+          }
+        }, 3000); // 3 seconds
+      }
     }
-  }, [topic, topicDetail]);
+
+    // Cleanup timer on unmount
+    return () => {
+      if (readTimerRef.current) {
+        clearTimeout(readTimerRef.current);
+      }
+    };
+  }, [topic, topicDetail, topicId, religion, hasMarkedAsRead, markTopicAsRead]);
 
   const loadTopicData = async () => {
     try {
